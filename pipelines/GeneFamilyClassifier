@@ -1,0 +1,445 @@
+#!/usr/bin/env perl
+# Author: Eric Wafula
+# Email: ekw10@psu.edu
+# Institution: Penn State University, Biology Dept, Claude dePamphilis Lab
+# Date: 01-31-2015
+
+use strict;
+use warnings;
+use Getopt::Long qw(:config no_ignore_case);
+use FindBin;
+
+my $home =  "$FindBin::Bin/..";
+
+my $usage = <<__EOUSAGE__;
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+#                                  GENE FAMILY CLASSIFICATION
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Required Options:
+#
+#  --proteins <string>             : Amino acids (proteins) sequences fasta file (proteins.fasta)
+#
+#  --scaffold <string>             : Orthogroups or gene families proteins scaffold
+#                                    If Angiosperms clusters (version 1.0): 22Gv1.0
+#                                    If Angiosperms clusters (version 1.1): 22Gv1.1	
+#
+#  --method <string>               : Protein clustering method
+#                                    If GFam: gfam
+#                                    If OrthoFinder: orthofinder
+#                                    If OrthoMCL: orthomcl
+#
+#  --classifier <string>           : Protein classification method 
+#                                    If BLASTP: blastp
+#                                    If HMMScan: hmmscan
+#                                    If BLASTP and HMMScan: both
+#
+# # # # # # # # # # # # # # # # # # 
+#  Others Options:
+#
+#  --num_threads <int>             : number of threads (CPUs) to used for HMMScan, BLASTP, and MAFFT
+#                                    Default: 1 
+#
+#  --super_orthogroups <string>    : SuperOrthogroups MCL clustering - blastp e-value matrix between all pairs of orthogroups
+#                                    If minimum e-value: min_evalue (default) 
+#                                    If average e-value: avg_evalue
+#
+#  --single_copy_custom		       : Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
+#            						  (see manual on how to customize the single copy config file)	
+#                                    
+#  --single_copy_taxa <int>        : Minumum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
+#
+#  --taxa_present <int>            : Minumum taxa required in single copy orthogroup - requires "--single_copy_taxa"
+#
+#  --orthogroup_fasta              : Create orthogroup fasta files - requires "--coding_sequences" for CDS orthogroup fasta
+#                                    
+#  --coding_sequences <string>     : Corresponding coding sequences (CDS) fasta file (cds.fasta)
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Example Usage:
+#
+#  GeneFamilyClassifier --proteins proteins.fasta --scaffold 22Gv1.1 --method orthomcl --classifier blastp 
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ 
+__EOUSAGE__
+    ; 
+
+# Declare and initialize variables;
+my $proteins;
+my $scaffold;
+my $method;
+my $classifier;
+my $num_threads;
+my $super_orthogroups;
+my $single_copy_custom;
+my $single_copy_taxa;
+my $taxa_present;
+my $orthogroup_fasta;
+my $coding_sequences;
+
+my $options = GetOptions (  'proteins=s' => \$proteins,
+              'scaffold=s' => \$scaffold,
+              'method=s' => \$method,
+              'classifier=s' => \$classifier,
+              'num_threads=i' => \$num_threads,
+              'super_orthogroups=s' => \$super_orthogroups,
+              'single_copy_custom' => \$single_copy_custom,
+              'single_copy_taxa=i' => \$single_copy_taxa,
+              'taxa_present=i' => \$taxa_present,
+              'orthogroup_fasta' => \$orthogroup_fasta,
+              'coding_sequences=s' => \$coding_sequences,
+              );
+              
+my %utilies;
+open (IN, "$home/config/plantTribes.config") or die "can't open $home/config/plantTribes.config file\n";
+while (<IN>) {
+	chomp;
+	if ($_ !~ /^\w+/) { next; }
+	my @F = split(/\=/, $_);
+	$utilies{$F[0]} = $F[1];
+}
+close;
+# defaults
+my $blastp = $utilies{'blastp'};
+my $hmmscan = $utilies{'hmmscan'};
+if (!$num_threads) { $num_threads = 1; }
+              
+# validate options            
+my %scaffolds = ("22Gv1.0", "Angiosperms clusters (version 1.0)", "22Gv1.1", "Angiosperms clusters (version 1.1)"); 
+my %methods = ("gfam", "GFam", "orthofinder", "OrthoFinder", "orthomcl", "OrthoMCL");
+unless ( $options ) { die $usage; }
+unless ( $proteins and $scaffolds{$scaffold} and $methods{$method} ) { print "\nOne or more required options not set\n"; die $usage; }
+if ( $single_copy_custom and $single_copy_taxa ) { 
+	print "\nSingle copy custom selection is incompatibale with minumum single copy taxa required\n"; die $usage; 
+}
+if ( $taxa_present and !$single_copy_taxa ) { print "\nMinumum taxa required requires minumum single copy taxa required\n"; die $usage; }
+$scaffold =~ /(\d+)(.*)/;
+if ( $single_copy_taxa ) {
+	unless ( $single_copy_taxa <= $1 ) { print "\nMinumum single copy taxa required in orthogroup exceeds scaffold taxa ($1 genomes)\n"; die $usage; }
+	unless ( $taxa_present <= $1 ) { print "\nMinumum taxa required in single copy orthogroup exceeds scaffold taxa ($1 gemomes)\n"; die $usage; }
+}
+
+print "\n";
+print localtime()." - Starting gene family classification\n";
+print "-- Scaffold: $scaffolds{$scaffold}\n-- Method: $methods{$method}\n-- Classifier: $classifier\n\n";
+
+# create output directory
+my $dirname ="./geneFamilyClassification_dir";
+if (-d $dirname) { die "Exiting...!\nGene family classification output directory ($dirname) already exists!\n\n"; }
+mkdir ($dirname, 0755);
+
+if ( $classifier eq "blastp" ) {
+	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $home );
+}
+elsif ( $classifier eq "hmmscan" ) {
+	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $home );
+}
+elsif ( $classifier eq "both" ) {
+	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $home );
+	get_blast_hmmscan_orthos ( $dirname, $scaffold, $method, $super_orthogroups, $home );
+}
+else { die "Unknown protein classification method.\n\n$usage"; }
+
+if ( $single_copy_custom or $single_copy_taxa) {
+	get_single_copy_orthogroups ( $single_copy_custom, $single_copy_taxa, $taxa_present, $classifier, $scaffold, $method, $dirname, $home );
+}
+
+if ( $orthogroup_fasta ) {
+	get_orthogroup_fasta ( $proteins, $coding_sequences, $single_copy_custom, $single_copy_taxa, $classifier, $scaffold, $dirname );
+} 
+
+print localtime()." - Completed gene family classification\n\n";
+
+exit(0);
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #  sub-routines # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+sub sort_sequences {
+	my ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $home ) = @_;
+	print localtime()." - Sorting protein sequences\n";
+	if ( (!$super_orthogroups) or ($super_orthogroups ne "min_evalue") or ($super_orthogroups ne "avg_evalue") ) { $super_orthogroups = "min_evalue" } 
+	if ( ($classifier eq "blastp") or ($classifier eq "both") ) {
+		print "-- ".localtime()." - Running BLASTP\n\n";
+		system "$blastp -db_soft_mask 21 -outfmt 6 -evalue 1e-5 -num_threads $num_threads -query $proteins -db $home/data/$scaffold/db/blast/$method -out $dirname/proteins.blastp.$scaffold  >/dev/null 2>/dev/null";
+		print "-- ".localtime()." - Getting best BLASTP hits\n\n";
+		my $results = "proteins.blastp.$scaffold";
+		get_best_blastp_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $home );
+	}
+	if ( ($classifier eq "hmmscan") or ($classifier eq "both") ) {
+		print "-- ".localtime()." - Running HMMScan\n\n";
+		system "$hmmscan -E 1e-5 --cpu $num_threads --noali --tblout $dirname/proteins.hmmscan.$scaffold -o $dirname/hmmscan.log $home/data/$scaffold/db/hmm/$method $proteins >/dev/null 2>/dev/null";
+		print "-- ".localtime()." - Getting best HMMScan hits\n\n";
+		my $results = "proteins.hmmscan.$scaffold";
+		get_best_hmmscan_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $home );
+	}	
+}
+
+sub  get_best_blastp_orthos {
+	my ( $classifier, $blast_results, $dirname, $scaffold, $method, $super_orthogroups, $home ) = @_;
+	my (%best, %max, %list);
+    open (IN, "$dirname/$blast_results") or die "can't open $dirname/$blast_results file\n";
+	while (<IN>) {
+    	chomp;
+    	my @F=split(/\t/, $_);
+    	if ($F[0] eq $F[1]) { next; }
+    	if (!$best{$F[0]}) {
+        	$best{$F[0]} = $_;
+        	$max{$F[0]} = $F[11];
+    	}
+    	else {
+        	if ($F[11] > $max{$F[0]}) {
+            	$best{$F[0]} = $_;
+            	$max{$F[0]} = $F[11];
+        	}
+    	}
+	} 
+	close IN;
+	open (IN, "$home/data/$scaffold/annot/$method.list") or die "can't open $home/data/$scaffold/annot/$method.list file\n";
+	while (<IN>) {
+		chomp;
+		my @F=split(/\t/, $_);
+		$list{$F[1]} = $F[0];
+	}
+	close IN;	
+	open (OUT, ">$dirname/$blast_results.bestOrthos") or die "can't open $dirname/$blast_results.bestOrthos file\n";
+	print OUT "Gene ID\tOrthogroup ID\n"; 
+	foreach (keys %best) {
+    	my @F = split(/\t/, $best{$_});
+    	print OUT "$F[0]\t$list{$F[1]}\n";
+	}
+	close OUT;
+	if ($classifier eq "blastp") {
+		my $orthogroup_assignment = "$blast_results.bestOrthos";
+		print "-- ".localtime()." - Getting orthogroup annotation summaries\n\n";
+		get_annot_summary ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $home );
+	}
+}
+
+sub  get_best_hmmscan_orthos {
+	my ( $classifier, $hmmscan_results, $dirname, $scaffold, $method, $super_orthogroups, $home ) = @_;
+	my %hits;
+	open (IN, "$dirname/$hmmscan_results") or die "can't open $dirname/$hmmscan_results file\n";
+	while (<IN>) {
+    	if (/^#/){next;}
+        my @F = split(/\s+/, $_);
+        $hits{$F[2]}{$F[0]} = $F[5];
+	}    
+	close IN;
+	open (OUT, ">$dirname/$hmmscan_results.bestOrthos") or die "can't open $dirname/$hmmscan_results.bestOrthos file\n";
+	print OUT "Gene ID\tOrthogroup ID\n"; 
+	for my $hit (keys %hits) {
+    	my $score = 0;
+    	my $best_target;
+    	for my $target (keys %{$hits{$hit}}) {
+        	if ($hits{$hit}{$target} >= $score) {
+            	$score = $hits{$hit}{$target};
+            	$best_target = $target; 
+        	}
+    	}    
+    	print OUT "$hit\t$best_target\n";
+ 	}
+	close OUT;
+	if ($classifier eq "hmmscan") {
+		my $orthogroup_assignment = "$hmmscan_results.bestOrthos";
+		print "-- ".localtime()." - Getting orthogroup annotation summaries\n\n";
+		get_annot_summary ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $home );
+	}
+}
+
+sub get_blast_hmmscan_orthos {
+	my ( $dirname, $scaffold, $method, $super_orthogroups, $home ) = @_;
+	my (%blastp, %hmmscan, %genes);	
+	if ( (!$super_orthogroups) or ($super_orthogroups ne "min_evalue") or ($super_orthogroups ne "avg_evalue") ) { $super_orthogroups = "min_evalue" }
+	opendir (DIR, "$dirname") or die "can't open $dirname directory\n";
+	while (my $filename = readdir(DIR)) {
+		if ($filename =~ /^proteins\.blastp\.\w+\.\d+\.bestOrthos$/){ 
+			open (IN, "$dirname/$filename") or die "can't open $dirname/$filename file\n";
+			while (<IN>) {
+				chomp;
+				if (/^Gene/) {next;}
+				my @F = split(/\t/, $_);
+				$blastp{$F[0]} = $F[1];
+				$genes{$F[0]} = $F[0];
+			}
+			close IN;
+		}
+		if ($filename =~ /^proteins\.hmmscan\.\w+\.\d+\.bestOrthos$/){ 
+			open (IN, "$dirname/$filename") or die "can't open $dirname/$filename file\n";
+			while (<IN>) {
+				chomp;
+				if (/^Gene/) {next;}
+				my @F = split(/\t/, $_);
+				$hmmscan{$F[0]} = $F[1];
+				$genes{$F[0]} = $F[0];
+			}
+			close IN;
+		}
+	}
+	closedir DIR;
+	open (OUT, ">$dirname/proteins.both.$scaffold.bestOrthos") or die "can't open $dirname/protein.both.$scaffold.bestOrthos file\n";
+	print OUT "Gene ID\tOrthogroup ID\n";
+	foreach (sort keys %genes) {
+		if (!$blastp{$_} and $hmmscan{$_}) { print OUT "$_\t$hmmscan{$_}\n"; next; }
+		elsif ($blastp{$_} and !$hmmscan{$_}) { print OUT "$_\t$blastp{$_}\n"; next; }
+		elsif ($blastp{$_} == $hmmscan{$_}) { print OUT "$_\t$blastp{$_}\n"; next }
+		else { print OUT "$_\t$hmmscan{$_}\n"; }
+	}
+	close OUT;
+	my $orthogroup_assignment = "proteins.both.$scaffold.bestOrthos";
+	print "-- ".localtime()." - Getting orthogroup annotation summaries\n\n";
+	get_annot_summary ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $home );	
+}
+
+sub get_annot_summary {
+	my ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $home ) = @_;
+	my %annot;
+	open (OUT, ">$dirname/$orthogroup_assignment.summary") or die "can't open $dirname/$orthogroup_assignment.summary file\n";	
+	open (IN, "$home/data/$scaffold/annot/$method.$super_orthogroups.summary") or die "can't open $home/data/$scaffold/annot/$method.$super_orthogroups.summary file\n";
+	while (<IN>) {
+		chomp;
+		if ($_ =~ /^Orthogroup/) { print OUT "Gene ID\t$_\n"; next; }
+		$_ =~ /(\d+)\s+(.*)/;
+		$annot{$1} = $_;
+	}
+	close IN;
+	open (IN, "$dirname/$orthogroup_assignment") or die "can't open $dirname/$orthogroup_assignment file\n";
+	while (<IN>) {
+		chomp;
+		if ($_ =~ /^Gene/) { next; }
+		my @F = split(/\t/, $_);
+		if ($annot{$F[1]}) { print OUT "$F[0]\t$annot{$F[1]}\n"; }
+	}
+	close IN;
+	close OUT;	
+}
+
+sub get_single_copy_orthogroups {
+	my ( $single_copy_custom, $single_copy_taxa, $taxa_present, $classifier, $scaffold, $method, $dirname, $home ) = @_;
+	print "-- ".localtime()." - Determining single copy orthogroups\n\n";	
+	my $annot_summary = "proteins.$classifier.$scaffold.bestOrthos.summary";
+	open (OUT, ">$dirname/$annot_summary.singleCopy") or die "can't open $dirname/$annot_summary.singleCopy file\n";
+	open (ANNOT, "$dirname/$annot_summary") or die "can't open $dirname/$annot_summary file\n";
+	if ($single_copy_custom) {
+		my %genes;
+		my $annot_field = 1;
+		open (IN, "$home/config/singleCopy.config") or die "can't open $home/config/singleCopy.config file\n";
+		while (<IN>) {
+			chomp; 
+			if ($_ !~ /^\w+/) { next; }
+			my @F = split(/\=/, $_);
+			$annot_field++;
+			$genes{$annot_field} = $F[1];
+		}
+		close IN;
+		while (<ANNOT>) {
+			chomp;
+			if ($_ =~ /^Gene\s+ID(.*)/) { print OUT "$_\n"; next; }
+			my @F = split(/\t/, $_);
+			my $matches = 0;
+			for my $field (2..$annot_field) {
+				if ( ($genes{$field} == -1) or ($genes{$field} == $F[$field]) ) { $matches++; }
+			}
+			if ($matches == keys(%genes)) { print OUT "$_\n"; } 
+		}
+	}
+	if ($single_copy_taxa and $taxa_present) {
+		while (<ANNOT>) {
+			chomp;
+			if ($_ =~ /^Gene\s+ID(.*)/) { print OUT "$_\n"; next; }
+			my @F = split(/\t/, $_);
+			$scaffold =~ /(\d+)(.*)/;
+			my $annot_field = $1 + 1;
+			my $single_copy = 0;
+			my $taxa = 0;
+			for my $field (2..$annot_field) {
+				if ($F[$field] == 1) { $single_copy++; }
+				if ($F[$field] != 0) { $taxa++; }
+			}
+			if ($single_copy >= $single_copy_taxa and $taxa >= $taxa_present) { print OUT "$_\n"; } 
+		}
+	}
+	if ($single_copy_taxa and !$taxa_present) {
+		while (<ANNOT>) {
+			chomp;
+			if ($_ =~ /^Gene\s+ID(.*)/) { print OUT "$_\n"; next; }
+			my @F = split(/\t/, $_);
+			$scaffold =~ /(\d+)(.*)/;
+			my $annot_field = $1 + 1;
+			my $single_copy = 0;
+			for my $field (2..$annot_field) {
+				if ($F[$field] == 1) { $single_copy++; }
+			}
+			if ($single_copy >= $single_copy_taxa) { print OUT "$_\n"; } 
+		}		
+	}
+	close ANNOT;
+	close OUT;
+}
+
+sub get_orthogroup_fasta {
+	my ( $proteins, $coding_sequences, $single_copy_custom, $single_copy_taxa, $classifier, $scaffold, $dirname ) = @_;
+	print "-- ".localtime()." - Retrieving orthogroup fasta files\n\n";
+	my (%orthos, %pep, %cds);
+	my $orthogroups = "$dirname/orthogroups_fasta";
+	mkdir ($orthogroups, 0755);
+	my $orthogroup_assignment = "proteins.$classifier.$scaffold.bestOrthos";
+	open (IN, "$dirname/$orthogroup_assignment") or die "can't open $dirname/$orthogroup_assignment file\n";
+	while (<IN>) {
+		chomp;
+		if ($_ =~ /^Gene/) { next; }
+		my @F = split(/\t/, $_);
+		$orthos{$F[1]}{$F[0]} = $F[0];
+	}
+	close IN;
+	%pep = get_sequences ($proteins);
+	if ($coding_sequences) { %cds = get_sequences ($coding_sequences); }
+	my ($ortho_id, $seq_id);
+	foreach $ortho_id (keys %orthos) {
+		open (PEP, ">$orthogroups/$ortho_id.faa") or die "can't open $orthogroups/$ortho_id.faa file\n";
+		if ($coding_sequences) { open (CDS, ">$orthogroups/$ortho_id.fna") or die "can't open $orthogroups/$ortho_id.fna file\n"; }
+		foreach $seq_id (sort keys %{$orthos{$ortho_id}}) {
+			$pep{$seq_id} =~ s/.{80}(?=.)/$&\n/g;
+			print PEP ">$seq_id\n$pep{$seq_id}\n";
+			if ($coding_sequences) {
+				$cds{$seq_id} =~ s/.{80}(?=.)/$&\n/g;
+				print CDS ">$seq_id\n$cds{$seq_id}\n";
+			}				
+		}
+		close PEP;
+		close CDS;
+	}
+	if ($single_copy_custom or $single_copy_taxa) {
+		my $single_copy = "$dirname/single_copy_fasta";
+		mkdir ($single_copy, 0755);
+		my $single_copy_selection = "proteins.$classifier.$scaffold.bestOrthos.summary.singleCopy";
+		my (%single_copy_orthos, $single_copy_ortho_id);
+		open (IN, "$dirname/$single_copy_selection") or die "can't open $dirname/$single_copy_selection file\n";
+		while (<IN>) {
+			chomp;
+			if ($_ =~ /^Gene\s+ID(.*)/) { next; }
+			my @F = split(/\t/, $_);
+			$single_copy_orthos{$F[1]} = $F[1];
+		}
+		close IN;
+		foreach $single_copy_ortho_id (keys %single_copy_orthos) {
+			system "cp $orthogroups/$single_copy_ortho_id.*  $single_copy/";
+		}
+	}	
+}
+
+sub get_sequences {
+	my ( $file ) = @_;
+	my (%sequences, $id);
+	open (IN, "$file") or die "can't open $file file\n";
+	while (<IN>) {
+		if ($_ =~ />(\S+)/){ $id = $1; }
+		else { s/\s+//g; $sequences{$id} .= $_; }
+	}
+	close IN;
+	return %sequences; 
+}
+
+

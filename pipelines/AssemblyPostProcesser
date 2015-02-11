@@ -1,0 +1,405 @@
+#!/usr/bin/env perl
+# Author: Eric Wafula
+# Email: ekw10@psu.edu
+# Institution: Penn State University, Biology Dept, Claude dePamphilis Lab
+# Date: 01-31-2015
+
+use strict;
+use warnings;
+use Getopt::Long qw(:config no_ignore_case);
+use FindBin;
+
+my $home =  "$FindBin::Bin/..";
+
+my $usage = <<__EOUSAGE__;
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+#                                  TRANSCRIPTOME ASSEMBLY POST PROCESSING
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Required Options:
+#
+#  --transcripts <string>          : de novo transcriptome assembly fasta file (transcripts.fasta)
+#
+#  --prediction_method <string>    : The prediction method for coding regions
+#                                    If ESTScan: estscan
+#                                    If TransDecoder: transdecoder
+#
+#  --score_matrices <string>       : Required if the coding regions prediction method is ESTScan
+#                                    (i.e. Arabidopsis_thaliana.smat, Oryza_sativa.smat, Zea_mays.smat)
+#
+# # # # # # # # # # # # # # # # # # 
+#  Others Options:
+#
+#  --strand_specific               : If de novo transcriptome assembly was performed with strand-specific library
+#                                    Default: not strand-specific 
+#
+#  --dereplicate                   : Remove reapeated sequences in predicted coding regions
+#
+#  --min_length <int>              : Minimum sequence length of predicted coding regions
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Example Usage:
+#
+#  AssemblyPostProcesser  --transcripts transcripts.fasta --prediction_method estscan --score_matrices /path/to/score/matrices/Arabidopsis_thaliana.smat  
+#  OR
+#  AssemblyPostProcesser --transcripts transcripts.fasta --prediction_method transdecoder
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ 
+__EOUSAGE__
+    ; 
+
+# Declare and initialize variables;
+my $transcripts;
+my $prediction_method;
+my $score_matrices;
+my $strand_specific;
+my $dereplicate;
+my $min_length;
+
+my $options = GetOptions (  'transcripts=s' => \$transcripts,
+	      'prediction_method=s' => \$prediction_method,
+	      'score_matrices=s' => \$score_matrices,
+	      'strand_specific' => \$strand_specific,
+	      'dereplicate' => \$dereplicate,
+	      'min_length=i' => \$min_length,
+	      );
+
+my %utilies;
+open (IN, "$home/config/plantTribes.config") or die "can't open $home/config/plantTribes.config file\n";
+while (<IN>) {
+	chomp;
+	if ($_ !~ /^\w+/) { next; }
+	my @F = split(/\=/, $_);
+	$utilies{$F[0]} = $F[1];
+}
+my $estscan = $utilies{'estscan'};
+my $transdecoder = $utilies{'transdecoder'};
+my $genometools = $utilies{'genometools'};
+
+# validate options
+unless ( $options ) { die $usage; }
+unless ( $transcripts and $prediction_method ) { print "\nOne or more required options not set\n"; die $usage; }
+
+print "\n";
+print localtime()." - Starting transcriptome assembly post processing\n\n";
+
+# create output directory
+my $dirname ="./assemblyPostProcessing_dir";
+if (-d $dirname) { die "Exiting...!\nAssembly post processing output directory ($dirname) already exists!\n\n"; }
+mkdir ($dirname, 0755);
+
+if ( $prediction_method eq "estscan" ) {
+    unless ( $score_matrices ) { die "Reference score matrices required with ESTScan.\n\n$usage;"; }
+    run_estscan ( $estscan, $transcripts, $score_matrices, $strand_specific, $min_length, $dirname ); 
+}
+elsif ( $prediction_method eq "transdecoder" ) {
+	run_transdecoder ( $transdecoder, $transcripts, $strand_specific, $min_length, $dirname );
+}
+else { die "Unknown coding sequence prediction method.\n\n$usage"; }
+
+if ( $dereplicate ) {
+    dereplicate ($genometools, $dirname);
+}
+
+print localtime()." - Completed transcriptome assembly post processing\n\n";
+
+exit(0);
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #  sub-routines # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+sub run_estscan {
+    my ($estscan, $transcripts, $matrices, $stranded, $length, $out_dir ) = @_;
+    print localtime()." - Predicting coding regions with ESTScan\n\n";
+    system "$estscan $transcripts -M $matrices -t $out_dir/transcripts.pep > $out_dir/transcripts.cds 2>/dev/null";
+    if (!(-e "$out_dir/transcripts.cds") or !(-e "$out_dir/transcripts.pep") or (-z "$out_dir/transcripts.cds") or (-z "$out_dir/transcripts.pep")) { 
+	print "Coding sequence prediction was not successful.\nEither ESTScan is not properly installed or there a problem with reference score matrices you provided.\nTerminating...\n\n";
+	exit(0);
+    }
+    my (%cds, %pep, $id, $strand);
+    # if transcriptome assembly is from a strand specific library only keep the strand with most predictions i.e usually
+    # more than 90% of predictions are of from one strand (plus or minus) if from stranded library. 
+    if ($stranded) {
+		my (%plus, %minus);
+		open (IN, "$out_dir/transcripts.cds") or die "can't open $out_dir/transcripts.cds file\n";
+		while(<IN>) {
+	  		chomp;
+	  		if (/^>(\S+)/) { $id = $1; if (/minus/) { $strand = 1; } else { $strand = 0; } } # >contig_1; 50 1 337 = minus strand, >contig_7 11 1 244 = plus strand
+	  		else {
+	      		# clean ESTScan results to make sure that predicted peptides pefectly match by replacing insertions 'X' with
+	      		# unknow character 'N' in cds, and removing deletions that are represented the cds in lower case base charaters.
+	      		s/\s+//g; s/X/N/g; s/a//g; s/t//g; s/c//g; s/g//g; s/x//g; s/n//g;
+	      		if ($strand == 0) { $plus{$id} .= $_; }
+	      		if ($strand == 1) { $id =~ /(.*)\;$/; $minus{$1} .= $_; }
+	  		}
+       	}
+		close IN;
+		my $plus_count = keys(%plus);
+		my $minus_count = keys(%minus);
+		if ($plus_count > $minus_count) {
+	    	%cds = %plus;
+	    	open (IN, "$out_dir/transcripts.pep") || die "can't open $out_dir/transcripts.pep file\n";
+	    	while(<IN>) {
+				chomp; 
+				if (/^>(\S+)/) { $id = $1; if (/minus/) { $strand = 1; } else { $strand = 0; } }
+				else { if ($strand == 1) {next; } s/\s+//g; $pep{$id} .= $_; }
+	    	}
+	    	close IN;
+	    	if ( (($minus_count) / ($minus_count + $plus_count )) > 0.25 ) {
+				print "A surprisingly large number of antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\n"; 
+	    	}
+		}
+		elsif ($minus_count > $plus_count) {
+	    	%cds = %minus;
+	    	open (IN, "$out_dir/transcripts.pep") or die "can't open $out_dir/transcripts.pep file\n";
+	    	while(<IN>) {
+				chomp;
+				if (/^>(\S+)/) { $id = $1; if (/minus/) { $strand = 1; } else { $strand = 0; } } # >contig_1; 50 1 337 = minus strand, >contig_7 11 1 244 = plus strand
+				else { if ($strand == 0) { next; } s/\s+//g; $id =~ /(.*)\;$/; $pep{$1} .= $_; } 
+			}
+	    	close IN;
+	    	if ( (($plus_count) / ($plus_count + $minus_count )) > 0.25 ) {
+				print "A surprisingly large number of antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\n";
+	    	}
+	   	}
+		else {
+	    	print "Proportional number of sense and antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\nTerminating...\n\n";
+	    	exit(0);
+		}
+		undef %plus; undef %minus;
+    } 
+    # if transcriptome assembly is not from a strand specific library only keep the strand with the longest predictions.
+    else {
+		my %seq;
+		open (IN, "$out_dir/transcripts.cds") or die "can't open $out_dir/transcripts.cds file\n";
+		while(<IN>) {
+	    	chomp;
+	    	if (/^>(\S+)/) { $id = $1; }
+	    	else {
+				# clean ESTScan results to make sure that predicted peptides pefectly match by replacing insertions 'X' with
+            	# unknow character 'N' in cds, and removing deletions that are represented the cds in lower case base charaters.
+				s/\s+//g; s/X/N/g; s/a//g; s/t//g; s/c//g; s/g//g; s/x//g; s/n//g; $seq{$id} .= $_;
+	    	}
+		}
+		close IN;
+		foreach my $key (keys %seq) {
+	    	my $sequence = $seq{$key};
+	    	if ($key =~ /(.*)\;$/) { $key = $1; }
+	    	if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
+	    	else { $cds{$key} = $sequence; }
+		}
+		undef %seq;
+		open (IN, "$out_dir/transcripts.pep") or die "can't open $out_dir/transcripts.pep file\n";
+		while(<IN>) {
+	    	chomp;
+	    	if (/^>(\S+)/) { $id = $1; }
+	    	else { s/\s+//g; $seq{$id} .= $_; }
+		}
+		close IN;
+		foreach my $key (keys %seq) {
+	    	my $sequence = $seq{$key};
+	    	if ($key =~ /(.*)\;$/) { $key = $1; }
+	    	if ( ($pep{$key}) and (length($pep{$key}) >= length($sequence)) ) { next; }
+	    	else { $pep{$key} = $sequence; }
+		}
+		undef %seq;
+    }
+    my %sequences = validate_translations(\%cds, \%pep);  # validate that cds and peptide match
+    # write validated cds and corresponding peptides sequences to output files
+    open (CDS, ">$out_dir/transcripts.cleaned.cds") or die "can't create $out_dir/transcripts.cleaned.cds file\n";
+    open (PEP, ">$out_dir/transcripts.cleaned.pep") or die "can't create $out_dir/transcripts.cleaned.pep file\n";
+    for my $seq_id ( sort keys %sequences ) {
+		if ($length) {
+	    	if (length($sequences{$seq_id}{'cds'}) >= $length) {
+				$sequences{$seq_id}{'cds'} =~ s/.{80}(?=.)/$&\n/g;
+				print CDS ">$seq_id\n$sequences{$seq_id}{'cds'}\n";
+				$sequences{$seq_id}{'pep'} =~ s/.{80}(?=.)/$&\n/g;
+				print PEP ">$seq_id\n$sequences{$seq_id}{'pep'}\n"; 
+	    	}
+		}
+		else {
+	    	$sequences{$seq_id}{'cds'} =~ s/.{80}(?=.)/$&\n/g;
+	    	print CDS ">$seq_id\n$sequences{$seq_id}{'cds'}\n";
+	    	$sequences{$seq_id}{'pep'} =~ s/.{80}(?=.)/$&\n/g;
+	    	print PEP ">$seq_id\n$sequences{$seq_id}{'pep'}\n";
+		}
+    }
+    close CDS;
+    close PEP;
+}
+
+sub run_transdecoder {
+    my ($transdecoder, $transcripts, $stranded, $length, $out_dir ) = @_;
+    print localtime()." - Predicting coding regions with TransDecoder\n\n";
+    if ($stranded) { system "$transdecoder -t $transcripts -S >/dev/null 2>/dev/null"; } else { system "$transdecoder -t $transcripts >/dev/null 2>/dev/null"; }
+    $transcripts =~ /(.*)\/(\S+)$/;
+    my $transcripts_file = $2;
+    system "mv $transcripts_file.transdecoder_dir/longest_orfs.cds $out_dir/transcripts.cds";
+    system "mv $transcripts_file.transdecoder_dir/longest_orfs.pep $out_dir/transcripts.pep";
+    system "rm -rf $transcripts_file.transdecoder_dir";
+    if (!(-e "$out_dir/transcripts.cds") or !(-e "$out_dir/transcripts.pep") or (-z "$out_dir/transcripts.cds") or (-z "$out_dir/transcripts.pep")) { 
+		print "Coding sequence prediction was not successful.\nTransDecoder might not be properly installed.\nTerminating...\n\n";
+		exit(0);
+    }
+    my (%cds, %pep, $id, $strand);
+    # if transcriptome assembly is from a strand specific library only keep the strand with most predictions i.e usually
+    # more than 90% of predictions are of from one strand (plus or minus) if from stranded library. 
+    if ($stranded) {
+		my (%plus, %minus);
+		open (IN, "$out_dir/transcripts.cds") or die "can't open $out_dir/transcripts.cds file\n";
+		while(<IN>) {
+	  		chomp;
+	  		# CDS: >contig_1|m.1 contig_1|g.1 type:internal len:115 contig_1:344-3(-) PEP: >contig_1|m.1 contig_1|g.1 type:internal len:115 gc:universal contig_1:344-3(-) = minus strand
+	  		# CDS: >contig_2|m.2 contig_2|g.2 type:5prime_partial len:170 contig_2:2-511(+) PEP: >contig_2|m.2 contig_2|g.2 type:5prime_partial len:170 gc:universal contig_2:2-511(+) = plus strand
+	  		if (/^>(\S+?)\|m\.\d+/) { $id = $1; if (/\(\-\)$/) { $strand = 1; } else { $strand = 0; } } 
+	  		else { s/\s+//g; if ($strand == 0) { $plus{$id} .= $_; } if ($strand == 1) { $minus{$1} .= $_; } }
+        }
+		close IN;
+		my $plus_count = keys(%plus);
+		my $minus_count = keys(%minus);
+		if ($plus_count > $minus_count) {
+	    	%cds = %plus;
+	    	open (IN, "$out_dir/transcripts.pep") || die "can't open $out_dir/transcripts.pep file\n";
+	    	while(<IN>) {
+				chomp; 
+				if (/^>(\S+?)\|m\.\d+/) { $id = $1; if (/\(\-\)$/) { $strand = 1; } else { $strand = 0; } }
+				else { if ($strand == 1) {next; } s/\s+//g; s/\*/X/g; $pep{$id} .= $_; }
+	    	}
+	    	close IN;
+	    	if ( (($minus_count) / ($minus_count + $plus_count )) > 0.25 ) {
+				print "A surprisingly large number of antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\n"; 
+	    	}
+		}
+		elsif ($minus_count > $plus_count) {
+	    	%cds = %minus;
+	    	open (IN, "$out_dir/transcripts.pep") or die "can't open $out_dir/transcripts.pep file\n";
+	    	while(<IN>) {
+				chomp;
+				if (/^>(\S+?)\|m\.\d+/) { $id = $1; if (/\(\-\)$/) { $strand = 1; } else { $strand = 0; } }
+				else { if ($strand == 0) { next; } s/\s+//g; s/\*/X/g; $pep{$id} .= $_; }
+			}
+	    	close IN;
+	    	if ( (($plus_count) / ($plus_count + $minus_count )) > 0.25 ) {
+				print "A surprisingly large number of antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\n";
+	    	}
+		}
+		else {
+	    	print "Proportional number of sense and antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\nTerminating...\n\n";
+	    	exit(0);
+		}
+		undef %plus; undef %minus;
+	} 
+	# if transcriptome assembly is not from a strand specific library only keep the strand with the longest predictions.
+    else {
+		my %seq;
+		open (IN, "$out_dir/transcripts.cds") or die "can't open $out_dir/transcripts.cds file\n";
+		while(<IN>) {
+	    	chomp;
+	    	if (/^>(\S+?)\|m\.\d+/) { $id = $1; }
+	    	else { s/\s+//g; $seq{$id} .= $_; }
+		}
+		close IN;
+		foreach my $key (keys %seq) {
+	    	my $sequence = $seq{$key};
+	    	if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
+	    	else { $cds{$key} = $sequence; }
+		}
+		undef %seq;
+		open (IN, "$out_dir/transcripts.pep") or die "can't open $out_dir/transcripts.pep file\n";
+		while(<IN>) {
+	    	chomp;
+	    	if (/^>(\S+?)\|m\.\d+/) { $id = $1; }
+	    	else { s/\s+//g; s/\*/X/g; $seq{$id} .= $_; }
+		}
+		close IN;
+		foreach my $key (keys %seq) {
+	    	my $sequence = $seq{$key};
+	    	if ( ($pep{$key}) and (length($pep{$key}) >= length($sequence)) ) { next; }
+	    	else { $pep{$key} = $sequence; }
+		}
+		undef %seq;
+    }
+    my %sequences = validate_translations(\%cds, \%pep);  # validate that cds and peptide match
+    # write validated cds and corresponding peptides sequences to output files
+    open (CDS, ">$out_dir/transcripts.cleaned.cds") or die "can't create $out_dir/transcripts.cleaned.cds file\n";
+    open (PEP, ">$out_dir/transcripts.cleaned.pep") or die "can't create $out_dir/transcripts.cleaned.pep file\n";
+    for my $seq_id ( sort keys %sequences ) {
+		if ($length) {
+	    	if (length($sequences{$seq_id}{'cds'}) >= $length) {
+				$sequences{$seq_id}{'cds'} =~ s/.{80}(?=.)/$&\n/g;
+				print CDS ">$seq_id\n$sequences{$seq_id}{'cds'}\n";
+				$sequences{$seq_id}{'pep'} =~ s/.{80}(?=.)/$&\n/g;
+				print PEP ">$seq_id\n$sequences{$seq_id}{'pep'}\n"; 
+	    	}
+		}
+		else {
+	    	$sequences{$seq_id}{'cds'} =~ s/.{80}(?=.)/$&\n/g;
+	    	print CDS ">$seq_id\n$sequences{$seq_id}{'cds'}\n";
+	    	$sequences{$seq_id}{'pep'} =~ s/.{80}(?=.)/$&\n/g;
+	    	print PEP ">$seq_id\n$sequences{$seq_id}{'pep'}\n";
+		}
+	}
+    close CDS;
+    close PEP;
+}
+
+sub validate_translations {
+    my ($cds, $pep) = @_;
+    my %sequences; 
+    print localtime()." - Validating predicted coding regions\n\n";
+    foreach my $id (keys %$cds) {
+		unless ( $$cds{$id} and $$pep{$id} ) { print "$id does not have a valid aa and dna, skipping...!\n"; next; }
+		my $dna_seq = $$cds{$id};
+		if ( length($dna_seq) % 3 != 0 ) { print "$id cds not in triplets, skipping...! \n"; next; }
+		my @codon  = unpack( "a3" x int( length($dna_seq) / 3 ), $dna_seq );
+		my $aa_seq = $$pep{$id};
+		if ( length($dna_seq) / 3 < length($aa_seq) ) { print "$id cds triplets shorter than amino acids, skipping...!\n"; next; }
+		my @aa = split( "", $aa_seq );
+		my $index = 0;
+		foreach (@aa) {
+	    	if ( $_ eq "X" and ( $codon[$index] eq "TAA" or $codon[$index] eq "TAG" or $codon[$index] eq "TGA" ) ) { $index++; next; }
+	    	if ( $codon[$index] eq "TAA" or $codon[$index] eq "TAG" or $codon[$index] eq "TGA" ) { print "$id has an internal stop codon, skipping...!\n"; last; }
+	    	$sequences{$id}{'cds'} .= $codon[$index];
+	    	$sequences{$id}{'pep'} .= $_;
+	    	$index++;
+		}
+    }
+    return %sequences;
+}
+
+sub dereplicate {
+    my ($genometools, $out_dir) = @_;
+    my ($id, %cds, %pep);
+    print localtime()." - Removing reapeated sequences in predicted coding regions\n\n";
+    if (!(-e "$out_dir/transcripts.cleaned.cds") or !(-e "$out_dir/transcripts.cleaned.pep") or (-z "$out_dir/transcripts.cleaned.cds") or (-z "$out_dir/transcripts.cleaned.pep")) {
+		print "Dereplication not performed - transcriptome assembly post processing might not have completed successfully.\nTerminating...\n\n";
+    }
+    system "$genometools sequniq -force -o $out_dir/transcripts.cleaned.cds.nr $out_dir/transcripts.cleaned.cds >/dev/null 2>/dev/null";
+    open (IN, "$out_dir/transcripts.cleaned.cds.nr") or die "can't open $out_dir/transcripts.cleaned.cds.nr file\n";
+    while(<IN>) {
+		chomp;
+		if (/^>(\S+)/) { $id = $1; }
+		else { s/\s+//g; $cds{$id} .= $_; }
+    }
+    close IN;
+    open (IN, "$out_dir/transcripts.cleaned.pep") or die "can't open $out_dir/transcripts.cleaned.pep file\n";
+    while(<IN>) {
+		chomp;
+		if (/^>(\S+)/) { $id = $1; }
+		else { s/\s+//g; $pep{$id} .= $_; }
+    }
+    close IN;
+    open (CDS, ">$out_dir/transcripts.cleaned.nr.cds") or die "can't create $out_dir/transcripts.cleaned.nr.cds file\n";
+    open (PEP, ">$out_dir/transcripts.cleaned.nr.pep") or die "can't create $out_dir/transcripts.cleaned.nr.pep file\n";
+    for my $seq_id ( sort keys %cds ) {
+		$cds{$seq_id} =~ s/.{80}(?=.)/$&\n/g;
+		print CDS ">$seq_id\n$cds{$seq_id}\n";
+		$pep{$seq_id} =~ s/.{80}(?=.)/$&\n/g;
+		print PEP ">$seq_id\n$pep{$seq_id}\n";
+    }
+    close CDS;
+    close PEP;
+    system "rm -f $out_dir/transcripts.cleaned.cds.*";
+}
