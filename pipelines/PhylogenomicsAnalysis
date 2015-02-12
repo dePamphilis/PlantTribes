@@ -23,11 +23,8 @@ my $usage = <<__EOUSAGE__;
 #  --orthogroup_faa <string>       : Directory containing gene family classification orthogroups protein fasta files
 #
 #  --scaffold <string>             : Orthogroups gene families proteins classification scaffold
-#                                    If Monocots clusters (version 1.0): 12Gv1.0
 #                                    If Angiosperms clusters (version 1.0): 22Gv1.0
-#                                    If Angiosperms clusters (version 1.1): 22Gv1.1	
-#                                    If Angiosperms clusters (version 2.0): 26Gv2.0
-#                                    If Green plants clusters (version 1.0): 31Gv1.0
+#                                    If Angiosperms clusters (version 1.1): 22Gv1.1
 #
 #  --method <string>               : Protein clustering method for the classification scaffold
 #                                    If GFam: gfam
@@ -175,8 +172,7 @@ my $raxml = $utilies{'raxml'};
 my $fasttree = $utilies{'fasttree'};
 
 # validate options
-my %scaffolds = ("12Gv1.0", "Monocots clusters (version 1.0)",  "22Gv1.0", "Angiosperms clusters (version 1.0)",
-	"22Gv1.1", "Angiosperms clusters (version 1.1)", "26Gv2.0", "Angiosperms clusters (version 2.0)", "31Gv1.0", "Green plants clusters (version 1.0)");
+my %scaffolds = ("22Gv1.0", "Angiosperms clusters (version 1.0)", "22Gv1.1", "Angiosperms clusters (version 1.1)");
 my %methods = ("gfam", "GFam", "orthofinder", "OrthoFinder", "orthomcl", "OrthoMCL");
 unless ( $options ) { die $usage; }
 unless ( $orthogroup_faa and $scaffolds{$scaffold} and $methods{$method}) { print "\nOne or more required options not set\n";die $usage; }
