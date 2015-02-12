@@ -1,0 +1,4 @@
+# Exclude Following endings
+.DS_Stores
+*#
+*~
