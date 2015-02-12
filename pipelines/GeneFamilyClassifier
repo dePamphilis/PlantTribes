@@ -47,7 +47,7 @@ my $usage = <<__EOUSAGE__;
 #                                    If average e-value: avg_evalue
 #
 #  --single_copy_custom            : Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
-#            			             (see manual on how to customize the single copy config file)	
+#                                    (see manual on how to customize the single copy config file)	
 #                                    
 #  --single_copy_taxa <int>        : Minumum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
 #
