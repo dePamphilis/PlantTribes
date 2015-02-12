@@ -47,7 +47,7 @@ my $usage = <<__EOUSAGE__;
 #                                    If average e-value: avg_evalue
 #
 #  --single_copy_custom		       : Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
-#            						  (see manual on how to customize the single copy config file)	
+#            			             (see manual on how to customize the single copy config file)	
 #                                    
 #  --single_copy_taxa <int>        : Minumum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
 #
@@ -101,14 +101,12 @@ while (<IN>) {
 	my @F = split(/\=/, $_);
 	$utilies{$F[0]} = $F[1];
 }
-close;
-# defaults
+close IN;
 my $blastp = $utilies{'blastp'};
 my $hmmscan = $utilies{'hmmscan'};
-if (!$num_threads) { $num_threads = 1; }
               
 # validate options            
-my %scaffolds = ("22Gv1.0", "Angiosperms clusters (version 1.0)", "22Gv1.1", "Angiosperms clusters (version 1.1)"); 
+my %scaffolds = ("22Gv1.0", "Angiosperms clusters (version 1.0)", "22Gv1.1", "Angiosperms clusters (version 1.1)");
 my %methods = ("gfam", "GFam", "orthofinder", "OrthoFinder", "orthomcl", "OrthoMCL");
 unless ( $options ) { die $usage; }
 unless ( $proteins and $scaffolds{$scaffold} and $methods{$method} ) { print "\nOne or more required options not set\n"; die $usage; }
@@ -121,6 +119,9 @@ if ( $single_copy_taxa ) {
 	unless ( $single_copy_taxa <= $1 ) { print "\nMinumum single copy taxa required in orthogroup exceeds scaffold taxa ($1 genomes)\n"; die $usage; }
 	unless ( $taxa_present <= $1 ) { print "\nMinumum taxa required in single copy orthogroup exceeds scaffold taxa ($1 gemomes)\n"; die $usage; }
 }
+
+# defaults
+if (!$num_threads) { $num_threads = 1; }
 
 print "\n";
 print localtime()." - Starting gene family classification\n";

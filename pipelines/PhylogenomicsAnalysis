@@ -23,8 +23,11 @@ my $usage = <<__EOUSAGE__;
 #  --orthogroup_faa <string>       : Directory containing gene family classification orthogroups protein fasta files
 #
 #  --scaffold <string>             : Orthogroups gene families proteins classification scaffold
+#                                    If Monocots clusters (version 1.0): 12Gv1.0
 #                                    If Angiosperms clusters (version 1.0): 22Gv1.0
 #                                    If Angiosperms clusters (version 1.1): 22Gv1.1	
+#                                    If Angiosperms clusters (version 2.0): 26Gv2.0
+#                                    If Green plants clusters (version 1.0): 31Gv1.0
 #
 #  --method <string>               : Protein clustering method for the classification scaffold
 #                                    If GFam: gfam
@@ -165,22 +168,15 @@ while (<IN>) {
 	$utilies{$F[0]} = $F[1];
 }
 close IN;
-# defaults
 my $mafft = $utilies{'mafft'};
 my $pasta = $utilies{'pasta'};
 my $trimal = $utilies{'trimal'};
 my $raxml = $utilies{'raxml'};
 my $fasttree = $utilies{'fasttree'};
-if (!$max_orthogroup_size) { $max_orthogroup_size = 100; }
-if (!$min_orthogroup_size) { $min_orthogroup_size = 4; }
-if (!$bootstrap_replicates) { $bootstrap_replicates = 100; }
-if (!$num_threads) { $num_threads = 1; }
-if (!$max_memory) { $max_memory = 256; }
-if (!$pasta_iter_limit) { $pasta_iter_limit = 3; }
-
 
 # validate options
-my %scaffolds = ("22Gv1.0", "Angiosperms clusters (version 1.0)", "22Gv1.1", "Angiosperms clusters (version 1.1)");
+my %scaffolds = ("12Gv1.0", "Monocots clusters (version 1.0)",  "22Gv1.0", "Angiosperms clusters (version 1.0)",
+	"22Gv1.1", "Angiosperms clusters (version 1.1)", "26Gv2.0", "Angiosperms clusters (version 2.0)", "31Gv1.0", "Green plants clusters (version 1.0)");
 my %methods = ("gfam", "GFam", "orthofinder", "OrthoFinder", "orthomcl", "OrthoMCL");
 unless ( $options ) { die $usage; }
 unless ( $orthogroup_faa and $scaffolds{$scaffold} and $methods{$method}) { print "\nOne or more required options not set\n";die $usage; }
@@ -201,6 +197,14 @@ if ( $rooting_order and ($tree_inference ne "raxml") ) { print "\nOrthogroup roo
 if ( $bootstrap_replicates and ($tree_inference ne "raxml") ) { print "\nBootstrap analysis requires RAxML phylogenetic tree inference method\n"; die $usage; }
 if ( $max_memory and !$pasta_alignments ) { print "\nThe maximum memory available to PASTA's java tools requires PASTA alignment algorithm option\n"; die $usage; }
 if ( $pasta_iter_limit and !$pasta_alignments ) { print "\nThe maximum number of iteration that the PASTA algorithm will run requires PASTA alignment algorithm option\n"; die $usage; }
+
+# defaults
+if (!$max_orthogroup_size) { $max_orthogroup_size = 100; }
+if (!$min_orthogroup_size) { $min_orthogroup_size = 4; }
+if (!$bootstrap_replicates) { $bootstrap_replicates = 100; }
+if (!$num_threads) { $num_threads = 1; }
+if (!$max_memory) { $max_memory = 256; }
+if (!$pasta_iter_limit) { $pasta_iter_limit = 3; }
 
 print "\n";
 print localtime()." - Starting phylogenomics analysis\n";
@@ -282,6 +286,11 @@ sub create_orthogroup_alignments {
 	while ( my $filename = readdir(DIR) ) { if ($filename =~ /^(\d+)\.faa$/) { $pep{$1} = $1; } }
 	closedir DIR;
 	foreach my $ortho_id (keys %pep) {
+		my $seq_count = 0;
+		open (IN, "$orthogroups_fasta/$ortho_id.faa") or die "can't open $$orthogroups_fasta/$ortho_id.faa file\n";
+		while (<IN>) { if (/^>(.*)/) { $seq_count++; } }
+		close IN;
+		if ($seq_count < 3) { next; }
 		if ($create_alignments) {
 			system "$mafft --maxiterate 1000 --thread $num_threads --localpair $orthogroups_fasta/$ortho_id.faa > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null"; 
 		}
@@ -545,6 +554,11 @@ sub prepare_alignments {
 	closedir DIR;
 	open (LOG, ">$log_file") or die "can't open $log_file file\n";
 	foreach my $ortho_id (keys %pep) {
+		my $seq_count = 0;
+		open (IN, "$temp_dir/$ortho_id.faa") or die "can't open $temp_dir/$ortho_id.faa file\n";
+		while (<IN>) { if (/^>(.*)/) { $seq_count++; } }
+		close IN;
+		if ($seq_count < 3) { next; }		
 		if ($pasta_alignments){
 			my $pasta_temp = "$dirname/pasta_temp";
 			mkdir $pasta_temp, 0755;

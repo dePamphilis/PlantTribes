@@ -234,8 +234,8 @@ sub run_transdecoder {
     my ($transdecoder, $transcripts, $stranded, $length, $out_dir ) = @_;
     print localtime()." - Predicting coding regions with TransDecoder\n\n";
     if ($stranded) { system "$transdecoder -t $transcripts -S >/dev/null 2>/dev/null"; } else { system "$transdecoder -t $transcripts >/dev/null 2>/dev/null"; }
-    $transcripts =~ /(.*)\/(\S+)$/;
-    my $transcripts_file = $2;
+    my @file_path = split (/\/+/, $transcripts);
+    my $transcripts_file = $file_path[$#file_path];
     system "mv $transcripts_file.transdecoder_dir/longest_orfs.cds $out_dir/transcripts.cds";
     system "mv $transcripts_file.transdecoder_dir/longest_orfs.pep $out_dir/transcripts.pep";
     system "rm -rf $transcripts_file.transdecoder_dir";
