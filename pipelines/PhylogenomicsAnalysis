@@ -35,7 +35,7 @@ my $usage = <<__EOUSAGE__;
 #  Multiple Sequence Alignments:
 #
 #  --create_alignments             : Create orthogroup protein multiple sequence alignments including scaffold backbone proteins
-#									 (MAFFT algorithm, incompatible with "--add_alignments" and "--pasta_alignments") 	
+#                                    (MAFFT algorithm, incompatible with "--add_alignments" and "--pasta_alignments") 	
 #                                    
 #  --add_alignments                : Add unaligned orthogroup proteins to scaffold backbone multiple sequence alignments
 #                                    (MAFFT algorithm, incompatible with "--create_alignments" and "--pasta_alignments")
@@ -43,7 +43,7 @@ my $usage = <<__EOUSAGE__;
 #  --pasta_alignments              : Create orthogroup protein multiple sequence alignments including scaffold backbone proteins
 #                                    (PASTA algorithm, incompatible with "--create_alignments" and "--add_alignments") 
 #
-#  --codon_alignments              : Construct orthogroup multiple codon alignments - requires "--orthogroup_fna"
+#  --codon_alignments              : Construct orthogroup multiple sequence codon alignments - requires "--orthogroup_fna"
 #
 #  --iterative_realignment <int>   : Iterative orthogroups realignment, trimming and fitering - requires "--remove_sequences"
 #                                    (maximum number of iterations) 
