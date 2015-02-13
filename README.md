@@ -1,2 +1,2 @@
 # PlantTribes
-### A Plant Gene Family Analysis Pipeline
+### A Collection of Plant Gene Family Analysis Pipelines
