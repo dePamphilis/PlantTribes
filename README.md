@@ -4,6 +4,6 @@ PlantTribes is a collection of automated modular sequence and gene family  analy
 
 All questions and inquires should be addressed to our user email group: `PlantTribes-users@googlegroups.com`
 
-In addition to this README file, you can consult a more detailed [Manual](docs/PlantTribes_Manual.md).
+In addition to this README file, you can consult the PlantTribes [manual](docs/PlantTribes_manual.md) more detailed information.
 
 ## Installation
