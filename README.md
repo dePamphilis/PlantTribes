@@ -32,4 +32,5 @@ Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.1.tar.bz2
 3. Download the scaffold data set(s) that you would like to use in the PlantTribes' **_data_** subdirectory and decompress them.
   - Examples: `cd PlantTribes/data`, followed by `tar -xjvf 22Gv1.1.tar.bz2`
 
-
+## Using PlantTribes
+The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrectory of the installation. You can either add them to your PATH environment variable or execute directly from the PlantTribes installation.
