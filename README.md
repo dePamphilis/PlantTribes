@@ -34,3 +34,4 @@ Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.1.tar.bz2
 
 ## Using PlantTribes
 The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrectory of the installation. You can either add them to your PATH environment variable or execute directly from the PlantTribes installation.
+#### Install PlantTribes
