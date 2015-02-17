@@ -25,11 +25,11 @@ Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.0.tar.bz2
 Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.1.tar.bz2
 
 #### Install PlantTribes
-1. Open terminal and change to the location where you would to keep PlantTribes 
+1. Open terminal and change to the location where you would to keep PlantTribes. 
   - Example: `cd ~/softwares`
 2. Clone the [PlantTribes](https://github.com/dePamphilis/PlantTribes) GitHub repository or download the [zip archive](https://github.com/dePamphilis/PlantTribes/archive/master.zip) and decompress it in your desired location.   
   - Examples: `git clonse https://github.com/dePamphilis/PlantTribes.git` or `unzip https://github.com/dePamphilis/PlantTribes/archive/master.zip`
-3. Download the scaffold data set(s) that you would like to use in the PlantTribes data subdirectory and decompress them
+3. Download the scaffold data set(s) that you would like to use in the PlantTribes' **_data_** subdirectory and decompress them.
   - Examples: `cd PlantTribes/data` followed by `tar -xzvf 22Gv1.1.tar.bz2`
 
 
