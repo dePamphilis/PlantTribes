@@ -25,5 +25,7 @@ Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.0.tar.bz2
 Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.1.tar.bz2
 
 #### Install PlantTribes
+1. Open terminal and change to the location where you would to keep PlantTribes. 
+  - Example `cd ~/softwares`.
 
 
