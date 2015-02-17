@@ -7,8 +7,8 @@ All questions and inquires should be addressed to our user email group: `PlantTr
 In addition to this README file, you can consult the PlantTribes [manual](docs/PlantTribes.md) more detailed information.
 
 ## Installation
-PlantTribes pipeline scripts have many external dependencies that need to be installed before the pipelines can used. Executables of external dependencies should be set in the **_plantTribes.config_** file that is in the **_config_** subdirectory of the installation. 
-#### Pipelines Dependencies
+PlantTribes pipeline scripts have many external dependencies that need to be installed before the pipelines can be used. Executables of external dependencies should be set in the **_plantTribes.config_** file that is in the **_config_** subdirectory of the installation. 
+#### Pipelines dependencies
 - **AssemblyPostProcesser pipeline**:  
 [ESTScan (version 2.1)](http://estscan.sourceforge.net/), [TransDecoder (version 2.0.1)](https://github.com/TransDecoder/TransDecoder/releases), and [GenomeTools (version 1.5.4)](http://genometools.org/).
 - **GeneFamilyClassifier pipeline**:  
@@ -18,7 +18,7 @@ PlantTribes pipeline scripts have many external dependencies that need to be ins
 - **KaKsAnalysis pipeline**:  
 [BLASTP (NCBI BLAST version 2.2.29+)](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download), [PAML (version 4.8)](http://abacus.gene.ucl.ac.uk/software/paml.html#download), [EMMIX (version 1.0.1)](http://www.maths.uq.edu.au/~gjm/), and [mclust (version 4.4)](http://www.stat.washington.edu/mclust/).
 
-#### PlantTribes Scaffolds Data 
+#### PlantTribes scaffolds data 
 - **22 plant genomes (Angiosperms clusters, version 1.0)**  
 Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.0.tar.bz2
 - **22 plant genomes (Angiosperms clusters, version 1.1)**  
