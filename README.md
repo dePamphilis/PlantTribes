@@ -40,5 +40,8 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
     - `PlantTribes/pipelines/AssemblyPostProcesser`
   - Basic run using ESTScan prediction method:
     - `PlantTribes/pipelines/AssemblyPostProcesser  --transcripts transcripts.fasta --prediction_method estscan --score_matrices /path/to/score/matrices/Arabidopsis_thaliana.smat`
-  - Basic run using TransDecoder prediction method:
-    - `PlantTribes/pipelines/AssemblyPostProcesser --transcripts transcripts.fasta --prediction_method transdecoder`
+- **AssemblyPostProcesser pipeline**: 
+  - Display all usage options: 
+    - `PlantTribes/pipelines/GeneFamilyClassifier`
+  - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and blastp classifier:
+    - `PlantTribes/pipelines/GeneFamilyClassifier --proteins proteins.fasta --scaffold 22Gv1.1 --method orthomcl --classifier blastp`
