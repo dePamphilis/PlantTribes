@@ -17,6 +17,7 @@ PlantTribes pipeline scripts have many external dependencies that need to be ins
 [MAFFT (version 7.215 )](http://mafft.cbrc.jp/alignment/software/), [PASTA](https://github.com/smirarab/pasta), [trimAl (version 1.4.rev8)](http://trimal.cgenomics.org/), [RAxML (version 8.1.16)](http://sco.h-its.org/exelixis/web/software/raxml/index.html), and [FastTreeMP (version 2.1.7 SSE3)](http://meta.microbesonline.org/fasttree/).
 - **KaKsAnalysis pipeline**:  
 [BLASTP (NCBI BLAST version 2.2.29+)](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download), [PAML (version 4.8)](http://abacus.gene.ucl.ac.uk/software/paml.html#download), [EMMIX (version 1.0.1)](http://www.maths.uq.edu.au/~gjm/), and [mclust (version 4.4)](http://www.stat.washington.edu/mclust/).
+
 #### Scaffold Data sets 
 - **22 plant genomes (Angiosperms clusters, version 1.0)**  
 Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.0.tar.bz2
