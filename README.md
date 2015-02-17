@@ -34,4 +34,8 @@ Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.1.tar.bz2
 
 ## Using PlantTribes
 The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrectory of the installation. You can either add them to your PATH environment variable or execute directly from the PlantTribes installation.
-#### Install PlantTribes
+
+- **AssemblyPostProcesser pipeline**: 
+  - `PlantTribes/pipelines/AssemblyPostProcesser` will display all pipeline usage options on the terminal
+  - Basic run using ESTScan prediction method:
+    - `PlantTribes/pipelines/AssemblyPostProcesser  --transcripts transcripts.fasta --prediction_method estscan --score_matrices /path/to/score/matrices/Arabidopsis_thaliana.smat`
