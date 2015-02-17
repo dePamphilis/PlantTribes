@@ -45,3 +45,10 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
     - `PlantTribes/pipelines/GeneFamilyClassifier`
   - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and blastp classifier:
     - `PlantTribes/pipelines/GeneFamilyClassifier --proteins proteins.fasta --scaffold 22Gv1.1 --method orthomcl --classifier blastp`
+- **AssemblyPostProcesser pipeline**: 
+  - Display all usage options: 
+    - `PlantTribes/pipelines/PhylogenomicsAnalysis`
+  - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and raxml Phylogenetic trees inference method:
+    - `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl  --add_alignments  --tree_inference raxml`
+
+Please consult the PlantTribes [manual](docs/PlantTribes.md) for a detailed description of all usage options for the pipelines. 
