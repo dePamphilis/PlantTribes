@@ -55,7 +55,7 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
 - **KaKsAnalysis pipeline**
   - Coming soon!
 
-Please consult the PlantTribes [manual](docs/PlantTribes.md) for a detailed description of all usage options for the pipelines.
+Please consult the PlantTribes [manual](docs/PlantTribes.md) and [tutorial](docs/Tutorial.md) for a detailed description and usage of all options for the pipelines respectively.
 
 ## License
 PlantTribes is distributed under the GNU GPL v3. For more information, see [license](LICENSE).
