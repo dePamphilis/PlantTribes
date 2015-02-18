@@ -20,9 +20,11 @@ PlantTribes pipeline scripts have many external dependencies that need to be ins
 
 #### PlantTribes scaffolds data 
 - **22 plant genomes (Angiosperms clusters, version 1.0)**  
-Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.0.tar.bz2
+Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.0.tar.bz2  
+MD5 checksum: `3e509094a6f763d8af1f9a3f781f3a0d`  
 - **22 plant genomes (Angiosperms clusters, version 1.1)**  
-Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.1.tar.bz2
+Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.1.tar.bz2  
+MD5 checksum: `5f4f602f4ee2e274fa6ed8398993af60`
 
 #### Install PlantTribes
 1. Open a terminal and change to the location where you would to keep PlantTribes. 
@@ -30,7 +32,7 @@ Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.1.tar.bz2
 2. Clone the [PlantTribes](https://github.com/dePamphilis/PlantTribes) GitHub repository or download the [zip archive](https://github.com/dePamphilis/PlantTribes/archive/master.zip) and decompress it in your desired location.   
   - Examples: `git clone https://github.com/dePamphilis/PlantTribes.git` or `unzip https://github.com/dePamphilis/PlantTribes/archive/master.zip`
 3. Download the scaffold data set(s) that you would like to use in the PlantTribes' **_data_** subdirectory and decompress them.
-  - Examples: `cd PlantTribes/data`, followed by `tar -xjvf 22Gv1.1.tar.bz2`
+  - Examples: `cd PlantTribes/data`, `md5sum 22Gv1.1.tar.bz` (should match the provided MD5 checksum for the data archive), followed by `tar -xjvf 22Gv1.1.tar.bz2`
 
 ## Using PlantTribes
 The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrectory of the installation. You can either add them to your PATH environment variable or execute directly from the PlantTribes installation.
@@ -53,7 +55,7 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
 - **KaKsAnalysis pipeline**
   - Coming soon!
 
-Please consult the PlantTribes [manual](docs/PlantTribes.md) for a detailed description of all usage options for the pipelines.
+Please consult the PlantTribes [manual](docs/PlantTribes.md) and [tutorial](docs/Tutorial.md) for a detailed description and usage of all options for the pipelines respectively.
 
 ## License
 PlantTribes is distributed under the GNU GPL v3. For more information, see [license](LICENSE).
