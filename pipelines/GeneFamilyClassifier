@@ -110,6 +110,9 @@ my %scaffolds = ("22Gv1.0", "Angiosperms clusters (version 1.0)", "22Gv1.1", "An
 my %methods = ("gfam", "GFam", "orthofinder", "OrthoFinder", "orthomcl", "OrthoMCL");
 unless ( $options ) { die $usage; }
 unless ( $proteins and $scaffolds{$scaffold} and $methods{$method} ) { print "\nOne or more required options not set\n"; die $usage; }
+if ( ($scaffold eq "22Gv1.0") and ($method eq "orthomcl") and ($super_orthogroups eq "avg_evalue") ) {
+    print "\nAverage super orthogroups MCL clustering for OrthoMCL method of scaffold 22Gv1.0 not available\n"; die $usage;
+}
 if ( $single_copy_custom and $single_copy_taxa ) { 
 	print "\nSingle copy custom selection is incompatibale with minumum single copy taxa required\n"; die $usage; 
 }
