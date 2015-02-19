@@ -4,7 +4,7 @@ PlantTribes is a collection of automated modular sequence and gene family  analy
 
 All questions and inquires should be addressed to our user email group: `PlantTribes-users@googlegroups.com`
 
-In addition to this README file, you can consult the PlantTribes [manual](docs/PlantTribes.md) more detailed information.
+In addition to this README file, you can consult the PlantTribes [manual](./PlantTribes.md) more detailed information.
 
 ## Installation
 PlantTribes pipeline scripts have many external dependencies that need to be installed before the pipelines can be used. Executables of external dependencies should be set in the **_plantTribes.config_** file that is in the **_config_** subdirectory of the installation. 
@@ -55,7 +55,7 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
 - **KaKsAnalysis pipeline**
   - Coming soon!
 
-Please consult the PlantTribes [manual](docs/PlantTribes.md) and [tutorial](docs/Tutorial.md) for a detailed description and usage of all options for the pipelines respectively.
+Please consult the PlantTribes [manual](./PlantTribes.md) and [tutorial](./Tutorial.md) for a detailed description and usage of all options for the pipelines respectively.
 
 ## Pipeline options
 
@@ -157,5 +157,5 @@ Coming soon!
 
 
 ## License
-PlantTribes is distributed under the GNU GPL v3. For more information, see [license](LICENSE).
+PlantTribes is distributed under the GNU GPL v3. For more information, see [../license](LICENSE).
 
