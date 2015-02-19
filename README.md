@@ -5,7 +5,6 @@ PlantTribes is a collection of automated modular sequence and gene family  analy
 All questions and inquires should be addressed to our user email group: `PlantTribes-users@googlegroups.com`
 
 In addition to this README file, you can consult the PlantTribes [manual](docs/PlantTribes.md) more detailed information.
-***
 
 ## Installation
 PlantTribes pipeline scripts have many external dependencies that need to be installed before the pipelines can be used. Executables of external dependencies should be set in the **_plantTribes.config_** file that is in the **_config_** subdirectory of the installation. 
