@@ -73,6 +73,27 @@ Please consult the PlantTribes [manual](docs/PlantTribes.md) and [tutorial](docs
 `--min_length` 
 
 #### GeneFamilyClassifier pipeline
+`--proteins`
+
+`--scaffold`
+
+`--method`
+
+`--classifier`
+
+`--num_threads`
+
+`--super_orthogroups`
+
+`--single_copy_custom`
+
+`--single_copy_taxa`
+
+`--taxa_present`
+
+`--orthogroup_fasta`
+
+`--coding_sequences`
 
 #### PhylogenomicsAnalysis pipeline
 
