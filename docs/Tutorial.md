@@ -67,7 +67,7 @@ Please consult the PlantTribes [manual](docs/PlantTribes.md) and [tutorial](docs
 
 #### KaKsAnalysis pipeline
 
-## Configuration Files
+## Configuration files
 
 
 ## Scaffold data
@@ -79,7 +79,7 @@ Please consult the PlantTribes [manual](docs/PlantTribes.md) and [tutorial](docs
 ## Test data
 
 
-## Orthers
+## Others
 
 
 ## License
