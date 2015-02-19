@@ -157,5 +157,5 @@ Coming soon!
 
 
 ## License
-PlantTribes is distributed under the GNU GPL v3. For more information, see [../license](LICENSE).
+PlantTribes is distributed under the GNU GPL v3. For more information, see [license](../LICENSE).
 
