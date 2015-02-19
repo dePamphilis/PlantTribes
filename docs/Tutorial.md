@@ -60,7 +60,7 @@ Please consult the PlantTribes [manual](docs/PlantTribes.md) and [tutorial](docs
 ## Pipeline options
 
 #### AssemblyPostProcesser pipeline
-- `--transcripts`
+`--transcripts`
 
 - `--prediction_method`
 
