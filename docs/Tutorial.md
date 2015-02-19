@@ -60,6 +60,17 @@ Please consult the PlantTribes [manual](docs/PlantTribes.md) and [tutorial](docs
 ## Pipeline options
 
 #### AssemblyPostProcesser pipeline
+- `--transcripts`
+
+- `--prediction_method`
+
+- `--score_matrices`
+
+- `--strand_specific`
+
+- `--dereplicate`
+
+- `--min_length` 
 
 #### GeneFamilyClassifier pipeline
 
