@@ -96,8 +96,50 @@ Please consult the PlantTribes [manual](docs/PlantTribes.md) and [tutorial](docs
 `--coding_sequences`
 
 #### PhylogenomicsAnalysis pipeline
+`--orthogroup_faa`
+
+`--scaffold`
+
+`--method`
+
+`--create_alignments`
+
+`--add_alignments`
+
+`--pasta_alignments`
+
+`--codon_alignments`
+
+`--iterative_realignment`
+
+`--tree_inference`
+
+`--max_orthogroup_size`
+
+`--min_orthogroup_size`
+
+`--sequence_type`
+
+`--rooting_order`
+
+`--bootstrap_replicates`
+
+`--automated_trimming`
+
+`--gap_trimming`
+
+`--remove_sequences`
+
+`--num_threads`
+
+`--max_memory`
+
+`--pasta_iter_limit`
+
+`--orthogroup_fna`
 
 #### KaKsAnalysis pipeline
+Coming soon!
 
 ## Configuration files
 
