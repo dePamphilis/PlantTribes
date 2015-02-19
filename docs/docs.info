@@ -1,4 +1,5 @@
 # All PlantTribes documentations should be placed this in location - "PlanTribes/docs"
 
 # Available documentations:
-1. PlantTribes Manual 
+1. PlantTribes manual = PlantTribes.md
+2. PlantTribes tutorial = Tutorial.md
