@@ -433,10 +433,10 @@ sub build_orthogroup_trees {
 		}
 		else {
 			if ($seq_type eq "fna") {
-				system "FastTreeMP -wag -gamma -out $orthogroups_tree/$filename.tree $orthogroups_aln/$filename >/dev/null 2>/dev/null";
+			    system "FastTreeMP -nt -gtr -gamma -out $orthogroups_tree/$filename.tree $orthogroups_aln/$filename >/dev/null 2>/dev/null";
 			}
 			else {
-				system "FastTreeMP -nt -gtr -gamma -out $orthogroups_tree/$filename.tree $orthogroups_aln/$filename >/dev/null 2>/dev/null";
+				system "FastTreeMP -wag -gamma -out $orthogroups_tree/$filename.tree $orthogroups_aln/$filename >/dev/null 2>/dev/null";
 			}
 		}
 	}
