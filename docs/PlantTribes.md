@@ -59,10 +59,13 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
 
 #### AssemblyPostProcesser pipeline
  Required Options:
+ 
 `--transcripts <string>          : de novo transcriptome assembly fasta file (transcripts.fasta)`
 
 `--prediction_method <string>    : The prediction method for coding regions`
+
 `                                   If ESTScan: estscan`
+
 `                                   If TransDecoder: transdecoder` 
 
 `--score_matrices`
