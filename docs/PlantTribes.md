@@ -225,22 +225,6 @@ Others Options:
 ```
 Coming soon!
 ```
-
-## Configuration files
-
-
-## Scaffold data
-
-
-## Helper scripts
-
-
-## Test data
-
-
-## Others
-
-
 ## License
 PlantTribes is distributed under the GNU GPL v3. For more information, see [license](../LICENSE).
 
