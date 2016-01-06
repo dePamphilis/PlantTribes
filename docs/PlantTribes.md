@@ -58,24 +58,49 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
 ## Pipeline options
 
 #### AssemblyPostProcesser pipeline
- Required Options:
- ```
-`--transcripts <string>          : de novo transcriptome assembly fasta file (transcripts.fasta)`
-
---prediction_method <string>    : The prediction method for coding regions`
-                                   If ESTScan: estscan`
-                                   If TransDecoder: transdecoder` 
 ```
-`--score_matrices`
+**Required Options:**
 
-`--strand_specific`
+--transcripts <string>          : de novo transcriptome assembly fasta file (transcripts.fasta)
 
-`--dereplicate`
+--prediction_method <string>    : The prediction method for coding regions
+                                  If ESTScan: estscan
+                                  If TransDecoder: transdecoder
 
-`--min_length` 
+--score_matrices <string>       : Required if the coding regions prediction method is ESTScan
+                                  (i.e. Arabidopsis_thaliana.smat, Oryza_sativa.smat, Zea_mays.smat)
+                                  
+**Target Gene Family Assembly:**
+
+--gene_family_search <string>   : File with a list of orthogroup identifiers for target gene families to assemble
+                                  - requires "--scaffold" and "--method" 
+                                  
+--scaffold <string>             : Orthogroups or gene families proteins scaffold - required by "--gene_family_search"
+                                  If Angiosperms clusters (version 1.0): 22Gv1.0
+                                  If Angiosperms clusters (version 1.1): 22Gv1.1	
+
+--method <string>               : Protein clustering method - required by "--gene_family_search"
+                                  If GFam: gfam
+                                  If OrthoFinder: orthofinder
+                                  If OrthoMCL: orthomcl
+
+--gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
+                                  Default: 0.1
+   
+**Others Options:**
+
+--strand_specific               : If de novo transcriptome assembly was performed with strand-specific library
+                                  Default: not strand-specific 
+
+--dereplicate                   : Remove reapeated sequences in predicted coding regions
+
+--min_length <int>              : Minimum sequence length of predicted coding regions
+
+--num_threads <int>             : number of threads (CPUs) to used for HMMSearch with for targeted gene family assembly                                                    Default: 1
+```
 
 #### GeneFamilyClassifier 
- Required Options:
+
 `--proteins`
 
 `--scaffold`
