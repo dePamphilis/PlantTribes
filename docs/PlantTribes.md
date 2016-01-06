@@ -96,7 +96,7 @@ Others Options:
 
 --min_length <int>              : Minimum sequence length of predicted coding regions
 
---num_threads <int>             : number of threads (CPUs) to use with HMMSearch for targeted gene family assembly                                                         Default: 1
+--num_threads <int>             : number of threads (CPUs) - only required for targeted gene family assembly                                                               Default: 1
 ```
 
 #### GeneFamilyClassifier 
