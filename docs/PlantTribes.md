@@ -5,7 +5,7 @@ PlantTribes is a collection of automated modular analysis pipelines that utilize
 All questions and inquires should be addressed to our user email group: `PlantTribes-users@googlegroups.com`
 
 ## Installation
-PlantTribes pipeline scripts have many external dependencies that need to be installed before the pipelines can be used. Executables of external dependencies should be set in the **_plantTribes.config_** file that is in the **_config_** subdirectory of the installation. 
+PlantTribes pipeline scripts have many external dependencies that need to be installed before the pipelines can be used. Executables of external dependencies should be set in the **_plantTribes.config_** file that is in the [config](../config) subdirectory of the installation. 
 #### Pipeline dependencies
 - **AssemblyPostProcesser pipeline**:  
 [ESTScan (version 2.1)](http://estscan.sourceforge.net/), [TransDecoder (version 2.0.1)](https://github.com/TransDecoder/TransDecoder/releases), and [GenomeTools (version 1.5.4)](http://genometools.org/).
@@ -126,8 +126,8 @@ Others Options:
                                   If average e-value: avg_evalue
 
 --single_copy_custom            : Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
-                                  (see the single copy configuration files the config directory of the distribution
-                                  on how to customize the single copy selection)	
+                                  (see the single copy configuration files the [config](../config) sub-directory of the
+                                  installation on how to customize the single copy selection)	
                                     
 --single_copy_taxa <int>        : Minumum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
 
