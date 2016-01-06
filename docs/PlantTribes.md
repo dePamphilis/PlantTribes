@@ -71,6 +71,8 @@ Required Options:
 Target Gene Family Assembly:
 
 --gene_family_search <string>   : File with a list of orthogroup identifiers for target gene families to assemble
+                                  (see example target orthogroups configuration files in config sub-directory of 
+                                  the installation).
                                   - requires "--scaffold" and "--method" 
                                   
 --scaffold <string>             : Orthogroups or gene families proteins scaffold - required by "--gene_family_search"
