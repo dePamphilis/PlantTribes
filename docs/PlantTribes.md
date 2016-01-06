@@ -59,7 +59,7 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
 
 #### AssemblyPostProcesser pipeline
 ```
-**Required Options:**
+Required Options:
 
 --transcripts <string>          : de novo transcriptome assembly fasta file (transcripts.fasta)
 
@@ -70,7 +70,7 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
 --score_matrices <string>       : Required if the coding regions prediction method is ESTScan
                                   (i.e. Arabidopsis_thaliana.smat, Oryza_sativa.smat, Zea_mays.smat)
                                   
-**Target Gene Family Assembly:**
+Target Gene Family Assembly:
 
 --gene_family_search <string>   : File with a list of orthogroup identifiers for target gene families to assemble
                                   - requires "--scaffold" and "--method" 
@@ -87,7 +87,7 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
 --gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
                                   Default: 0.1
    
-**Others Options:**
+Others Options:
 
 --strand_specific               : If de novo transcriptome assembly was performed with strand-specific library
                                   Default: not strand-specific 
@@ -96,7 +96,7 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
 
 --min_length <int>              : Minimum sequence length of predicted coding regions
 
---num_threads <int>             : number of threads (CPUs) to used for HMMSearch with for targeted gene family assembly                                                    Default: 1
+--num_threads <int>             : number of threads (CPUs) to use with HMMSearch for targeted gene family assembly                                                         Default: 1
 ```
 
 #### GeneFamilyClassifier 
