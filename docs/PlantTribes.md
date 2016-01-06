@@ -127,8 +127,9 @@ Others Options:
                                   If minimum e-value: min_evalue (default) 
                                   If average e-value: avg_evalue
 
---single_copy_custom		: Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
-                                  (see manual on how to customize the single copy config file)	
+--single_copy_custom		        : Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
+                                  (see the single copy configuration files the config directory of the distribution
+                                  on how to customize the single copy selection)	
                                     
 --single_copy_taxa <int>        : Minumum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
 
@@ -139,48 +140,9 @@ Others Options:
 --coding_sequences <string>     : Corresponding coding sequences (CDS) fasta file (cds.fasta)
 ```
 #### PhylogenomicsAnalysis pipeline
-`--orthogroup_faa`
+```
 
-`--scaffold`
-
-`--method`
-
-`--create_alignments`
-
-`--add_alignments`
-
-`--pasta_alignments`
-
-`--codon_alignments`
-
-`--iterative_realignment`
-
-`--tree_inference`
-
-`--max_orthogroup_size`
-
-`--min_orthogroup_size`
-
-`--sequence_type`
-
-`--rooting_order`
-
-`--bootstrap_replicates`
-
-`--automated_trimming`
-
-`--gap_trimming`
-
-`--remove_sequences`
-
-`--num_threads`
-
-`--max_memory`
-
-`--pasta_iter_limit`
-
-`--orthogroup_fna`
-
+```
 #### KaKsAnalysis pipeline
 Coming soon!
 
