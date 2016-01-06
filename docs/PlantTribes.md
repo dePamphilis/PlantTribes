@@ -126,8 +126,8 @@ Others Options:
                                   If average e-value: avg_evalue
 
 --single_copy_custom            : Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
-                                  (see the single copy configuration files the [config](../config) sub-directory of the
-                                  installation on how to customize the single copy selection)	
+                                  (see the single copy configuration files the config sub-directory of the installation
+                                  on how to customize the single copy selection)	
                                     
 --single_copy_taxa <int>        : Minumum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
 
@@ -144,11 +144,8 @@ Required Options:
 --orthogroup_faa <string>       : Directory containing gene family classification orthogroups protein fasta files
 
 --scaffold <string>             : Orthogroups gene families proteins classification scaffold
-                                  If Monocots clusters (version 1.0): 12Gv1.0
                                   If Angiosperms clusters (version 1.0): 22Gv1.0
                                   If Angiosperms clusters (version 1.1): 22Gv1.1	
-                                  If Angiosperms clusters (version 2.0): 26Gv2.0
-                                  If Green plants clusters (version 1.0): 31Gv1.0
 
 --method <string>               : Protein clustering method for the classification scaffold
                                   If GFam: gfam
@@ -191,8 +188,10 @@ Phylogenetic Trees:
                                   classification (including scaffold taxa) to be used for determining the most basal taxa in
                                   the orthogroups for rooting trees. Should be listed in decreasing order from older to younger
                                   lineages. If the file is not provided, trees will be rooted using the oldest lineage taxon
-                                  present in the scaffold - requires "--tree_inference" with RAxML
-
+                                  present in the scaffold (see example rooting order configuration files in config sub-directory
+                                  of the installation). 
+                                  - requires "--tree_inference" with RAxML
+                                  
 --bootstrap_replicates <int>    : Number of replicates for rapid bootstrap analysis and search for the best-scoring ML tree
                                   - requires "--tree_inference" with RAxML
                                   Default: 100
