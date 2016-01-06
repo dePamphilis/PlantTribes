@@ -1,1 +1,23 @@
+# All PlantTribes confiuration files should be placed in this loacation - "PlanTribes/config"
+
+# Dependent software configuration file: 
+plantTribes.config
+
+# Targeted gene family assembly configuration files
+22Gv1.0.gfam.targetOrthos.config - 
+22Gv1.0.orthofinder.targetOrthos.config
+22Gv1.0.orthomcl.targetOrthos.config
+22Gv1.1.gfam.targetOrthos.config
+22Gv1.1.orthofinder.targetOrthos.config
+22Gv1.1.orthomcl.targetOrthos.config
+
+# Single copy orthogroup custom selection configuration files
+22Gv1.0.singleCopy.config
+22Gv1.1.singleCopy.config
+
+# Orthogroup phylogeny taxa rooting order
+22Gv1.0.rootingOrder.config
+22Gv1.1.rootingOrder.config
+
+
 
