@@ -141,10 +141,91 @@ Others Options:
 ```
 #### PhylogenomicsAnalysis pipeline
 ```
+Required Options:
 
+--orthogroup_faa <string>       : Directory containing gene family classification orthogroups protein fasta files
+
+--scaffold <string>             : Orthogroups gene families proteins classification scaffold
+                                  If Monocots clusters (version 1.0): 12Gv1.0
+                                  If Angiosperms clusters (version 1.0): 22Gv1.0
+                                  If Angiosperms clusters (version 1.1): 22Gv1.1	
+                                  If Angiosperms clusters (version 2.0): 26Gv2.0
+                                  If Green plants clusters (version 1.0): 31Gv1.0
+
+--method <string>               : Protein clustering method for the classification scaffold
+                                  If GFam: gfam
+                                  If OrthoFinder: orthofinder
+                                  If OrthoMCL: orthomcl
+
+Multiple Sequence Alignments:
+
+--create_alignments             : Create orthogroup protein multiple sequence alignments including scaffold backbone proteins
+                                  (MAFFT algorithm, incompatible with "--add_alignments" and "--pasta_alignments") 	
+                                  
+--add_alignments                : Add unaligned orthogroup proteins to scaffold backbone multiple sequence alignments
+                                  (MAFFT algorithm, incompatible with "--create_alignments" and "--pasta_alignments")
+
+--pasta_alignments              : Create orthogroup protein multiple sequence alignments including scaffold backbone proteins
+                                  (PASTA algorithm, incompatible with "--create_alignments" and "--add_alignments") 
+
+--codon_alignments              : Construct orthogroup multiple codon alignments - requires "--orthogroup_fna"
+
+--iterative_realignment <int>   : Iterative orthogroups realignment, trimming and fitering - requires "--remove_sequences"
+                                  (maximum number of iterations) 
+
+Phylogenetic Trees:
+
+--tree_inference <string>       : Phylogenetic trees inference method
+                                  If RAxML: raxml
+                                  If FastTree: fasttree
+
+--max_orthogroup_size <int>     : Maximum number of sequences in orthogroup alignments
+                                  Default: 100  
+
+--min_orthogroup_size <int>     : Minimum number of sequences in orthogroup alignments
+                                  Default: 4
+
+--sequence_type <string>        : Sequence type used in the phylogenetic inference - "dna" requires "--codon_alignments"
+                                  If amino acid based: protein (default)
+                                  If nucleotide based: dna
+
+--rooting_order <string>        : File with a list of string fragments matching sequences identifiers of species in the 
+                                  classification (including scaffold taxa) to be used for determining the most basal taxa in
+                                  the orthogroups for rooting trees. Should be listed in decreasing order from older to younger
+                                  lineages. If the file is not provided, trees will be rooted using the oldest lineage taxon
+                                  present in the scaffold - requires "--tree_inference" with RAxML
+
+--bootstrap_replicates <int>    : Number of replicates for rapid bootstrap analysis and search for the best-scoring ML tree
+                                  - requires "--tree_inference" with RAxML
+                                  Default: 100
+
+MSA Quality Control Options:
+
+--automated_trimming            : Trims alignments using trimAl's ML heuristic trimming approach - incompatible "--gap_trimming"  
+                                  
+--gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
+
+--remove_sequences <float>      : Removes gappy sequences in alignments (i.e. 0.5 removes sequences with 50% gaps): [0.1 to 1.0]
+                                  - requires either "--automated_trimming" or "--gap_trimming"
+
+Others Options:
+
+--num_threads <int>             : number of threads (CPUs) to assign to external utilities (MAFFT, PASTA, and RAxML)
+                                  Default: 1 
+
+--max_memory <int>              : maximum memory (in mb) available to PASTA's java tools - requires "--pasta_alignments" 
+                                  Default: 256
+ 
+--pasta_iter_limit <int>        : Maximum number of iteration that the PASTA algorithm will run - requires "--pasta_alignments" 
+                                  Default: 3
+                                 
+--orthogroup_fna                : Corresponding gene family classification orthogroups CDS fasta files. Files should be in the
+                                  same directory with input orthogroups protein fasta files.
 ```
 #### KaKsAnalysis pipeline
+``
 Coming soon!
+```
 
 ## Configuration files
 
