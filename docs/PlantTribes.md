@@ -98,31 +98,46 @@ Others Options:
 
 --num_threads <int>             : number of threads (CPUs) - only required for targeted gene family assembly                                                               Default: 1
 ```
-
 #### GeneFamilyClassifier 
+```
+Required Options:
 
-`--proteins`
+--proteins <string>             : Amino acids (proteins) sequences fasta file (proteins.fasta)
 
-`--scaffold`
+--scaffold <string>             : Orthogroups or gene families proteins scaffold
+                                  If Angiosperms clusters (version 1.0): 22Gv1.0
+                                  If Angiosperms clusters (version 1.1): 22Gv1.1
 
-`--method`
+--method <string>               : Protein clustering method
+                                  If GFam: gfam
+                                  If OrthoFinder: orthofinder
+                                  If OrthoMCL: orthomcl
 
-`--classifier`
+--classifier <string>           : Protein classification method 
+                                  If BLASTP: blastp
+                                  If HMMScan: hmmscan
+                                  If BLASTP and HMMScan: both
+                  
+Others Options:
 
-`--num_threads`
+--num_threads <int>             : number of threads (CPUs) to used for HMMScan, BLASTP, and MAFFT
+                                  Default: 1 
 
-`--super_orthogroups`
+--super_orthogroups <string>    : SuperOrthogroups MCL clustering - blastp e-value matrix between all pairs of orthogroups
+                                  If minimum e-value: min_evalue (default) 
+                                  If average e-value: avg_evalue
 
-`--single_copy_custom`
+--single_copy_custom		: Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
+                                  (see manual on how to customize the single copy config file)	
+                                    
+--single_copy_taxa <int>        : Minumum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
 
-`--single_copy_taxa`
+--taxa_present <int>            : Minumum taxa required in single copy orthogroup - requires "--single_copy_taxa"
 
-`--taxa_present`
-
-`--orthogroup_fasta`
-
-`--coding_sequences`
-
+--orthogroup_fasta              : Create orthogroup fasta files - requires "--coding_sequences" for CDS orthogroup fasta
+                                    
+--coding_sequences <string>     : Corresponding coding sequences (CDS) fasta file (cds.fasta)
+```
 #### PhylogenomicsAnalysis pipeline
 `--orthogroup_faa`
 
