@@ -127,7 +127,7 @@ Others Options:
                                   If minimum e-value: min_evalue (default) 
                                   If average e-value: avg_evalue
 
---single_copy_custom            :Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
+--single_copy_custom            : Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
                                   (see the single copy configuration files the config directory of the distribution
                                   on how to customize the single copy selection)	
                                     
