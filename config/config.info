@@ -4,20 +4,20 @@
 plantTribes.config
 
 # Targeted gene family assembly configuration files
-22Gv1.0.gfam.targetOrthos.config - 
-22Gv1.0.orthofinder.targetOrthos.config
-22Gv1.0.orthomcl.targetOrthos.config
-22Gv1.1.gfam.targetOrthos.config
-22Gv1.1.orthofinder.targetOrthos.config
-22Gv1.1.orthomcl.targetOrthos.config
+22Gv1.0.gfam.targetOrthos.config (GFam angiosperms clusters, version 1.0) = 22Gv1.0
+22Gv1.0.orthofinder.targetOrthos.config (OrthoFinder angiosperms clusters, version 1.0) = 22Gv1.0
+22Gv1.0.orthomcl.targetOrthos.config (OrthoMCL angiosperms clusters, version 1.0) = 22Gv1.0
+22Gv1.1.gfam.targetOrthos.config (GFam angiosperms clusters, version 1.1) = 22Gv1.1
+22Gv1.1.orthofinder.targetOrthos.config (OrthoFinder angiosperms clusters, version 1.1) = 22Gv1.1
+22Gv1.1.orthomcl.targetOrthos.config (OrthoMCL angiosperms clusters, version 1.1) = 22Gv1.1
 
 # Single copy orthogroup custom selection configuration files
-22Gv1.0.singleCopy.config
-22Gv1.1.singleCopy.config
+22Gv1.0.singleCopy.config (Angiosperms clusters, version 1.0) = 22Gv1.0
+22Gv1.1.singleCopy.config (Angiosperms clusters, version 1.1) = 22Gv1.1
 
 # Orthogroup phylogeny taxa rooting order
-22Gv1.0.rootingOrder.config
-22Gv1.1.rootingOrder.config
+22Gv1.0.rootingOrder.config (Angiosperms clusters, version 1.0) = 22Gv1.0
+22Gv1.1.rootingOrder.config (Angiosperms clusters, version 1.1) = 22Gv1.1
 
 
 
