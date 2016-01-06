@@ -29,11 +29,11 @@ MD5 checksum: `5f4f602f4ee2e274fa6ed8398993af60`
   - Example: `cd ~/softwares`
 2. Clone the [PlantTribes](https://github.com/dePamphilis/PlantTribes) GitHub repository or download the [zip archive](https://github.com/dePamphilis/PlantTribes/archive/master.zip) and decompress it in your desired location.   
   - Examples: `git clone https://github.com/dePamphilis/PlantTribes.git` or `unzip https://github.com/dePamphilis/PlantTribes/archive/master.zip`
-3. Download the scaffold data set(s) that you would like to use in the PlantTribes' **_data_** subdirectory and decompress them.
+3. Download the scaffold data set(s) that you would like to use into the PlantTribes' [data](../data) subdirectory and decompress them.
   - Examples: `cd PlantTribes/data`, `md5sum 22Gv1.1.tar.bz` (should match the provided MD5 checksum for the data archive), followed by `tar -xjvf 22Gv1.1.tar.bz2`
 
 ## Using PlantTribes
-The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrectory of the installation. You can either add them to your PATH environment variable or execute directly from the PlantTribes installation.
+The execulables for the PlantTribes pipelines are in the [pipelines](../pipelines) subdrectory of the installation. You can either add them to your PATH environment variable or execute directly from the PlantTribes installation.
 
 - **AssemblyPostProcesser pipeline**: 
   - Display all usage options: 
