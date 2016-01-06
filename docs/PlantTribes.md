@@ -55,14 +55,15 @@ The execulables for the PlantTribes pipelines are in the **_pipelines_** subdrec
 - **KaKsAnalysis pipeline**
   - Coming soon!
 
-Please consult the PlantTribes [manual](./PlantTribes.md) and [tutorial](./Tutorial.md) for a detailed description and usage of all options for the pipelines respectively.
-
 ## Pipeline options
 
 #### AssemblyPostProcesser pipeline
-`--transcripts`
+ Required Options:
+`--transcripts <string>          : de novo transcriptome assembly fasta file (transcripts.fasta)`
 
-`--prediction_method`
+`--prediction_method <string>    : The prediction method for coding regions`
+`                                   If ESTScan: estscan`
+`                                   If TransDecoder: transdecoder` 
 
 `--score_matrices`
 
@@ -72,7 +73,8 @@ Please consult the PlantTribes [manual](./PlantTribes.md) and [tutorial](./Tutor
 
 `--min_length` 
 
-#### GeneFamilyClassifier pipeline
+#### GeneFamilyClassifier 
+ Required Options:
 `--proteins`
 
 `--scaffold`
