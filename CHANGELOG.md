@@ -1,2 +1,2 @@
-##### Version 1.0.0 (March, 12, 2015)
+##### Version 0.1.0 (Jan, 11, 2016)
  - Initial public release
