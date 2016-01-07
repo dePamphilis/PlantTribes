@@ -8,7 +8,7 @@ This tutorial uses the test data `assembly.fasta`, a small set of *de novo* tran
 
 2). The following command as in 1) above will post processes `assembly.fasta` using TransDecoder coding regions prediction method in strand specific mode, and remove similar (sub)sequences and sequences shorter than 200 bp.
 
-`PlantTribes/pipelines/AssemblyPostProcesser  --transcripts assembly.fasta --prediction_method transdecoder --strand_specific --dereplicate --min_length 200`
+`PlantTribes/pipelines/AssemblyPostProcesser --transcripts assembly.fasta --prediction_method transdecoder --strand_specific --dereplicate --min_length 200`
 
 The commands in 1) and 2) will create an output directory `assemblyPostProcessing_dir` with the following fasta files:
 ```
@@ -19,7 +19,12 @@ transcripts.cleaned.cds - cleaned and validated predicted peptides with sequence
 transcripts.cleaned.nr.cds - cleaned and validated predicted cds with sequences shorter than 200 bp and similar (sub)sequences removed
 transcripts.cleaned.nr.pep - cleaned and validated predicted peptides with sequences shorter than 200 bp and similar (sub)sequences removed
 ```
-3). Running either of the commands in 1) and 2) togther with the the target gene family options will additionally create a `targeted_gene_families` directory within `assemblyPostProcessing_dir` containing several sub-directories of gene families listed in the  targetOrthos.ids file in the [test](../test).
+3). Running either of the commands in 1) and 2) togther with the targeted gene family options will additionally create a `targeted_gene_families` directory within `assemblyPostProcessing_dir`. 
 
 `PlantTribes/pipelines/AssemblyPostProcesser  --transcripts assembly.fasta --prediction_method transdecoder --gene_family_search targetOrthos.ids --scaffold 22Gv1.1 --method orthomcl --strand_specific --dereplicate --min_length 200`
+
+Within the `targeted_gene_families`, are several directories of gene families (orthogroups identities) listed in `targetOrthos.ids` file that is in the [test](../test) sub-directory of PlantTribes installation. Each gene family directory contains the following gene family guided meta-assembly results (example with orthogroup number X of classification scaffold 22Gv1.1  .
+```
+31032.contigs.fasta  31032.contigs.fasta.cds  31032.contigs.fasta.pep  31032.contigs.fasta.stats
+```
 
