@@ -9,3 +9,12 @@ This tutorial uses the test data `assembly.fasta`, a small set of *de novo* tran
 2). The following command as in 1) above will post processes `assembly.fasta` using TransDecoder coding regions prediction method in strand specific mode, and remove similar (sub)sequences and sequences shorter than 200 bp.
 
 `PlantTribes/pipelines/AssemblyPostProcesser  --transcripts assembly.fasta --prediction_method transdecoder --dereplicate --min_length 200`
+
+The commands in 1) and 2) will create an output directory `assemblyPostProcessing_dir` with the following fasta files:
+```
+transcripts.cds - primary output of predicted cds by the coding regions predictor
+transcripts.pep - primary output of predicted peptide by the coding regions predictor
+transcripts.cleaned.cds - cleaned and validated predicted cds with sequences shorter than 200 bp removed
+transcripts.cleaned.cds - cleaned and validated predicted peptides with sequences shorter than 200 bp removed
+transcripts.cleaned.nr.cds - cleaned and validated predicted cds with sequences shorter than 200 bp and similar (sub)sequences removed
+transcripts.cleaned.nr.pep - cleaned and validated predicted peptides with sequences shorter than 200 bp and similar (sub)sequences removed
