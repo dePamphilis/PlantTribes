@@ -23,8 +23,11 @@ transcripts.cleaned.nr.pep - cleaned and validated predicted peptides with seque
 
 `PlantTribes/pipelines/AssemblyPostProcesser  --transcripts assembly.fasta --prediction_method transdecoder --gene_family_search targetOrthos.ids --scaffold 22Gv1.1 --method orthomcl --strand_specific --dereplicate --min_length 200`
 
-Within the `targeted_gene_families`, are several directories of gene families (orthogroups identities) listed in `targetOrthos.ids` file that is in the [test](../test) sub-directory of PlantTribes installation. Each gene family directory contains the following gene family guided meta-assembly results (example with orthogroup number X of classification scaffold 22Gv1.1  .
+Within the `targeted_gene_families`, are several directories of gene families (orthogroups identities) listed in `targetOrthos.ids` file that is in the [test](../test) sub-directory of PlantTribes installation. Each gene family directory contains the following gene family guided meta-assembly results (example with orthogroup classification scaffold 22Gv1.1 of the OrthoMCL method).
 ```
-31032.contigs.fasta  31032.contigs.fasta.cds  31032.contigs.fasta.pep  31032.contigs.fasta.stats
+31032.contigs.fasta
+31032.contigs.fasta.cds
+31032.contigs.fasta.pep
+31032.contigs.fasta.stats
 ```
 
