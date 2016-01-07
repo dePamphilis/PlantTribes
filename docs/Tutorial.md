@@ -18,3 +18,4 @@ transcripts.cleaned.cds - cleaned and validated predicted cds with sequences sho
 transcripts.cleaned.cds - cleaned and validated predicted peptides with sequences shorter than 200 bp removed
 transcripts.cleaned.nr.cds - cleaned and validated predicted cds with sequences shorter than 200 bp and similar (sub)sequences removed
 transcripts.cleaned.nr.pep - cleaned and validated predicted peptides with sequences shorter than 200 bp and similar (sub)sequences removed
+```
