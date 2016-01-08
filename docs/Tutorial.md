@@ -31,3 +31,5 @@ Within the `targeted_gene_families` direcorty are several sub-directories of gen
 213.contigs.fasta.stats - summary coverage statistics for assembled sequences
 ```
 
+### GeneFamilyClassifier Pipeline
+
