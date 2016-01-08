@@ -1,5 +1,5 @@
 # PlantTribes Tutorial
-This tutorial uses the test data `assembly.fasta`, a small set of *de novo* transcriptome contigs, in the [test](../test) sub-directory of PlantTribes installation to show how to perform an analysis using the various pipelines of PlantTribes.
+This tutorial uses the test data `assembly.fasta`, a small set of *de novo* transcriptome contigs, located in the [test](../test) sub-directory of PlantTribes installation to show how to perform an analysis using the various pipelines of PlantTribes.
 
 ### AssemblyPostProcesser Pipeline
 1). The following command will post processes `assembly.fasta` using ESTScan coding regions prediction method with aid of Arabidopsis thaliana  references matrices in strand specific mode, and removes similar (sub)sequences and sequences shorter than 200 bp.
@@ -19,15 +19,15 @@ transcripts.cleaned.cds - cleaned and validated predicted peptides with sequence
 transcripts.cleaned.nr.cds - cleaned and validated predicted cds with sequences shorter than 200 bp and similar (sub)sequences removed
 transcripts.cleaned.nr.pep - cleaned and validated predicted peptides with sequences shorter than 200 bp and similar (sub)sequences removed
 ```
-3). Running either of the commands in 1) and 2) togther with the targeted gene family options will additionally create a `targeted_gene_families` directory within `assemblyPostProcessing_dir`. The following command will post processes `assembly.fasta` using TransDecoder coding regions prediction method in strand specific mode, remove similar (sub)sequences and sequences shorter than 200 bp, and attempt to reassemble fragmented contigs assigned to targeted gene families into more contiguous transcripts whenever possible.
+3). Running either of the commands in 1) and 2) togther with the targeted gene family options will additionally create a `targeted_gene_families` sub-directory within `assemblyPostProcessing_dir` output directory. The following command will post processes `assembly.fasta` using TransDecoder coding regions prediction method in strand specific mode, remove similar (sub)sequences and sequences shorter than 200 bp, and attempt to reassemble fragmented contigs assigned to targeted gene families into contiguous transcripts whenever possible.
 
 `PlantTribes/pipelines/AssemblyPostProcesser  --transcripts assembly.fasta --prediction_method transdecoder --gene_family_search targetOrthos.ids --scaffold 22Gv1.1 --method orthomcl --strand_specific --dereplicate --min_length 200`
 
-Within the `targeted_gene_families` direcorty are several sub-directories of gene families (orthogroups) listed in the `targetOrthos.ids` file that is located in the [test](../test) sub-directory of PlantTribes installation. In each of these sub-directories are the following output files (using orthogroup 213 of the OrthoMCL classificationscaffold 22Gv1.1 as an example).
+Within the `targeted_gene_families` direcorty are several sub-directories of gene families (orthogroups) listed in the `targetOrthos.ids` file located in the [test](../test) sub-directory of PlantTribes installation. In each of these sub-directories are the following output files (using orthogroup 213 of the OrthoMCL classification scaffold 22Gv1.1 as an example).
 ```
 213.contigs.fasta - reassembled contigs for the gene family
 213.contigs.fasta.cds - post processed predicted cds
 213.contigs.fasta.pep - post processed predicted peptides
-213.contigs.fasta.stats - summary coverage statistics for assembled sequences in gene family
+213.contigs.fasta.stats - summary coverage statistics for assembled sequences
 ```
 
