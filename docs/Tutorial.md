@@ -33,6 +33,7 @@ Within the `targeted_gene_families` direcorty are several sub-directories of gen
 
 ### GeneFamilyClassifier Pipeline
 1). Gene family classification of the post processed `assembly.fasta` *de novo* transcripts using **BLASTP** as a classifier - faster.
+
 `GeneFamilyClassifier --proteins assemblyPostProcessing_dir/transcripts.cleaned.nr.pep --scaffold 22Gv1.1 --method orthomcl --classifier blastp --num_threads 10`
 ```
 Output:
@@ -41,6 +42,7 @@ proteins.blastp.22Gv1.1.bestOrthos
 proteins.blastp.22Gv1.1.bestOrthos.summary
 ```
 2). Gene family classification of the post processed `assembly.fasta` *de novo* transcripts using **HMMSCAN** as a classifier - slower but more sensitive to remote homologs.
+
 `GeneFamilyClassifier --proteins assemblyPostProcessing_dir/transcripts.cleaned.nr.pep --scaffold 22Gv1.1 --method orthomcl --classifier hmmscan --num_threads 10`
 ```
 Output:
@@ -49,6 +51,7 @@ proteins.hmmscan.22Gv1.1.bestOrthos
 proteins.hmmscan.22Gv1.1.bestOrthos.summary
 ```
 3). Gene family classification of the post processed `assembly.fasta` *de novo* transcripts using both **BLASTP** and **HMMSCAN** as a classifiers - more exhaustive.
+
 `GeneFamilyClassifier --proteins assemblyPostProcessing_dir/transcripts.cleaned.nr.pep --scaffold 22Gv1.1 --method orthomcl --classifier both --num_threads 10`
 ```
 Output:
