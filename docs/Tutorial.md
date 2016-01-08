@@ -55,5 +55,10 @@ proteins.hmmscan.22Gv1.1.bestOrthos.summary
 `GeneFamilyClassifier --proteins assemblyPostProcessing_dir/transcripts.cleaned.nr.pep --scaffold 22Gv1.1 --method orthomcl --classifier both --num_threads 10`
 ```
 Output:
-
+proteins.blastp.22Gv1.1
+proteins.blastp.22Gv1.1.bestOrthos
+proteins.hmmscan.22Gv1.1
+proteins.hmmscan.22Gv1.1.bestOrthos
+proteins.both.22Gv1.1.bestOrthos
+proteins.both.22Gv1.1.bestOrthos.summary
 ```
