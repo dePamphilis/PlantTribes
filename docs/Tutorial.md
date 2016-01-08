@@ -12,12 +12,12 @@ This tutorial uses the test data `assembly.fasta`, a small set of *de novo* tran
 
 The commands in 1) and 2) will create an output directory `assemblyPostProcessing_dir` with the following fasta files:
 ```
-transcripts.cds - primary output of predicted cds by the coding regions predictor
-transcripts.pep - primary output of predicted peptide by the coding regions predictor
-transcripts.cleaned.cds - cleaned and validated predicted cds with sequences shorter than 200 bp removed
-transcripts.cleaned.cds - cleaned and validated predicted peptides with sequences shorter than 200 bp removed
-transcripts.cleaned.nr.cds - cleaned and validated predicted cds with sequences shorter than 200 bp and similar (sub)sequences removed
-transcripts.cleaned.nr.pep - cleaned and validated predicted peptides with sequences shorter than 200 bp and similar (sub)sequences removed
+transcripts.cds
+transcripts.pep
+transcripts.cleaned.cds
+transcripts.cleaned.cds
+transcripts.cleaned.nr.cds
+transcripts.cleaned.nr.pep 
 ```
 3). Running either of the commands in 1) and 2) togther with the targeted gene family options will additionally create a `targeted_gene_families` sub-directory within `assemblyPostProcessing_dir` output directory. The following command will post processes `assembly.fasta` using TransDecoder coding regions prediction method in strand specific mode, remove similar (sub)sequences and sequences shorter than 200 bp, and attempt to reassemble fragmented contigs assigned to targeted gene families into contiguous transcripts whenever possible.
 
@@ -25,10 +25,10 @@ transcripts.cleaned.nr.pep - cleaned and validated predicted peptides with seque
 
 Within the `targeted_gene_families` direcorty are several sub-directories of gene families (orthogroups) listed in the `targetOrthos.ids` file located in the [test](../test) sub-directory of PlantTribes installation. In each of these sub-directories are the following output files (using orthogroup 213 of the OrthoMCL classification scaffold 22Gv1.1 as an example).
 ```
-213.contigs.fasta - reassembled contigs for the gene family
-213.contigs.fasta.cds - post processed predicted cds
-213.contigs.fasta.pep - post processed predicted peptides
-213.contigs.fasta.stats - summary coverage statistics for assembled sequences
+213.contigs.fasta
+213.contigs.fasta.cds
+213.contigs.fasta.pep
+213.contigs.fasta.stats
 ```
 
 ### GeneFamilyClassifier Pipeline
@@ -82,6 +82,19 @@ proteins.both.22Gv1.1.bestOrthos.summary.singleCopy
 6). Individual gene families cds and their corresponding peptides for the post processed  *de novo* transcriptome assembly  can created by including the `--orthogroup_fasta` and `--coding_sequences` options in any of the above commands in 1) through 5). 
 
 `GeneFamilyClassifier --proteins assemblyPostProcessing_dir/transcripts.cleaned.nr.pep --scaffold 22Gv1.1 --method orthomcl --classifier both --single_copy_taxa 20 --taxa_present 21 --num_threads 10 --orthogroup_fasta --coding_sequences assemblyPostProcessing_dir/transcripts.cleaned.nr.cds`
+```
+Output for 4) and 5):
+proteins.blastp.22Gv1.1
+proteins.blastp.22Gv1.1.bestOrthos
+proteins.hmmscan.22Gv1.1
+proteins.hmmscan.22Gv1.1.bestOrthos
+proteins.both.22Gv1.1.bestOrthos
+proteins.both.22Gv1.1.bestOrthos.summary
+proteins.both.22Gv1.1.bestOrthos.summary.singleCopy
+orthogroups_fasta - transcriptome assembly orthogroup fasta directory
+single_copy_fasta - transcriptome assembly single/low copy orthogroup fasta directory
+```
+
 
 
 
