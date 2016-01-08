@@ -64,11 +64,11 @@ proteins.both.22Gv1.1.bestOrthos.summary
 ```
 4). Including `--single_copy_custom` option will allow setting the maximum number gene copies allowed for each backbone taxa in the orthogroup. An example of a customized single/low copy selection configuration file, `22Gv1.1.singleCopy.config` is located in the [config](../config) sub-directory of PlantTribes installation.
 
-`GeneFamilyClassifier --proteins assemblyPostProcessing_dir/transcripts.cleaned.nr.pep --scaffold 22Gv1.1 --method orthomcl --classifier both  --single_copy_custom  --num_threads 10`
+`GeneFamilyClassifier --proteins assemblyPostProcessing_dir/transcripts.cleaned.nr.pep --scaffold 22Gv1.1 --method orthomcl --classifier both --single_copy_custom  --num_threads 10`
 
-5). An altertive way to select single/low copy orthogroups is to assign the minumum mumber of single copy backbone taxa required in the orthogroup using `--single_copy_taxa` and minumum number of backbone taxa required to be present in the orthogroup using `--taxa_present`.
+5). An altertive way to select single/low copy gene families (orthogroups) is to assign the minumum mumber of single copy backbone taxa required in the gene families using `--single_copy_taxa` and minumum number of backbone taxa required to be present in the gene families using `--taxa_present`.
 
-`GeneFamilyClassifier --proteins assemblyPostProcessing_dir/transcripts.cleaned.nr.pep --scaffold 22Gv1.1 --method orthomcl --classifier both  --single_copy_taxa 20 --taxa_present 21  --num_threads 10`
+`GeneFamilyClassifier --proteins assemblyPostProcessing_dir/transcripts.cleaned.nr.pep --scaffold 22Gv1.1 --method orthomcl --classifier both --single_copy_taxa 20 --taxa_present 21 --num_threads 10`
 ```
 Output for 4) and 5):
 proteins.blastp.22Gv1.1
@@ -79,7 +79,9 @@ proteins.both.22Gv1.1.bestOrthos
 proteins.both.22Gv1.1.bestOrthos.summary
 proteins.both.22Gv1.1.bestOrthos.summary.singleCopy
 ```
-6). 
+6). Individual gene families cds and their corresponding peptides for the post processed  *de novo* transcriptome assembly  can created by including the `--orthogroup_fasta` and `--coding_sequences` options in any of the above commands in 1) through 5). 
+
+`GeneFamilyClassifier --proteins assemblyPostProcessing_dir/transcripts.cleaned.nr.pep --scaffold 22Gv1.1 --method orthomcl --classifier both --single_copy_taxa 20 --taxa_present 21 --num_threads 10 --orthogroup_fasta --coding_sequences assemblyPostProcessing_dir/transcripts.cleaned.nr.cds`
 
 
 
