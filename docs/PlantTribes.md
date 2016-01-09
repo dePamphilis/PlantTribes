@@ -189,8 +189,8 @@ Phylogenetic Trees:
 --rooting_order <string>        : File with a list of string fragments matching sequences identifiers of species in the 
                                   classification (including scaffold taxa) to be used for determining the most basal taxa in
                                   the orthogroups for rooting trees. Should be listed in decreasing order from older to younger
-                                  lineages. If the file is not provided, trees will be rooted using the oldest lineage taxon
-                                  present in the scaffold (see example rooting order configuration files in config sub-directory
+                                  lineages. If the file is not provided, trees will be rooted using the most distant taxon
+                                  present in the orthogroup (see example rooting order configuration files in config sub-directory
                                   of the installation). 
                                   - requires "--tree_inference" with RAxML
                                   
