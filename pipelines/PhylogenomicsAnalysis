@@ -43,7 +43,7 @@ my $usage = <<__EOUSAGE__;
 #  --pasta_alignments              : Create orthogroup protein multiple sequence alignments including scaffold backbone proteins
 #                                    (PASTA algorithm, incompatible with "--create_alignments" and "--add_alignments") 
 #
-#  --codon_alignments              : Construct orthogroup multiple sequence codon alignments - requires "--orthogroup_fna"
+#  --codon_alignments              : Construct orthogroup multiple codon alignments - requires "--orthogroup_fna"
 #
 #  --iterative_realignment <int>   : Iterative orthogroups realignment, trimming and fitering - requires "--remove_sequences"
 #                                    (maximum number of iterations) 
@@ -68,8 +68,10 @@ my $usage = <<__EOUSAGE__;
 #  --rooting_order <string>        : File with a list of string fragments matching sequences identifiers of species in the 
 #                                    classification (including scaffold taxa) to be used for determining the most basal taxa in
 #                                    the orthogroups for rooting trees. Should be listed in decreasing order from older to younger
-#                                    lineages. If the file is not provided, trees will be rooted using the oldest lineage taxon
-#                                    present in the scaffold - requires "--tree_inference" with RAxML
+#                                    lineages. If the file is not provided, trees will be rooted using the most distant taxon
+#                                    present in the orthogroup (see example rooting order configuration files in config sub-directory
+#                                    of the installation). 
+#                                    - requires "--tree_inference" with RAxML
 #
 #  --bootstrap_replicates <int>    : Number of replicates for rapid bootstrap analysis and search for the best-scoring ML tree
 #                                    - requires "--tree_inference" with RAxML
@@ -172,7 +174,8 @@ my $raxml = $utilies{'raxml'};
 my $fasttree = $utilies{'fasttree'};
 
 # validate options
-my %scaffolds = ("22Gv1.0", "Angiosperms clusters (version 1.0)", "22Gv1.1", "Angiosperms clusters (version 1.1)");
+my %scaffolds = ("12Gv1.0", "Monocots clusters (version 1.0)",  "22Gv1.0", "Angiosperms clusters (version 1.0)",
+	"22Gv1.1", "Angiosperms clusters (version 1.1)", "26Gv2.0", "Angiosperms clusters (version 2.0)", "31Gv1.0", "Green plants clusters (version 1.0)");
 my %methods = ("gfam", "GFam", "orthofinder", "OrthoFinder", "orthomcl", "OrthoMCL");
 unless ( $options ) { die $usage; }
 unless ( $orthogroup_faa and $scaffolds{$scaffold} and $methods{$method}) { print "\nOne or more required options not set\n";die $usage; }
@@ -238,7 +241,7 @@ if ( $iterative_realignment ) {
 
 if ( $tree_inference ) {
 	build_orthogroup_trees ( $tree_inference, $max_orthogroup_size, $min_orthogroup_size, $sequence_type, $rooting_order, $bootstrap_replicates,
-		$automated_trimming, $gap_trimming, $remove_sequences, $raxml, $fasttree, $num_threads, $dirname, $home );
+		$automated_trimming, $gap_trimming, $remove_sequences, $raxml, $fasttree, $num_threads, $scaffold, $dirname, $home );
 }
 
 print localtime()." - Completed phylogenomics analysis\n\n";
@@ -384,7 +387,7 @@ sub realign_filtered_orthogroup_alignments {
 
 sub build_orthogroup_trees {
 	my ( $tree_inference, $max_orthogroup_size, $min_orthogroup_size, $sequence_type, $rooting_order, $bootstrap_replicates, $automated_trimming,
-		$gap_trimming, $remove_sequences, $raxml, $fasttree, $num_threads, $dirname, $home ) = @_;
+		$gap_trimming, $remove_sequences, $raxml, $fasttree, $num_threads, $scaffold, $dirname, $home ) = @_;
 	print localtime()." - Building orthogroup phylogenetic trees\n\n";	
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
 	my $orthogroups_tree = "$dirname/orthogroups_tree";
@@ -407,7 +410,7 @@ sub build_orthogroup_trees {
 		if ( (keys(%seq) > $max_orthogroup_size) or (keys(%seq) < $min_orthogroup_size) ) { next; }
 		if ($tree_inference eq "raxml") {
 			my ($id, $species, $outgroup, @root_order);
-			if (!$rooting_order) { $rooting_order = "$home/config/rootingOrder.config"; }
+			if (!$rooting_order) { $rooting_order = "$home/config/$scaffold.rootingOrder.config"; }
 			open (IN, "$rooting_order") or die "can't open $rooting_order file\n";
 			while (<IN>) {
 				chomp;
@@ -436,7 +439,7 @@ sub build_orthogroup_trees {
 			    system "FastTreeMP -nt -gtr -gamma -out $orthogroups_tree/$filename.tree $orthogroups_aln/$filename >/dev/null 2>/dev/null";
 			}
 			else {
-				system "FastTreeMP -wag -gamma -out $orthogroups_tree/$filename.tree $orthogroups_aln/$filename >/dev/null 2>/dev/null";
+			    system "FastTreeMP -wag -gamma -out $orthogroups_tree/$filename.tree $orthogroups_aln/$filename >/dev/null 2>/dev/null";
 			}
 		}
 	}
