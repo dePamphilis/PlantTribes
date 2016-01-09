@@ -139,7 +139,7 @@ Detailed usage will soon be available.
 ```
 
 
-Consult the PlantTribes [manual](docs/PlantTribes.md) for usage of other optimization options not used in this tutorial. 
+Consult the PlantTribes [manual](PlantTribes.md) for usage of other optimization options not used in this tutorial. 
 
 
 
