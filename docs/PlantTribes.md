@@ -51,7 +51,7 @@ The execulables for the PlantTribes pipelines are in the [pipelines](../pipeline
   - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and raxml Phylogenetic trees inference method:
     - `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl  --add_alignments  --tree_inference raxml`
 - **KaKsAnalysis pipeline**
-  - Coming soon!
+  - Usage will soon be available.
 
 ## Pipeline options
 
@@ -222,7 +222,9 @@ Others Options:
                                   same directory with input orthogroups protein fasta files.
 ```
 #### KaKsAnalysis pipeline
+```
 Detailed usage will soon be available.
+```
 
 ## License
 PlantTribes is distributed under the GNU GPL v3. For more information, see [license](../LICENSE).
