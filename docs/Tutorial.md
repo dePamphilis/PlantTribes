@@ -133,6 +133,9 @@ phylogenomicsAnalysis_dir/orthogroups_fasta/ - orthogroup fasta directory
 phylogenomicsAnalysis_dir/orthogroups_aln/ - orthogroup multiple sequence alignments directory
 ```
 
+### KaKsAnalysis Pipeline
+Detailed usage of will soon be available
+
 Consult the PlantTribes [manual](docs/PlantTribes.md) for usage of other optimization options not used in this tutorial. 
 
 
