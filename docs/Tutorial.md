@@ -96,33 +96,34 @@ geneFamilyClassification_dir/single_copy_fasta - transcriptome assembly single/l
 ```
 
 ### PhylogenomicsAnalysis Pipeline
-1).  Creating gene family fasta files (cds and their corresponding peptide) for the post processed  *de novo* transcriptome assembly integrated with scaffold gene moodels 
+1).  Integrating post processed *de novo* transcriptome assembly sequence(s) with the scaffold gene family sequences 
 
 `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --orthogroup_fna`
-
 ```
 Output:
+phylogenomicsAnalysis_dir/orthogroups_fasta/
 ```
-2). 
+2). Creating gene family multiple sequence alignments using MAFFT L-INS-i iterative refinement method 
 
 `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --create_alignments`
 
-3). 
+3). Adding unaligned post processed *de novo* transcriptome assembly sequence(s) into precomputed scaffold gene family multiple sequence alignments - faster
 
 `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --add_alignments`
 
-4). 
+4). Creating gene family multiple sequence alignments using PASTA (Practical Alignment using SATe and Transitivity) method - for larger data sets 
 
 `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --pasta_alignments`
-
 ```
-Output for 2), 3) and 4):
+Output:
+phylogenomicsAnalysis_dir/orthogroups_fasta/
+phylogenomicsAnalysis_dir/orthogroups_aln/
 ```
-5). 
+5). Building maximum-likelihood gene family phylogenetic trees with RAxML
 
 `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --pasta_alignments --tree_inference raxml`
 
-6). 
+6). Building approximately-maximum-likelihood gene family phylogenetic trees with FastTree - faster
 
 `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --pasta_alignments --tree_inference fasttree`
 
