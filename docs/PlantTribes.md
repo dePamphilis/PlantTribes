@@ -221,10 +221,7 @@ Others Options:
 --orthogroup_fna                : Corresponding gene family classification orthogroups CDS fasta files. Files should be in the
                                   same directory with input orthogroups protein fasta files.
 ```
-#### KaKsAnalysis pipeline
-```
-Coming soon!
-```
+c
 ## License
 PlantTribes is distributed under the GNU GPL v3. For more information, see [license](../LICENSE).
 
