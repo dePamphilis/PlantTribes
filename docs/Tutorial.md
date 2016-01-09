@@ -134,7 +134,9 @@ phylogenomicsAnalysis_dir/orthogroups_aln/ - orthogroup multiple sequence alignm
 ```
 
 ### KaKsAnalysis Pipeline
+```
 Detailed usage will soon be available.
+```
 
 
 Consult the PlantTribes [manual](docs/PlantTribes.md) for usage of other optimization options not used in this tutorial. 
