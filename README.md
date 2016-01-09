@@ -53,7 +53,7 @@ The execulables for the PlantTribes pipelines are in the [pipelines](pipelines) 
   - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and raxml Phylogenetic trees inference method:
     - `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl  --add_alignments  --tree_inference raxml`
 - **KaKsAnalysis pipeline**
-  - Detailed usage of will be available soon.
+  - Detailed usage of will soon be available.
 
 Please consult the PlantTribes [manual](docs/PlantTribes.md) and [tutorial](docs/Tutorial.md) for a detailed description and usage of all options for the pipelines respectively.
 
