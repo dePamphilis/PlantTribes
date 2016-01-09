@@ -131,6 +131,7 @@ phylogenomicsAnalysis_dir/orthogroups_aln/ - orthogroup multiple sequence alignm
 Output:
 phylogenomicsAnalysis_dir/orthogroups_fasta/ - orthogroup fasta directory
 phylogenomicsAnalysis_dir/orthogroups_aln/ - orthogroup multiple sequence alignments directory
+phylogenomicsAnalysis_dir/orthogroups_tree/ - orthogroup phylogenetic trees directory
 ```
 
 ### KaKsAnalysis Pipeline
