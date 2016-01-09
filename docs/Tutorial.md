@@ -133,7 +133,7 @@ phylogenomicsAnalysis_dir/orthogroups_fasta/ - orthogroup fasta directory
 phylogenomicsAnalysis_dir/orthogroups_aln/ - orthogroup multiple sequence alignments directory
 ```
 
-Additonal optimization option not used this tutorial are explained in the 
+Consult the PlantTribes [manual](docs/PlantTribes.md) for usage of other optimization options not used in this tutorial. 
 
 
 
