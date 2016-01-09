@@ -101,7 +101,7 @@ geneFamilyClassification_dir/single_copy_fasta - transcriptome assembly single/l
 `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --orthogroup_fna`
 ```
 Output:
-phylogenomicsAnalysis_dir/orthogroups_fasta/
+phylogenomicsAnalysis_dir/orthogroups_fasta/ - orthogroup fasta directory
 ```
 2). Creating gene family multiple sequence alignments using MAFFT L-INS-i iterative refinement method 
 
@@ -116,8 +116,8 @@ phylogenomicsAnalysis_dir/orthogroups_fasta/
 `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --pasta_alignments`
 ```
 Output:
-phylogenomicsAnalysis_dir/orthogroups_fasta/
-phylogenomicsAnalysis_dir/orthogroups_aln/
+phylogenomicsAnalysis_dir/orthogroups_fasta/ - orthogroup fasta directory
+phylogenomicsAnalysis_dir/orthogroups_aln/ - orthogroup multiple sequence alignments directory
 ```
 5). Building maximum-likelihood gene family phylogenetic trees with RAxML
 
@@ -126,6 +126,14 @@ phylogenomicsAnalysis_dir/orthogroups_aln/
 6). Building approximately-maximum-likelihood gene family phylogenetic trees with FastTree - faster
 
 `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --pasta_alignments --tree_inference fasttree`
+
+```
+Output:
+phylogenomicsAnalysis_dir/orthogroups_fasta/ - orthogroup fasta directory
+phylogenomicsAnalysis_dir/orthogroups_aln/ - orthogroup multiple sequence alignments directory
+```
+
+Additonal optimization option not used this tutorial are explained in the 
 
 
 
