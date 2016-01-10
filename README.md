@@ -21,10 +21,10 @@ PlantTribes pipeline scripts have many external dependencies that need to be ins
 #### PlantTribes scaffolds data 
 - **22 plant genomes (Angiosperms clusters, version 1.0)**  
 Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.0.tar.bz2  
-MD5 checksum: `3e509094a6f763d8af1f9a3f781f3a0d`  
+MD5 checksum: `4f09c41683d1ea0670b38cef640fb548`  
 - **22 plant genomes (Angiosperms clusters, version 1.1)**  
 Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.1.tar.bz2  
-MD5 checksum: `5f4f602f4ee2e274fa6ed8398993af60`
+MD5 checksum: `0025188cdeccfb828fbebabb923963bd`
 
 #### Install PlantTribes
 1. Open a terminal and change to the location where you would to keep PlantTribes. 
