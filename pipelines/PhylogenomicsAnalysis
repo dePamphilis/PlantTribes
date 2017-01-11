@@ -90,6 +90,9 @@ my $usage = <<__EOUSAGE__;
 # # # # # # # # # # # # # # # # # # 
 #  Others Options:
 #
+#  --scaffold_dir <string>         : Optional directory path containing the scaffolds datasets
+#                                    Default: $home/data
+#
 #  --num_threads <int>             : number of threads (CPUs) to assign to external utilities (MAFFT, PASTA, and RAxML)
 #                                    Default: 1 
 #
@@ -130,6 +133,7 @@ my $bootstrap_replicates;
 my $automated_trimming;
 my $gap_trimming;
 my $remove_sequences;
+my $scaffold_dir;
 my $num_threads;
 my $max_memory;
 my $pasta_iter_limit;
@@ -152,6 +156,7 @@ my $options = GetOptions (  'orthogroup_faa=s' => \$orthogroup_faa,
               'automated_trimming' => \$automated_trimming,
               'gap_trimming=f' => \$gap_trimming,
               'remove_sequences=f' => \$remove_sequences,
+              'scaffold_dir=s' => \$scaffold_dir,
               'num_threads=i' => \$num_threads,
               'max_memory=i' => \$max_memory,
               'pasta_iter_limit=i'=> \$pasta_iter_limit,
@@ -167,6 +172,11 @@ while (<IN>) {
 	$utilies{$F[0]} = $F[1];
 }
 close IN;
+
+if (!($scaffold_dir)) {
+    $scaffold_dir = "$home/data"
+}
+
 my $mafft = $utilies{'mafft'};
 my $pasta = $utilies{'pasta'};
 my $trimal = $utilies{'trimal'};
@@ -266,9 +276,9 @@ sub get_orthogroup_fasta {
 		die "Exiting...!\nOrthogroup classification protein and CDS fasta files not equivalent in $orthogroup_faa directory\n\n";
 	}	
 	foreach my $ortho_id (keys %pep) { 
-		system "cat $home/data/$scaffold/fasta/$method/$ortho_id.faa $orthogroup_faa/$ortho_id.faa > $orthogroups_fasta/$ortho_id.faa";
+		system "cat $scaffold_dir/$scaffold/fasta/$method/$ortho_id.faa $orthogroup_faa/$ortho_id.faa > $orthogroups_fasta/$ortho_id.faa";
 		if ($orthogroup_fna and $cds{$ortho_id}) {
-			system "cat $home/data/$scaffold/fasta/$method/$ortho_id.fna $orthogroup_faa/$ortho_id.fna > $orthogroups_fasta/$ortho_id.fna";
+			system "cat $scaffold_dir/$scaffold/fasta/$method/$ortho_id.fna $orthogroup_faa/$ortho_id.fna > $orthogroups_fasta/$ortho_id.fna";
 		}
 	} 	
 }
@@ -294,7 +304,7 @@ sub create_orthogroup_alignments {
 			system "$mafft --maxiterate 1000 --thread $num_threads --localpair $orthogroups_fasta/$ortho_id.faa > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null"; 
 		}
 		if ($add_alignments) {
-			system "$mafft --add $orthogroup_faa/$ortho_id.faa $home/data/$scaffold/alns/$method/$ortho_id.aln > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null";
+			system "$mafft --add $orthogroup_faa/$ortho_id.faa $scaffold_dir/$scaffold/alns/$method/$ortho_id.aln > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null";
 		}
 		if ($pasta_alignments) {
 			my $pasta_temp = "$dirname/pasta_temp";

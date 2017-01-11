@@ -39,6 +39,9 @@ my $usage = <<__EOUSAGE__;
 # # # # # # # # # # # # # # # # # # 
 #  Others Options:
 #
+#  --scaffold_dir <string>         : Optional directory path containing the scaffolds datasets
+#                                    Default: $home/data
+#
 #  --num_threads <int>             : number of threads (CPUs) to used for HMMScan, BLASTP, and MAFFT
 #                                    Default: 1 
 #
@@ -73,6 +76,7 @@ my $proteins;
 my $scaffold;
 my $method;
 my $classifier;
+my $scaffold_dir;
 my $num_threads;
 my $super_orthogroups;
 my $single_copy_custom;
@@ -85,6 +89,7 @@ my $options = GetOptions (  'proteins=s' => \$proteins,
               'scaffold=s' => \$scaffold,
               'method=s' => \$method,
               'classifier=s' => \$classifier,
+              'scaffold_dir=s' => \$scaffold_dir,
               'num_threads=i' => \$num_threads,
               'super_orthogroups=s' => \$super_orthogroups,
               'single_copy_custom' => \$single_copy_custom,
@@ -103,6 +108,11 @@ while (<IN>) {
 	$utilies{$F[0]} = $F[1];
 }
 close IN;
+
+if (!($scaffold_dir)) {
+    $scaffold_dir = "$home/data"
+}
+
 my $blastp = $utilies{'blastp'};
 my $hmmscan = $utilies{'hmmscan'};
               
@@ -169,14 +179,14 @@ sub sort_sequences {
 	if ( (!$super_orthogroups) or ($super_orthogroups ne "min_evalue") or ($super_orthogroups ne "avg_evalue") ) { $super_orthogroups = "min_evalue" } 
 	if ( ($classifier eq "blastp") or ($classifier eq "both") ) {
 		print "-- ".localtime()." - Running BLASTP\n\n";
-		system "$blastp -db_soft_mask 21 -outfmt 6 -evalue 1e-5 -num_threads $num_threads -query $proteins -db $home/data/$scaffold/db/blast/$method -out $dirname/proteins.blastp.$scaffold  >/dev/null 2>/dev/null";
+		system "$blastp -db_soft_mask 21 -outfmt 6 -evalue 1e-5 -num_threads $num_threads -query $proteins -db $scaffold_dir/$scaffold/db/blast/$method -out $dirname/proteins.blastp.$scaffold  >/dev/null 2>/dev/null";
 		print "-- ".localtime()." - Getting best BLASTP hits\n\n";
 		my $results = "proteins.blastp.$scaffold";
 		get_best_blastp_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $home );
 	}
 	if ( ($classifier eq "hmmscan") or ($classifier eq "both") ) {
 		print "-- ".localtime()." - Running HMMScan\n\n";
-		system "$hmmscan -E 1e-5 --cpu $num_threads --noali --tblout $dirname/proteins.hmmscan.$scaffold -o $dirname/hmmscan.log $home/data/$scaffold/db/hmm/$method $proteins >/dev/null 2>/dev/null";
+		system "$hmmscan -E 1e-5 --cpu $num_threads --noali --tblout $dirname/proteins.hmmscan.$scaffold -o $dirname/hmmscan.log $scaffold_dir/$scaffold/db/hmm/$method $proteins >/dev/null 2>/dev/null";
 		print "-- ".localtime()." - Getting best HMMScan hits\n\n";
 		my $results = "proteins.hmmscan.$scaffold";
 		get_best_hmmscan_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $home );
@@ -203,7 +213,7 @@ sub  get_best_blastp_orthos {
     	}
 	} 
 	close IN;
-	open (IN, "$home/data/$scaffold/annot/$method.list") or die "can't open $home/data/$scaffold/annot/$method.list file\n";
+	open (IN, "$scaffold_dir/$scaffold/annot/$method.list") or die "can't open $scaffold_dir/$scaffold/annot/$method.list file\n";
 	while (<IN>) {
 		chomp;
 		my @F=split(/\t/, $_);
@@ -303,7 +313,7 @@ sub get_annot_summary {
 	my ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $home ) = @_;
 	my %annot;
 	open (OUT, ">$dirname/$orthogroup_assignment.summary") or die "can't open $dirname/$orthogroup_assignment.summary file\n";	
-	open (IN, "$home/data/$scaffold/annot/$method.$super_orthogroups.summary") or die "can't open $home/data/$scaffold/annot/$method.$super_orthogroups.summary file\n";
+	open (IN, "$scaffold_dir/$scaffold/annot/$method.$super_orthogroups.summary") or die "can't open $scaffold_dir/$scaffold/annot/$method.$super_orthogroups.summary file\n";
 	while (<IN>) {
 		chomp;
 		if ($_ =~ /^Orthogroup/) { print OUT "Gene ID\t$_\n"; next; }
