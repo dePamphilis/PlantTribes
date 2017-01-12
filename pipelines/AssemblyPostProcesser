@@ -62,6 +62,9 @@ my $usage = <<__EOUSAGE__;
 #  --num_threads <int>             : number of threads (CPUs) - only required for targeted gene family assembly
 #                                    Default: 1
 #
+#  --no_config_override            : Do not override values defined in the environment with values defined in
+#                                    $home/config/plantTribes.config.
+#
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #  Example Usage:
 #
@@ -87,6 +90,19 @@ my $strand_specific;
 my $dereplicate;
 my $min_length;
 my $num_threads;
+my $no_config_override;
+
+# Values that can either be retrieved from
+# $home/config/plantTribes.config or located
+# on $PATH using --no_config_override.
+my %utilies;
+my $estscan;
+my $transdecoder;
+my $genometools;
+my $hmmsearch;
+my $cap3;
+my $mafft;
+my $trimal;
 
 my $options = GetOptions (  'transcripts=s' => \$transcripts,
 	      'prediction_method=s' => \$prediction_method,
@@ -99,30 +115,42 @@ my $options = GetOptions (  'transcripts=s' => \$transcripts,
 	      'strand_specific' => \$strand_specific,
 	      'dereplicate' => \$dereplicate,
 	      'min_length=i' => \$min_length,
-	      'num_threads=i' => \$num_threads
+	      'num_threads=i' => \$num_threads,
+	      'no_config_override' => \$no_config_override
 	      );
 
-my %utilies;
-open (IN, "$home/config/plantTribes.config") or die "can't open $home/config/plantTribes.config file\n";
-while (<IN>) {
-	chomp;
-	if ($_ !~ /^\w+/) { next; }
-	my @F = split(/\=/, $_);
-	$utilies{$F[0]} = $F[1];
+# Should hmmsearch actually be hmmscan?
+if ($no_config_override) {
+    $estscan = 'ESTScan';
+    $transdecoder = 'TransDecoder.LongOrfs';
+    $genometools = 'gt';
+    $hmmsearch = 'hmmsearch';
+    $cap3 = 'cap3';
+    $mafft = 'mafft';
+    $trimal = 'trimal';
 }
-close IN;
+else {
+    open (IN, "$home/config/plantTribes.config") or die "can't open $home/config/plantTribes.config file\n";
+    while (<IN>) {
+	   chomp;
+	   if ($_ !~ /^\w+/) { next; }
+	   my @F = split(/\=/, $_);
+	   $utilies{$F[0]} = $F[1];
+    }
+    close IN;
+
+    $estscan = $utilies{'estscan'};
+    $transdecoder = $utilies{'transdecoder'};
+    $genometools = $utilies{'genometools'};
+    $hmmsearch = $utilies{'hmmsearch'};
+    $cap3 = $utilies{'cap3'};
+    $mafft = $utilies{'mafft'};
+    $trimal = $utilies{'trimal'};
+}
 
 if (!($scaffold_dir)) {
     $scaffold_dir = "$home/data"
 }
-
-my $estscan = $utilies{'estscan'};
-my $transdecoder = $utilies{'transdecoder'};
-my $genometools = $utilies{'genometools'};
-my $hmmsearch = $utilies{'hmmsearch'};
-my $cap3 = $utilies{'cap3'};
-my $mafft = $utilies{'mafft'};
-my $trimal = $utilies{'trimal'};
 
 # validate options
 my %scaffolds = ("12Gv1.0", "Monocots clusters (version 1.0)",  "22Gv1.0", "Angiosperms clusters (version 1.0)",
