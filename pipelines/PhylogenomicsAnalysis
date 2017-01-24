@@ -104,15 +104,10 @@ my $usage = <<__EOUSAGE__;
 #
 #  --pasta_script_path <string>    : Optional path to the location of the run_pasta.py script. which is used for running PASTA
 #                                    from the command line (useful since the script is a .py file).  Using this will override
-#                                    the default defined in $home/config/plantTribes.config, and it will complement the behavior
-#                                    that results from using --no_config_override by replacing the program default with the
-#                                    received value.
+#                                    the default defined in $home/config/plantTribes.
 #
 #  --orthogroup_fna                : Corresponding gene family classification orthogroups CDS fasta files. Files should be in the
-#                                    same directory with input orthogroups protein fasta files.
-#
-#  --no_config_override            : Do not override values defined in the environment with values defined in
-#                                    $home/config/plantTribes.config.
+#                                    same directory with input orthogroups protein fasta files. 
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #  Example Usage:
@@ -145,20 +140,10 @@ my $remove_sequences;
 my $scaffold_dir;
 my $num_threads;
 my $max_memory;
+my $pasta;
 my $pasta_iter_limit;
 my $pasta_script_path;
 my $orthogroup_fna;
-my $no_config_override;
-
-# Values that can either be retrieved from
-# $home/config/plantTribes.config or located
-# on $PATH using --no_config_override.
-my %utilies;
-my $mafft;
-my $pasta;
-my $trimal;
-my $raxml;
-my $fasttree;
 
 my $options = GetOptions (  'orthogroup_faa=s' => \$orthogroup_faa,
               'scaffold=s' => \$scaffold,
@@ -183,41 +168,33 @@ my $options = GetOptions (  'orthogroup_faa=s' => \$orthogroup_faa,
               'pasta_iter_limit=i'=> \$pasta_iter_limit,
               'pasta_script_path=s'=>\$pasta_script_path,
               'orthogroup_fna' => \$orthogroup_fna,
-              'no_config_override' => \$no_config_override
               );
 
-if ($no_config_override) {
-    $mafft = 'mafft';
-    $pasta = 'run_pasta.py';
-    $trimal = 'trimal';
-    $raxml = 'raxmlHPC-PTHREADS-SSE3';
-    $fasttree = 'FastTreeMP';
+my %utilies;
+open (IN, "$home/config/plantTribes.config") or die "can't open $home/config/plantTribes.config file\n";
+while (<IN>) {
+	chomp;
+	if ($_ !~ /^\w+/) { next; }
+	my @F = split(/\=/, $_);
+	$utilies{$F[0]} = $F[1];
 }
-else {
-    open (IN, "$home/config/plantTribes.config") or die "can't open $home/config/plantTribes.config file\n";
-    while (<IN>) {
-	   chomp;
-	   if ($_ !~ /^\w+/) { next; }
-	   my @F = split(/\=/, $_);
-	   $utilies{$F[0]} = $F[1];
-    }
-    close IN;
+close IN;
 
-    $mafft = $utilies{'mafft'};
-    $pasta = $utilies{'pasta'};
-    $trimal = $utilies{'trimal'};
-    $raxml = $utilies{'raxml'};
-    $fasttree = $utilies{'fasttree'};
+if (!($scaffold_dir)) {
+    $scaffold_dir = "$home/data"
 }
 
 if ($pasta_script_path) {
     # Use the specified path to the run_pasta.py script.
     $pasta = $pasta_script_path;
+} else {
+    $pasta = $utilies{'pasta'};
 }
 
-if (!($scaffold_dir)) {
-    $scaffold_dir = "$home/data"
-}
+my $mafft = $utilies{'mafft'};
+my $trimal = $utilies{'trimal'};
+my $raxml = $utilies{'raxml'};
+my $fasttree = $utilies{'fasttree'};
 
 # validate options
 my %scaffolds = ("12Gv1.0", "Monocots clusters (version 1.0)",  "22Gv1.0", "Angiosperms clusters (version 1.0)",

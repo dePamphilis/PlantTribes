@@ -61,9 +61,6 @@ my $usage = <<__EOUSAGE__;
 #                                    
 #  --coding_sequences <string>     : Corresponding coding sequences (CDS) fasta file (cds.fasta)
 #
-#  --no_config_override            : Do not override values defined in the environment with values defined in
-#                                    $home/config/plantTribes.config.
-#
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #  Example Usage:
 #
@@ -87,14 +84,6 @@ my $single_copy_taxa;
 my $taxa_present;
 my $orthogroup_fasta;
 my $coding_sequences;
-my $no_config_override;
-
-# Values that can either be retrieved from
-# $home/config/plantTribes.config or located
-# on $PATH using --no_config_override.
-my %utilies;
-my $blastp;
-my $hmmscan;
 
 my $options = GetOptions (  'proteins=s' => \$proteins,
               'scaffold=s' => \$scaffold,
@@ -108,30 +97,24 @@ my $options = GetOptions (  'proteins=s' => \$proteins,
               'taxa_present=i' => \$taxa_present,
               'orthogroup_fasta' => \$orthogroup_fasta,
               'coding_sequences=s' => \$coding_sequences,
-              'no_config_override' => \$no_config_override
               );
-
-if ($no_config_override) {
-    $blastp = 'blastp';
-    $hmmscan = 'hmmscan';
+              
+my %utilies;
+open (IN, "$home/config/plantTribes.config") or die "can't open $home/config/plantTribes.config file\n";
+while (<IN>) {
+	chomp;
+	if ($_ !~ /^\w+/) { next; }
+	my @F = split(/\=/, $_);
+	$utilies{$F[0]} = $F[1];
 }
-else {
-    open (IN, "$home/config/plantTribes.config") or die "can't open $home/config/plantTribes.config file\n";
-    while (<IN>) {
-	   chomp;
-	   if ($_ !~ /^\w+/) { next; }
-	   my @F = split(/\=/, $_);
-	   $utilies{$F[0]} = $F[1];
-    }
-    close IN;
-
-    $blastp = $utilies{'blastp'};
-    $hmmscan = $utilies{'hmmscan'};
-}
+close IN;
 
 if (!($scaffold_dir)) {
     $scaffold_dir = "$home/data"
 }
+
+my $blastp = $utilies{'blastp'};
+my $hmmscan = $utilies{'hmmscan'};
               
 # validate options            
 my %scaffolds = ("12Gv1.0", "Monocots clusters (version 1.0)",  "22Gv1.0", "Angiosperms clusters (version 1.0)",
