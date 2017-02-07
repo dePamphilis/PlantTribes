@@ -344,85 +344,93 @@ sub run_transdecoder {
     # if transcriptome assembly is from a strand specific library only keep the strand with most predictions i.e usually
     # more than 90% of predictions are of from one strand (plus or minus) if from stranded library. 
     if ($stranded) {
-		my (%plus, %minus);
+    		my (%plus, %minus);
 		open (IN, "$out_dir/transcripts.cds") or die "can't open $out_dir/transcripts.cds file\n";
 		while(<IN>) {
 	  		chomp;
+			# version 2.0.1
 	  		# CDS: >contig_1|m.1 contig_1|g.1 type:internal len:115 contig_1:344-3(-) PEP: >contig_1|m.1 contig_1|g.1 type:internal len:115 gc:universal contig_1:344-3(-) = minus strand
 	  		# CDS: >contig_2|m.2 contig_2|g.2 type:5prime_partial len:170 contig_2:2-511(+) PEP: >contig_2|m.2 contig_2|g.2 type:5prime_partial len:170 gc:universal contig_2:2-511(+) = plus strand
-	  		if (/^>(\S+)/) { $id = $1; if (/\(\-\)$/) { $strand = 1; } else { $strand = 0; } } 
+	  		# version 3.0.1
+			# CDS: >Gene.1::contig_1::g.1::m.1 type:internal len:115 contig_1:344-3(-) PEP: >Gene.1::contig_1::g.1::m.1 type:internal len:115 gc:universal contig_1:344-3(-) = minus strand
+			# CDS: >Gene.1::contig_2::g.1::m.1 type:3prime_partial len:413 contig_2:1-1236(+) PEP: >Gene.1::contig_2::g.1::m.1 type:3prime_partial len:413 gc:universal contig_2:1-1236(+) = plus strand
+			if (/^>(\S+)/) { $id = $1; if (/\(\-\)$/) { $strand = 1; } else { $strand = 0; } } 
 	  		else { s/\s+//g; if ($strand == 0) { $plus{$id} .= $_; } if ($strand == 1) { $minus{$1} .= $_; } }
-        }
+        	}
 		close IN;
 		my $plus_count = keys(%plus);
 		my $minus_count = keys(%minus);
 		if ($plus_count > $minus_count) {
-	    	my %orig;
+	    		my %orig;
 			foreach my $key (keys %plus) {
 				my $orig_id = $key;
-	    		my $sequence = $plus{$key};
-	    		$key =~ /(\S+?)\|m\.\d+/;
-	    		$key = $1;
-	    		if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
-	    		else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
+	    			my $sequence = $plus{$key};
+	    			#$key =~ /(\S+?)\|m\.\d+/;
+				$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+	    			$key = $1;
+	    			if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
+	    			else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
 			}
 			undef %plus;
-	    	open (IN, "$out_dir/transcripts.pep") || die "can't open $out_dir/transcripts.pep file\n";
-	    	while(<IN>) {
+	    		open (IN, "$out_dir/transcripts.pep") || die "can't open $out_dir/transcripts.pep file\n";
+	    		while(<IN>) {
 				chomp; 
 				if (/^>(\S+)/) { $id = $1; if (/\(\-\)$/) { $strand = 1; } else { $strand = 0; } }
 				else { if ($strand == 1) {next; } s/\s+//g; s/\*/X/g; $plus{$id} .= $_; }
-	    	}
-	    	close IN;
-	    	foreach my $key (keys %plus) {
-	    		my $sequence = $plus{$key};
-	    		if (!$orig{$key}) { next; }  
-	    		$key =~ /(\S+?)\|m\.\d+/;
-	    		$key = $1;
-	    		$pep{$key} = $sequence;
+	    		}
+	    		close IN;
+	    		foreach my $key (keys %plus) {
+	    			my $sequence = $plus{$key};
+	    			if (!$orig{$key}) { next; }  
+	    			#$key =~ /(\S+?)\|m\.\d+/;
+				$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+	    			$key = $1;
+	    			$pep{$key} = $sequence;
 			}
 			undef %plus;	    	
-	    	if ( (($minus_count) / ($minus_count + $plus_count )) > 0.25 ) {
+	    		if ( (($minus_count) / ($minus_count + $plus_count )) > 0.25 ) {
 				print "A surprisingly large number of antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\n"; 
-	    	}
+	    		}
 		}
 		elsif ($minus_count > $plus_count) {
-	    	my %orig;
+	    		my %orig;
 			foreach my $key (keys %minus) {
 				my $orig_id = $key;
-	    		my $sequence = $minus{$key};
-	    		$key =~ /(\S+?)\|m\.\d+/;
-	    		$key = $1;
-	    		if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
-	    		else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
+	    			my $sequence = $minus{$key};
+	    			#$key =~ /(\S+?)\|m\.\d+/;
+				$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+	    			$key = $1;
+	    			if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
+	    			else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
 			}
 			undef %minus;	    	
-	    	open (IN, "$out_dir/transcripts.pep") or die "can't open $out_dir/transcripts.pep file\n";
-	    	while(<IN>) {
+	    		open (IN, "$out_dir/transcripts.pep") or die "can't open $out_dir/transcripts.pep file\n";
+	    		while(<IN>) {
 				chomp;
 				if (/^>(\S+)/) { $id = $1; if (/\(\-\)$/) { $strand = 1; } else { $strand = 0; } }
 				else { if ($strand == 0) { next; } s/\s+//g; s/\*/X/g; $minus{$id} .= $_; }
 			}
-	    	close IN;
-	    	foreach my $key (keys %minus) {
-	    		my $sequence = $minus{$key};
-	    		if (!$orig{$key}) { next; }  
-	    		$key =~ /(\S+?)\|m\.\d+/;
-	    		$key = $1;
-	    		$pep{$key} = $sequence;
+	    		close IN;
+	    		foreach my $key (keys %minus) {
+	    			my $sequence = $minus{$key};
+	    			if (!$orig{$key}) { next; }  
+	    			#$key =~ /(\S+?)\|m\.\d+/;
+				$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+	    			$key = $1;
+	    			$pep{$key} = $sequence;
 			}
 			undef %minus;	  
-	    	if ( (($plus_count) / ($plus_count + $minus_count )) > 0.25 ) {
+	    		if ( (($plus_count) / ($plus_count + $minus_count )) > 0.25 ) {
 				print "A surprisingly large number of antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\n";
-	    	}
+	    		}
 		}
 		else {
-	    	print "Proportional number of sense and antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\nTerminating...\n\n";
-	    	exit(0);
+	    		print "Proportional number of sense and antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\nTerminating...\n\n";
+	    		exit(0);
 		}
-	} 
-	# if transcriptome assembly is not from a strand specific library only keep the strand with the longest predictions.
-    else {
+   } 
+   # if transcriptome assembly is not from a strand specific library only keep the strand with the longest predictions.
+   else {
 		my %seq;
 		open (IN, "$out_dir/transcripts.cds") or die "can't open $out_dir/transcripts.cds file\n";
 		while(<IN>) {
@@ -435,7 +443,8 @@ sub run_transdecoder {
 		foreach my $key (keys %seq) {
 			my $orig_id = $key;
 	    	my $sequence = $seq{$key};
-	    	$key =~ /(\S+?)\|m\.\d+/;
+	    	#$key =~ /(\S+?)\|m\.\d+/;
+		$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
 	    	$key = $1;
 	    	if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
 	    	else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
@@ -451,7 +460,8 @@ sub run_transdecoder {
 		foreach my $key (keys %seq) {
 	    	my $sequence = $seq{$key};
 	    	if (!$orig{$key}) { next; }  
-	    	$key =~ /(\S+?)\|m\.\d+/;
+	    	#$key =~ /(\S+?)\|m\.\d+/;
+		$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
 	    	$key = $1;
 	    	$pep{$key} = $sequence;
 		}
