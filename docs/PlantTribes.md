@@ -8,7 +8,7 @@ All questions and inquires should be addressed to our user email group: `PlantTr
 PlantTribes pipeline scripts have many external dependencies that need to be installed before the pipelines can be used. Executables of external dependencies should be set in the `plantTribes.config` file that is in the [config](../config) subdirectory of the installation. 
 #### Pipeline dependencies
 - **AssemblyPostProcesser pipeline**:  
-[ESTScan (version 2.1)](http://estscan.sourceforge.net/), [TransDecoder (version 2.0.1)](https://github.com/TransDecoder/TransDecoder/releases), and [GenomeTools (version 1.5.4)](http://genometools.org/).
+[ESTScan (version 2.1)](http://estscan.sourceforge.net/), [TransDecoder (version 3.0.1)](https://github.com/TransDecoder/TransDecoder/releases), and [GenomeTools (version 1.5.4)](http://genometools.org/).
 - **GeneFamilyClassifier pipeline**:  
 [BLASTP (NCBI BLAST version 2.2.29+)](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download), and [HMMScan (HMMER version 3.1b1)](http://hmmer.janelia.org/).
 - **PhylogenomicsAnalysis pipeline**:  
