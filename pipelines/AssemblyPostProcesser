@@ -6,6 +6,8 @@
 
 use strict;
 use warnings;
+use File::Spec;
+use File::Basename;
 use Getopt::Long qw(:config no_ignore_case);
 use FindBin;
 
@@ -33,9 +35,6 @@ my $usage = <<__EOUSAGE__;
 #
 #  --gene_family_search <string>   : File with a list of orthogroup identifiers for target gene families to assemble
 #                                    - requires "--scaffold" and "--method" 
-#
-#  --scaffold_dir <string>         : Optional directory path containing the scaffolds datasets
-#                                    Default: $home/data
 #
 #  --scaffold <string>             : Orthogroups or gene families proteins scaffold - required by "--gene_family_search"
 #                                    If Angiosperms clusters (version 1.0): 22Gv1.0
@@ -92,7 +91,6 @@ my $options = GetOptions (  'transcripts=s' => \$transcripts,
 	      'prediction_method=s' => \$prediction_method,
 	      'score_matrices=s' => \$score_matrices,
 	      'gene_family_search=s' => \$gene_family_search,
-	      'scaffold_dir=s' => \$scaffold_dir,
 	      'scaffold=s' => \$scaffold,
 	      'method=s' => \$method,
 	      'gap_trimming=f' => \$gap_trimming,
@@ -112,8 +110,11 @@ while (<IN>) {
 }
 close IN;
 
-if (!($scaffold_dir)) {
-    $scaffold_dir = "$home/data"
+if (File::Spec->file_name_is_absolute($scaffold)) {
+    $scaffold_dir = $scaffold;
+    $scaffold = basename($scaffold);
+} else {
+    $scaffold_dir = "$home/data/$scaffold";
 }
 
 my $estscan = $utilies{'estscan'};
@@ -566,7 +567,7 @@ sub targeted_gene_family_assembly {
 	foreach my $ortho_id (sort keys %target_ids) {
 		print "############ Target Family - Orthogroup $ortho_id ############\n\n";
 		# check if target hmm profile is present for the scaffold and method
-		if (!(-e "$scaffold_dir/$scaffold/hmms/$clustering_method/$ortho_id.hmm") or (-z "$scaffold_dir/$scaffold/hmms/$clustering_method/$ortho_id.hmm")) {
+		if (!(-e "$scaffold_dir/hmms/$clustering_method/$ortho_id.hmm") or (-z "$scaffold_dir/hmms/$clustering_method/$ortho_id.hmm")) {
 			print "HMM profile for orthogroup $ortho_id doesn't exist for $clustering_method method of scaffold $scaffold!\n\n";
 			next;
 		}
@@ -574,10 +575,10 @@ sub targeted_gene_family_assembly {
 		mkdir ($target_out_dir, 0755);
 		# hmmsearch target profile using post-processed predicted proteins - default parameters
 		if ($dereplicate) { 
-			system "$hmmsearch -E 10 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/$scaffold/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.nr.pep >/dev/null 2>/dev/null";
+			system "$hmmsearch -E 10 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.nr.pep >/dev/null 2>/dev/null";
 		}
 		else {
-			system "$hmmsearch -E 10 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/$scaffold/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.pep >/dev/null 2>/dev/null";
+			system "$hmmsearch -E 10 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.pep >/dev/null 2>/dev/null";
 		}
 		# extract corresponding primary contigs for target hits
 		my $hits = 0;
@@ -633,7 +634,7 @@ sub targeted_gene_family_assembly {
 		    open(IN, "$target_out_dir/transcripts.cleaned.nr.cds") or die "can't open $target_out_dir/transcripts.cleaned.nr.cds file\n";
 		    while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly_cds{$seq_id} .= $_ ; } }
 		    close IN;
-		    system "$hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/$scaffold/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.nr.pep >/dev/null 2>/dev/null";			
+		    system "$hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.nr.pep >/dev/null 2>/dev/null";			
 		} 
 		else {
 		    open(IN, "$target_out_dir/transcripts.cleaned.pep") or die "can't open $target_out_dir/transcripts.cleaned.pep file\n";
@@ -642,7 +643,7 @@ sub targeted_gene_family_assembly {
 		    open(IN, "$target_out_dir/transcripts.cleaned.cds") or die "can't open $target_out_dir/$transcripts.cleaned.cds file\n";
 		    while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly_cds{$seq_id} .= $_ ; } }
 		    close IN;
-		    system "$hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/$scaffold/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.pep >/dev/null 2>/dev/null";								
+		    system "$hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.pep >/dev/null 2>/dev/null";								
 		}	
 		# compute transcript orthogroup coverage
 		$hits = 0;
@@ -656,7 +657,7 @@ sub targeted_gene_family_assembly {
 			system "rm -r $target_out_dir";
 			next;
 		}
-		system "$mafft --add $target_out_dir/temp.2.hmm.pep $scaffold_dir/$scaffold/alns/$clustering_method/$ortho_id.aln > $target_out_dir/temp.2.hmm.pep.aln 2>/dev/null";
+		system "$mafft --add $target_out_dir/temp.2.hmm.pep $scaffold_dir/alns/$clustering_method/$ortho_id.aln > $target_out_dir/temp.2.hmm.pep.aln 2>/dev/null";
 		unless ($gap_trimming) { $gap_trimming = 0.1; } 
 		system "$trimal -in $target_out_dir/temp.2.hmm.pep.aln -out $target_out_dir/temp.2.hmm.pep.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null";
 		open(IN, "$target_out_dir/temp.2.hmm.pep.aln.trim") or die "can't open $target_out_dir/temp.2.hmm.pep.aln.trim file\n";

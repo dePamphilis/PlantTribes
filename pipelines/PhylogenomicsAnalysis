@@ -6,6 +6,8 @@
 
 use strict;
 use warnings;
+use File::Spec;
+use File::Basename;
 use Getopt::Long qw(:config no_ignore_case);
 use FindBin;
 
@@ -89,9 +91,6 @@ my $usage = <<__EOUSAGE__;
 #
 # # # # # # # # # # # # # # # # # # 
 #  Others Options:
-#
-#  --scaffold_dir <string>         : Optional directory path containing the scaffolds datasets
-#                                    Default: $home/data
 #
 #  --num_threads <int>             : number of threads (CPUs) to assign to external utilities (MAFFT, PASTA, and RAxML)
 #                                    Default: 1 
@@ -180,8 +179,11 @@ while (<IN>) {
 }
 close IN;
 
-if (!($scaffold_dir)) {
-    $scaffold_dir = "$home/data"
+if (File::Spec->file_name_is_absolute($scaffold)) {
+	$scaffold_dir = $scaffold;
+	$scaffold = basename($scaffold);
+} else {
+	$scaffold_dir = "$home/data/$scaffold";
 }
 
 if ($pasta_script_path) {
@@ -289,9 +291,9 @@ sub get_orthogroup_fasta {
 		die "Exiting...!\nOrthogroup classification protein and CDS fasta files not equivalent in $orthogroup_faa directory\n\n";
 	}	
 	foreach my $ortho_id (keys %pep) { 
-		system "cat $scaffold_dir/$scaffold/fasta/$method/$ortho_id.faa $orthogroup_faa/$ortho_id.faa > $orthogroups_fasta/$ortho_id.faa";
+		system "cat $scaffold_dir/fasta/$method/$ortho_id.faa $orthogroup_faa/$ortho_id.faa > $orthogroups_fasta/$ortho_id.faa";
 		if ($orthogroup_fna and $cds{$ortho_id}) {
-			system "cat $scaffold_dir/$scaffold/fasta/$method/$ortho_id.fna $orthogroup_faa/$ortho_id.fna > $orthogroups_fasta/$ortho_id.fna";
+			system "cat $scaffold_dir/fasta/$method/$ortho_id.fna $orthogroup_faa/$ortho_id.fna > $orthogroups_fasta/$ortho_id.fna";
 		}
 	} 	
 }
@@ -317,7 +319,7 @@ sub create_orthogroup_alignments {
 			system "$mafft --maxiterate 1000 --thread $num_threads --localpair $orthogroups_fasta/$ortho_id.faa > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null"; 
 		}
 		if ($add_alignments) {
-			system "$mafft --add $orthogroup_faa/$ortho_id.faa $scaffold_dir/$scaffold/alns/$method/$ortho_id.aln > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null";
+			system "$mafft --add $orthogroup_faa/$ortho_id.faa $scaffold_dir/alns/$method/$ortho_id.aln > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null";
 		}
 		if ($pasta_alignments) {
 			my $pasta_temp = "$dirname/pasta_temp";
