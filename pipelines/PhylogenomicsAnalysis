@@ -324,7 +324,16 @@ sub create_orthogroup_alignments {
 		if ($pasta_alignments) {
 			my $pasta_temp = "$dirname/pasta_temp";
 			mkdir $pasta_temp, 0755;
-			system "python $pasta -d Protein -i $orthogroups_fasta/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null 2>/dev/null";
+			system "python $pasta -d Protein -i $orthogroups_fasta/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null";
+			my $pasta_aln = 0;
+			opendir (DIR, "$pasta_temp") or die "can't $pasta_temp directory\n";
+			while ( my $filename = readdir(DIR)) {
+				if ($filename =~ /\.aln$/){ $pasta_aln++; }
+			}
+			if($pasta_aln == 0) {
+				print "PASTA multiple alignments was not successful.\nEither PASTA is properly installed or your input fasta file is not in the required format.\nTerminating...\n\n";
+				exit(0);
+			}
 			system "mv $pasta_temp/*.$ortho_id.faa.aln $orthogroups_aln/$ortho_id.faa.aln";
 			system "rm -r $pasta_temp";
 		}
