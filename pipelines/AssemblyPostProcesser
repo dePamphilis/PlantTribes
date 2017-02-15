@@ -36,7 +36,10 @@ my $usage = <<__EOUSAGE__;
 #  --gene_family_search <string>   : File with a list of orthogroup identifiers for target gene families to assemble
 #                                    - requires "--scaffold" and "--method" 
 #
-#  --scaffold <string>             : Orthogroups or gene families proteins scaffold - required by "--gene_family_search"
+#  --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
+#                                    path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
+#                                    or just the scaffold (e.g., 22Gv1.1).  If the latter, $home/data is prepended to
+#                                    the scaffold to create the absolute path.
 #                                    If Angiosperms clusters (version 1.0): 22Gv1.0
 #                                    If Angiosperms clusters (version 1.1): 22Gv1.1
 #
@@ -50,6 +53,11 @@ my $usage = <<__EOUSAGE__;
 #   
 # # # # # # # # # # # # # # # # # # 
 #  Others Options:
+#
+#  --config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
+#                                    for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
+#                                    /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
+#                                    default configuration files is set to $home/config/$scaffold.
 #
 #  --strand_specific               : If de novo transcriptome assembly was performed with strand-specific library
 #                                    Default: not strand-specific 
@@ -82,6 +90,7 @@ my $scaffold_dir;
 my $scaffold;
 my $method;
 my $gap_trimming;
+my $config_dir;
 my $strand_specific;
 my $dereplicate;
 my $min_length;
@@ -94,14 +103,28 @@ my $options = GetOptions (  'transcripts=s' => \$transcripts,
 	      'scaffold=s' => \$scaffold,
 	      'method=s' => \$method,
 	      'gap_trimming=f' => \$gap_trimming,
+	      'config_dir=s' => \$config_dir,
 	      'strand_specific' => \$strand_specific,
 	      'dereplicate' => \$dereplicate,
 	      'min_length=i' => \$min_length,
 	      'num_threads=i' => \$num_threads
 	      );
 
+if ($scaffold) {
+	if File::Spec->file_name_is_absolute($scaffold)) {
+		$scaffold_dir = $scaffold;
+		$scaffold = basename($scaffold);
+	} else {
+		$scaffold_dir = "$home/data/$scaffold";
+	}
+}
+
+if (!$config_dir || !File::Spec->file_name_is_absolute($config_dir)) {
+	$config_dir = $home/config;
+}
+
 my %utilies;
-open (IN, "$home/config/plantTribes.config") or die "can't open $home/config/plantTribes.config file\n";
+open (IN, "$config_dir/plantTribes.config") or die "can't open $config_dir/plantTribes.config file\n";
 while (<IN>) {
 	chomp;
 	if ($_ !~ /^\w+/) { next; }
@@ -109,13 +132,6 @@ while (<IN>) {
 	$utilies{$F[0]} = $F[1];
 }
 close IN;
-
-if (File::Spec->file_name_is_absolute($scaffold)) {
-    $scaffold_dir = $scaffold;
-    $scaffold = basename($scaffold);
-} else {
-    $scaffold_dir = "$home/data/$scaffold";
-}
 
 my $estscan = $utilies{'estscan'};
 my $transdecoder = $utilies{'transdecoder'};
@@ -163,7 +179,7 @@ if ( $dereplicate ) {
 
 if ( $gene_family_search ) {
 	targeted_gene_family_assembly ( $gene_family_search, $scaffold, $method, $hmmsearch, $cap3, $prediction_method, $estscan, $transdecoder,
-		$genometools, $mafft, $trimal, $transcripts, $score_matrices, $strand_specific, $dereplicate, $min_length, $gap_trimming, $num_threads, $dirname, $home )		
+		$genometools, $mafft, $trimal, $transcripts, $score_matrices, $strand_specific, $dereplicate, $min_length, $gap_trimming, $num_threads, $dirname, $scaffold_dir )		
 }
 
 print localtime()." - Completed transcriptome assembly post processing\n\n";
@@ -553,7 +569,7 @@ sub dereplicate {
 
 sub targeted_gene_family_assembly { 
 	my ( $target_orthogroups, $scaffold, $clustering_method, $hmmsearch, $cap3, $prediction_method, $estscan, $transdecoder,
-		$genometools, $mafft, $trimal, $transcripts, $score_matrices, $stranded, $dereplicate, $length, $gap_trimming, $num_threads, $out_dir, $home ) = @_;
+		$genometools, $mafft, $trimal, $transcripts, $score_matrices, $stranded, $dereplicate, $length, $gap_trimming, $num_threads, $out_dir, $scaffold_dir ) = @_;
 	print localtime()." - Starting targeted gene family assembly\n\n";	
 	my $targeted_gene_families = "$out_dir/targeted_gene_families";
 	mkdir ($targeted_gene_families, 0755);

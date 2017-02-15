@@ -24,7 +24,10 @@ my $usage = <<__EOUSAGE__;
 #
 #  --proteins <string>             : Amino acids (proteins) sequences fasta file (proteins.fasta)
 #
-#  --scaffold <string>             : Orthogroups or gene families proteins scaffold
+#  --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
+#                                    path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
+#                                    or just the scaffold (e.g., 22Gv1.1).  If the latter, $home/data is prepended to
+#                                    the scaffold to create the absolute path.
 #                                    If Angiosperms clusters (version 1.0): 22Gv1.0
 #                                    If Angiosperms clusters (version 1.1): 22Gv1.1	
 #
@@ -40,6 +43,11 @@ my $usage = <<__EOUSAGE__;
 #
 # # # # # # # # # # # # # # # # # # 
 #  Others Options:
+#
+#  --config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
+#                                    for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
+#                                    /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
+#                                    default configuration files is set to $home/config.
 #
 #  --num_threads <int>             : number of threads (CPUs) to used for HMMScan, BLASTP, and MAFFT
 #                                    Default: 1 
@@ -76,6 +84,7 @@ my $scaffold;
 my $method;
 my $classifier;
 my $scaffold_dir;
+my $config_dir;
 my $num_threads;
 my $super_orthogroups;
 my $single_copy_custom;
@@ -89,6 +98,7 @@ my $options = GetOptions (  'proteins=s' => \$proteins,
               'method=s' => \$method,
               'classifier=s' => \$classifier,
               'scaffold_dir=s' => \$scaffold_dir,
+              'config_dir=s' => \$config_dir,
               'num_threads=i' => \$num_threads,
               'super_orthogroups=s' => \$super_orthogroups,
               'single_copy_custom' => \$single_copy_custom,
@@ -98,8 +108,19 @@ my $options = GetOptions (  'proteins=s' => \$proteins,
               'coding_sequences=s' => \$coding_sequences,
               );
               
+if (File::Spec->file_name_is_absolute($scaffold)) {
+	$scaffold_dir = $scaffold;
+	$scaffold = basename($scaffold);
+} else {
+	$scaffold_dir = "$home/data/$scaffold";
+}
+
+if (!$config_dir || !File::Spec->file_name_is_absolute($config_dir)) {
+	$config_dir = $home/config;
+}
+
 my %utilies;
-open (IN, "$home/config/plantTribes.config") or die "can't open $home/config/plantTribes.config file\n";
+open (IN, "$config_dir/plantTribes.config") or die "can't open $config_dir/plantTribes.config file\n";
 while (<IN>) {
 	chomp;
 	if ($_ !~ /^\w+/) { next; }
@@ -108,16 +129,9 @@ while (<IN>) {
 }
 close IN;
 
-if (File::Spec->file_name_is_absolute($scaffold)) {
-	$scaffold_dir = $scaffold;
-	$scaffold = basename($scaffold);
-} else {
-	$scaffold_dir = "$home/data/$scaffold";
-}
-
 my $blastp = $utilies{'blastp'};
 my $hmmscan = $utilies{'hmmscan'};
-              
+ 
 # validate options            
 my %scaffolds = ("12Gv1.0", "Monocots clusters (version 1.0)",  "22Gv1.0", "Angiosperms clusters (version 1.0)",
 	"22Gv1.1", "Angiosperms clusters (version 1.1)", "26Gv2.0", "Angiosperms clusters (version 2.0)", "31Gv1.0", "Green plants clusters (version 1.0)");
@@ -150,19 +164,19 @@ if (-d $dirname) { die "Exiting...!\nGene family classification output directory
 mkdir ($dirname, 0755);
 
 if ( $classifier eq "blastp" ) {
-	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $home );
+	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir );
 }
 elsif ( $classifier eq "hmmscan" ) {
-	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $home );
+	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir );
 }
 elsif ( $classifier eq "both" ) {
-	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $home );
-	get_blast_hmmscan_orthos ( $dirname, $scaffold, $method, $super_orthogroups, $home );
+	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir );
+	get_blast_hmmscan_orthos ( $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir );
 }
 else { die "Unknown protein classification method.\n\n$usage"; }
 
 if ( $single_copy_custom or $single_copy_taxa) {
-	get_single_copy_orthogroups ( $single_copy_custom, $single_copy_taxa, $taxa_present, $classifier, $scaffold, $method, $dirname, $home );
+	get_single_copy_orthogroups ( $single_copy_custom, $single_copy_taxa, $taxa_present, $classifier, $scaffold, $method, $dirname, $config_dir );
 }
 
 if ( $orthogroup_fasta ) {
@@ -176,7 +190,7 @@ exit(0);
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #  sub-routines # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 sub sort_sequences {
-	my ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $home ) = @_;
+	my ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir ) = @_;
 	print localtime()." - Sorting protein sequences\n";
 	if ( (!$super_orthogroups) or ($super_orthogroups ne "min_evalue") or ($super_orthogroups ne "avg_evalue") ) { $super_orthogroups = "min_evalue" } 
 	if ( ($classifier eq "blastp") or ($classifier eq "both") ) {
@@ -184,19 +198,19 @@ sub sort_sequences {
 		system "$blastp -db_soft_mask 21 -outfmt 6 -evalue 1e-5 -num_threads $num_threads -query $proteins -db $scaffold_dir/db/blast/$method -out $dirname/proteins.blastp.$scaffold  >/dev/null 2>/dev/null";
 		print "-- ".localtime()." - Getting best BLASTP hits\n\n";
 		my $results = "proteins.blastp.$scaffold";
-		get_best_blastp_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $home );
+		get_best_blastp_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir );
 	}
 	if ( ($classifier eq "hmmscan") or ($classifier eq "both") ) {
 		print "-- ".localtime()." - Running HMMScan\n\n";
 		system "$hmmscan -E 1e-5 --cpu $num_threads --noali --tblout $dirname/proteins.hmmscan.$scaffold -o $dirname/hmmscan.log $scaffold_dir/db/hmm/$method $proteins >/dev/null 2>/dev/null";
 		print "-- ".localtime()." - Getting best HMMScan hits\n\n";
 		my $results = "proteins.hmmscan.$scaffold";
-		get_best_hmmscan_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $home );
+		get_best_hmmscan_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir );
 	}	
 }
 
 sub  get_best_blastp_orthos {
-	my ( $classifier, $blast_results, $dirname, $scaffold, $method, $super_orthogroups, $home ) = @_;
+	my ( $classifier, $blast_results, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir ) = @_;
 	my (%best, %max, %list);
     open (IN, "$dirname/$blast_results") or die "can't open $dirname/$blast_results file\n";
 	while (<IN>) {
@@ -232,12 +246,12 @@ sub  get_best_blastp_orthos {
 	if ($classifier eq "blastp") {
 		my $orthogroup_assignment = "$blast_results.bestOrthos";
 		print "-- ".localtime()." - Getting orthogroup annotation summaries\n\n";
-		get_annot_summary ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $home );
+		get_annot_summary ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir );
 	}
 }
 
 sub  get_best_hmmscan_orthos {
-	my ( $classifier, $hmmscan_results, $dirname, $scaffold, $method, $super_orthogroups, $home ) = @_;
+	my ( $classifier, $hmmscan_results, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir ) = @_;
 	my %hits;
 	open (IN, "$dirname/$hmmscan_results") or die "can't open $dirname/$hmmscan_results file\n";
 	while (<IN>) {
@@ -263,12 +277,12 @@ sub  get_best_hmmscan_orthos {
 	if ($classifier eq "hmmscan") {
 		my $orthogroup_assignment = "$hmmscan_results.bestOrthos";
 		print "-- ".localtime()." - Getting orthogroup annotation summaries\n\n";
-		get_annot_summary ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $home );
+		get_annot_summary ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir );
 	}
 }
 
 sub get_blast_hmmscan_orthos {
-	my ( $dirname, $scaffold, $method, $super_orthogroups, $home ) = @_;
+	my ( $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir ) = @_;
 	my (%blastp, %hmmscan, %genes);	
 	if ( (!$super_orthogroups) or ($super_orthogroups ne "min_evalue") or ($super_orthogroups ne "avg_evalue") ) { $super_orthogroups = "min_evalue" }
 	opendir (DIR, "$dirname") or die "can't open $dirname directory\n";
@@ -308,11 +322,11 @@ sub get_blast_hmmscan_orthos {
 	close OUT;
 	my $orthogroup_assignment = "proteins.both.$scaffold.bestOrthos";
 	print "-- ".localtime()." - Getting orthogroup annotation summaries\n\n";
-	get_annot_summary ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $home );	
+	get_annot_summary ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir );	
 }
 
 sub get_annot_summary {
-	my ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $home ) = @_;
+	my ( $orthogroup_assignment, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir ) = @_;
 	my %annot;
 	open (OUT, ">$dirname/$orthogroup_assignment.summary") or die "can't open $dirname/$orthogroup_assignment.summary file\n";	
 	open (IN, "$scaffold_dir/annot/$method.$super_orthogroups.summary") or die "can't open $scaffold_dir/annot/$method.$super_orthogroups.summary file\n";
@@ -335,7 +349,7 @@ sub get_annot_summary {
 }
 
 sub get_single_copy_orthogroups {
-	my ( $single_copy_custom, $single_copy_taxa, $taxa_present, $classifier, $scaffold, $method, $dirname, $home ) = @_;
+	my ( $single_copy_custom, $single_copy_taxa, $taxa_present, $classifier, $scaffold, $method, $dirname, $config_dir ) = @_;
 	print "-- ".localtime()." - Determining single copy orthogroups\n\n";	
 	my $annot_summary = "proteins.$classifier.$scaffold.bestOrthos.summary";
 	open (OUT, ">$dirname/$annot_summary.singleCopy") or die "can't open $dirname/$annot_summary.singleCopy file\n";
@@ -343,7 +357,7 @@ sub get_single_copy_orthogroups {
 	if ($single_copy_custom) {
 		my %genes;
 		my $annot_field = 1;
-		open (IN, "$home/config/$scaffold.singleCopy.config") or die "can't open $home/config/$scaffold.singleCopy.config file\n";
+		open (IN, "$config_dir/$scaffold.singleCopy.config") or die "can't open $config_dir/$scaffold.singleCopy.config file\n";
 		while (<IN>) {
 			chomp; 
 			if ($_ !~ /^\w+/) { next; }
