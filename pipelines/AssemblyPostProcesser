@@ -162,7 +162,7 @@ if ($gene_family_search) {
 # create output directory
 my $dirname ="./assemblyPostProcessing_dir";
 if (-d $dirname) { die "Exiting...!\nAssembly post processing output directory ($dirname) already exists!\n\n"; }
-mkdir ($dirname, 0755);
+make_directory($dirname);
 
 if ( $prediction_method eq "estscan" ) {
     unless ( $score_matrices ) { die "Reference score matrices required with ESTScan.\n\n$usage;"; }
@@ -187,6 +187,13 @@ print localtime()." - Completed transcriptome assembly post processing\n\n";
 exit(0);
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #  sub-routines # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+sub make_directory {
+        my ( $new_dir ) = @_;
+        if (!-d $new_dir) {
+                mkdir($new_dir, 0755);
+        }
+}
 
 sub run_estscan {
     my ($estscan, $transcripts, $matrices, $stranded, $length, $gene_family_search, $out_dir ) = @_;
@@ -572,7 +579,7 @@ sub targeted_gene_family_assembly {
 		$genometools, $mafft, $trimal, $transcripts, $score_matrices, $stranded, $dereplicate, $length, $gap_trimming, $num_threads, $out_dir, $scaffold_dir ) = @_;
 	print localtime()." - Starting targeted gene family assembly\n\n";	
 	my $targeted_gene_families = "$out_dir/targeted_gene_families";
-	mkdir ($targeted_gene_families, 0755);
+	make_directory($targeted_gene_families);
 	my (%target_ids, %contigs, $contig_id);
 	open (IN, "$target_orthogroups") or die "can't open $target_orthogroups file\n";
 	while(<IN>){ chomp; if ($_ =~ /^(\d+)/) { $target_ids{$1} = $1; } else { next; } }
@@ -588,7 +595,7 @@ sub targeted_gene_family_assembly {
 			next;
 		}
 		my $target_out_dir = "$targeted_gene_families/$ortho_id";
-		mkdir ($target_out_dir, 0755);
+		make_directory($target_out_dir);
 		# hmmsearch target profile using post-processed predicted proteins - default parameters
 		if ($dereplicate) { 
 			system "$hmmsearch -E 10 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.nr.pep >/dev/null 2>/dev/null";

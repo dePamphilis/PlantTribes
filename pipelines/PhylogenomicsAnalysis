@@ -261,7 +261,7 @@ print "\n\n";
 # create output directory
 my $dirname ="./phylogenomicsAnalysis_dir";
 if (-d $dirname) { die "Exiting...!\nPhylogenomics analysis output directory ($dirname) already exists!\n\n"; }
-mkdir ($dirname, 0755);
+make_directory($dirname);
 
 get_orthogroup_fasta ( $orthogroup_faa, $orthogroup_fna, $scaffold, $method, $dirname, $scaffold_dir );
 
@@ -290,12 +290,19 @@ exit(0);
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #  sub-routines # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+sub make_directory {
+	my ( $new_dir ) = @_;
+	if (!-d $new_dir) {
+		mkdir($new_dir, 0755);
+	}
+}
+
 sub get_orthogroup_fasta {
 	my ( $orthogroup_faa, $orthogroup_fna, $scaffold, $method, $dirname, $scaffold_dir ) = @_;
 	print localtime()." - Creating orthogroup fasta\n\n";
 	my (%pep, %cds);
 	my $orthogroups_fasta = "$dirname/orthogroups_fasta";
-	mkdir ($orthogroups_fasta, 0755);
+	make_directory($orthogroups_fasta);
 	opendir (DIR, "$orthogroup_faa") or die "can't open $orthogroup_faa file\n";
 	while ( my $filename = readdir(DIR) ) {
 		if ($filename =~ /^(\d+)\.faa$/) { $pep{$1} = $1; }
@@ -318,8 +325,9 @@ sub create_orthogroup_alignments {
 		$scaffold, $method, $num_threads, $max_memory, $pasta_iter_limit, $dirname, $scaffold_dir ) = @_;
 	print localtime()." - Creating orthogroup alignments\n\n";
 	my $orthogroups_fasta = "$dirname/orthogroups_fasta";
+	make_directory($orthogroups_fasta);
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
-	mkdir ($orthogroups_aln, 0755);
+	make_directory($orthogroups_aln);
 	my %pep;
 	opendir (DIR, "$orthogroups_fasta") or die "can't open $orthogroups_fasta file\n";
 	while ( my $filename = readdir(DIR) ) { if ($filename =~ /^(\d+)\.faa$/) { $pep{$1} = $1; } }
@@ -338,7 +346,7 @@ sub create_orthogroup_alignments {
 		}
 		if ($pasta_alignments) {
 			my $pasta_temp = "$dirname/pasta_temp";
-			mkdir $pasta_temp, 0755;
+			make_directory($pasta_temp);
 			system "python $pasta -d Protein -i $orthogroups_fasta/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null";
 			my $pasta_aln = 0;
 			opendir (DIR, "$pasta_temp") or die "can't $pasta_temp directory\n";
@@ -404,7 +412,8 @@ sub trim_orthogroup_alignments {
 				if ( keys(%unfiltered_aln) != keys(%filtered_aln) ) {
 					my $orthogroups_fasta = "$dirname/orthogroups_fasta";
 					my $temp_dir = "$dirname/temp_dir";
-					mkdir ($temp_dir, 0755);
+					make_directory($temp_dir);
+				
 					get_sequences ( $orthogroups_fasta, $temp_dir, $ortho_id, \%filtered_aln, $codon_alignments );				
 				}		              
 			}
@@ -439,8 +448,9 @@ sub build_orthogroup_trees {
 		$gap_trimming, $remove_sequences, $raxml, $fasttree, $num_threads, $scaffold, $dirname, $config_dir ) = @_;
 	print localtime()." - Building orthogroup phylogenetic trees\n\n";	
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
+	make_directory($orthogroups_aln);
 	my $orthogroups_tree = "$dirname/orthogroups_tree";
-	mkdir ($orthogroups_tree, 0755);
+	make_directory($orthogroups_tree);
 	my ($seq_type, $aln_type, $max_seq, $min_seq);
 	if ($sequence_type and ($sequence_type eq "dna")) { $seq_type = "fna"; } else { $seq_type = "faa"; }
 	if ($remove_sequences) { $aln_type = "filter"; } 
@@ -595,7 +605,7 @@ sub prepare_alignments {
 		$gap_trimming, $remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname) = @_;
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
 	my $temp_aln = "$temp_dir/aln_dir";
-	mkdir $temp_aln, 0755;
+	make_directory($temp_aln);
 	my %pep;
 	opendir (DIR, "$temp_dir") or die "can't open $temp_dir file\n";
 	while ( my $filename = readdir(DIR) ) { if ($filename =~ /^(\d+)\.faa$/) { $pep{$1} = $1; } }
@@ -609,7 +619,7 @@ sub prepare_alignments {
 		if ($seq_count < 3) { next; }		
 		if ($pasta_alignments){
 			my $pasta_temp = "$dirname/pasta_temp";
-			mkdir $pasta_temp, 0755;
+			make_directory($pasta_temp);
 			system "python $pasta -d Protein -i $temp_dir/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null 2>/dev/null";
 			my $pasta_aln = 0;
 			opendir (DIR, "$pasta_temp") or die "can't $pasta_temp directory\n";

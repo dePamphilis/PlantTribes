@@ -161,7 +161,7 @@ print "-- Scaffold: $scaffolds{$scaffold}\n-- Method: $methods{$method}\n-- Clas
 # create output directory
 my $dirname ="./geneFamilyClassification_dir";
 if (-d $dirname) { die "Exiting...!\nGene family classification output directory ($dirname) already exists!\n\n"; }
-mkdir ($dirname, 0755);
+make_directory($dirname);
 
 if ( $classifier eq "blastp" ) {
 	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir );
@@ -188,6 +188,13 @@ print localtime()." - Completed gene family classification\n\n";
 exit(0);
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #  sub-routines # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+sub make_directory {
+        my ( $new_dir ) = @_;
+        if (!-d $new_dir) {
+                mkdir($new_dir, 0755);
+        }
+}
 
 sub sort_sequences {
 	my ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir ) = @_;
@@ -416,7 +423,7 @@ sub get_orthogroup_fasta {
 	print "-- ".localtime()." - Retrieving orthogroup fasta files\n\n";
 	my (%orthos, %pep, %cds);
 	my $orthogroups = "$dirname/orthogroups_fasta";
-	mkdir ($orthogroups, 0755);
+	make_directory($orthogroups);
 	my $orthogroup_assignment = "proteins.$classifier.$scaffold.bestOrthos";
 	open (IN, "$dirname/$orthogroup_assignment") or die "can't open $dirname/$orthogroup_assignment file\n";
 	while (<IN>) {
@@ -445,7 +452,7 @@ sub get_orthogroup_fasta {
 	}
 	if ($single_copy_custom or $single_copy_taxa) {
 		my $single_copy = "$dirname/single_copy_fasta";
-		mkdir ($single_copy, 0755);
+		make_directory($single_copy);
 		my $single_copy_selection = "proteins.$classifier.$scaffold.bestOrthos.summary.singleCopy";
 		my (%single_copy_orthos, $single_copy_ortho_id);
 		open (IN, "$dirname/$single_copy_selection") or die "can't open $dirname/$single_copy_selection file\n";
