@@ -26,7 +26,7 @@ my $usage = <<__EOUSAGE__;
 #
 #  --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
 #                                    path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
-#                                    or just the scaffold (e.g., 22Gv1.1).  If the latter, $home/data is prepended to
+#                                    or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
 #                                    the scaffold to create the absolute path.
 #                                    If Angiosperms clusters (version 1.0): 22Gv1.0
 #                                    If Angiosperms clusters (version 1.1): 22Gv1.1	
@@ -47,7 +47,7 @@ my $usage = <<__EOUSAGE__;
 #  --config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
 #                                    for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
 #                                    /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
-#                                    default configuration files is set to $home/config.
+#                                    default configuration files is set to ~home/config.
 #
 #  --num_threads <int>             : number of threads (CPUs) to used for HMMScan, BLASTP, and MAFFT
 #                                    Default: 1 
@@ -116,7 +116,7 @@ if (File::Spec->file_name_is_absolute($scaffold)) {
 }
 
 if (!$config_dir || !File::Spec->file_name_is_absolute($config_dir)) {
-	$config_dir = $home/config;
+	$config_dir = "$home/config";
 }
 
 my %utilies;
@@ -161,7 +161,7 @@ print "-- Scaffold: $scaffolds{$scaffold}\n-- Method: $methods{$method}\n-- Clas
 # create output directory
 my $dirname ="./geneFamilyClassification_dir";
 if (-d $dirname) { die "Exiting...!\nGene family classification output directory ($dirname) already exists!\n\n"; }
-mkdir ($dirname, 0755);
+make_directory($dirname);
 
 if ( $classifier eq "blastp" ) {
 	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir );
@@ -188,6 +188,13 @@ print localtime()." - Completed gene family classification\n\n";
 exit(0);
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #  sub-routines # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+sub make_directory {
+        my ( $new_dir ) = @_;
+        if (!-d $new_dir) {
+                mkdir($new_dir, 0755);
+        }
+}
 
 sub sort_sequences {
 	my ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir ) = @_;
@@ -416,7 +423,7 @@ sub get_orthogroup_fasta {
 	print "-- ".localtime()." - Retrieving orthogroup fasta files\n\n";
 	my (%orthos, %pep, %cds);
 	my $orthogroups = "$dirname/orthogroups_fasta";
-	mkdir ($orthogroups, 0755);
+	make_directory($orthogroups);
 	my $orthogroup_assignment = "proteins.$classifier.$scaffold.bestOrthos";
 	open (IN, "$dirname/$orthogroup_assignment") or die "can't open $dirname/$orthogroup_assignment file\n";
 	while (<IN>) {
@@ -445,7 +452,7 @@ sub get_orthogroup_fasta {
 	}
 	if ($single_copy_custom or $single_copy_taxa) {
 		my $single_copy = "$dirname/single_copy_fasta";
-		mkdir ($single_copy, 0755);
+		make_directory($single_copy);
 		my $single_copy_selection = "proteins.$classifier.$scaffold.bestOrthos.summary.singleCopy";
 		my (%single_copy_orthos, $single_copy_ortho_id);
 		open (IN, "$dirname/$single_copy_selection") or die "can't open $dirname/$single_copy_selection file\n";
