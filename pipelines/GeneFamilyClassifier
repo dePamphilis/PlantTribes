@@ -56,10 +56,13 @@ my $usage = <<__EOUSAGE__;
 #                                    If minimum e-value: min_evalue (default) 
 #                                    If average e-value: avg_evalue
 #
-#  --single_copy_custom            : Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
-#                                    (see the single copy configuration files the config sub-directory of the installation
-#                                    on how to customize the single copy selection)	
-#                                    
+#  --single_copy_custom <string>   : Configuration file for single copy orthogroup custom selection - incompatible with
+#                                    "--single_copy_taxa".  This must be an absolute path to the configuration file
+#                                    (e.g., '~/home/scaffolds/22Gv1.1.singleCopy.config') or the string 'default'.   If the
+#                                    latter, the config is defined to be ~/config_dir/~scaffold.singleCopy.config.  See the
+#                                    single copy configuration files the config sub-directory of the installation on how to
+#                                    customize the single copy selection.
+#
 #  --single_copy_taxa <int>        : Minumum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
 #
 #  --taxa_present <int>            : Minumum taxa required in single copy orthogroup - requires "--single_copy_taxa"
@@ -101,7 +104,7 @@ my $options = GetOptions (  'proteins=s' => \$proteins,
               'config_dir=s' => \$config_dir,
               'num_threads=i' => \$num_threads,
               'super_orthogroups=s' => \$super_orthogroups,
-              'single_copy_custom' => \$single_copy_custom,
+              'single_copy_custom=s' => \$single_copy_custom,
               'single_copy_taxa=i' => \$single_copy_taxa,
               'taxa_present=i' => \$taxa_present,
               'orthogroup_fasta' => \$orthogroup_fasta,
@@ -117,6 +120,10 @@ if (File::Spec->file_name_is_absolute($scaffold)) {
 
 if (!$config_dir || !File::Spec->file_name_is_absolute($config_dir)) {
 	$config_dir = "$home/config";
+}
+
+if ($single_copy_custom == "default") {
+    $single_copy_custom = "$config_dir/$scaffold.singleCopy.config";
 }
 
 my %utilies;
@@ -364,7 +371,7 @@ sub get_single_copy_orthogroups {
 	if ($single_copy_custom) {
 		my %genes;
 		my $annot_field = 1;
-		open (IN, "$config_dir/$scaffold.singleCopy.config") or die "can't open $config_dir/$scaffold.singleCopy.config file\n";
+		open (IN, "$single_copy_custom") or die "can't open file $single_copy_custom\n";
 		while (<IN>) {
 			chomp; 
 			if ($_ !~ /^\w+/) { next; }
