@@ -122,7 +122,7 @@ if (!$config_dir || !File::Spec->file_name_is_absolute($config_dir)) {
 	$config_dir = "$home/config";
 }
 
-if ($single_copy_custom eq "default") {
+if ($single_copy_custom && $single_copy_custom eq "default") {
     $single_copy_custom = "$config_dir/$scaffold.singleCopy.config";
 }
 
