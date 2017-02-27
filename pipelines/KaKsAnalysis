@@ -1,0 +1,616 @@
+#!/usr/bin/env perl
+# Author: Eric Wafula
+# Email: ekw10@psu.edu
+# Institution: Penn State University, Biology Dept, Claude dePamphilis Lab
+# Date: 02-15-2017
+
+use strict;
+use warnings;
+use File::Spec;
+use File::Basename;
+use Getopt::Long qw(:config no_ignore_case);
+use FindBin;
+
+my $home =  "$FindBin::Bin/..";
+my $usage = <<__EOUSAGE__;
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+#                                           KaKsAnalysis Pipeline
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Required Options:
+#
+#  --coding_sequences_species_1 <string>   : Coding sequences (CDS) fasta file for the first species (species1.fna)
+#
+#  
+#  --proteins_species_1 <string>   		     : Aamino acids (proteins) sequences fasta file for the first species (species1.faa) 
+#
+#
+#  --comparison <string>                   : pairwise sequence comparison to determine homolgous pairs
+#                                            If self species comparison: paralogs
+#                                            If cross species comparison: orthologs (requires second species data)
+#
+#
+# # # # # # # # # # # # # # # # # # 
+#  Others Options:
+#
+#  --coding_sequences_species_2 <string>   : Coding sequences (CDS) fasta file for the first species (species2.fna)
+#                                            requires "--comparison" to be set to "orthologs" 
+#
+#
+#  --proteins_species_2 <string>   		     : Aamino acids (proteins) sequences fasta file for the first species (species2.faa)
+#                                            requires "--comparison" to be set to "orthologs" 
+#
+#
+#  --min_coverage <float>                  : Minimum sequence pairwise coverage length between homologous pairs
+#                                            Default: 0.5 (50% coverage) - [0.3 to 1.0]
+#
+#  --recalibration_rate <float>            : Recalibrate synonymous subsitutions (ks) of species using a predetermined evoutionary rate that can
+#                                            be determined from a species tree inferred from a collection single copy genes from taxa of interest
+#                                            (Cui et al., 2006) - applies only paralogous ks
+#
+#  --codeml_ctl_file <string>             : PAML's codeml control file to carry out ML analysis of protein-coding DNA sequences using codon 
+#                                           substitution models. The "codeml.ctl.args" template in config directory of the installation will be used 
+#                                           if not provided. NOTE: input (seqfile, treefile) and output (outfile) parameters of codeml are not
+#                                           included in the template.
+#
+#
+#  --fit_components                        : Fit a mixture model of multivariate normal components to synonymous (ks) distribution to identify
+#                                            significant duplication event(s) in a genome
+# 
+#
+#  --num_of_components <int>               : Number components to fit to synonymous subsitutions (ks) distribution - required if "--fit_components"
+#
+#
+#  --min_ks <float>                        : Lower limit of synonymous subsitutions (ks) - necessary if fitting components to the distribution to
+#                                            reduce background noise from young paralogous pairs due to normal gene births and deaths in a genome.  
+#
+#
+#  --max_ks <float>                        : Upper limit of synonymous subsitutions (ks) - necessary if fitting components to the distribution to
+#                                            exclude likey ancient paralogous pairs.
+#
+# 
+#  --num_threads <int>                     : number of threads (CPUs) 
+#                                            Default: 1
+#
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Example Usage:
+#
+#  KaKsAnalysis --coding_sequences_species_1 species1.fna --proteins_species_1 species1.faa --comparison paralogs --num_threads 4
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ 
+__EOUSAGE__
+    ; 
+
+# Declare and initialize variables;
+my $coding_sequences_species_1;
+my $proteins_species_1;
+my $comparison;
+my $coding_sequences_species_2;
+my $proteins_species_2;
+my $config_dir;
+my $min_coverage;
+my $codeml_ctl_file;
+my $recalibration_rate;
+my $fit_components;
+my $num_of_components;
+my $min_ks;
+my $max_ks;
+my $num_threads;
+
+my $options = GetOptions (  'coding_sequences_species_1=s' => \$coding_sequences_species_1,
+              'proteins_species_1=s' => \$proteins_species_1,
+              'comparison=s' => \$comparison,
+              'coding_sequences_species_2=s' => \$coding_sequences_species_2,
+              'proteins_species_2=s' => \$proteins_species_2,
+              'config_dir=s' => \$config_dir,
+              'min_coverage=f' => \$min_coverage,
+              'codeml_ctl_file=s' => \$codeml_ctl_file,
+              'recalibration_rate=f' => \$recalibration_rate,
+              'fit_components' => \$fit_components,
+              'num_of_components=i' => \$num_of_components, 
+              'min_ks=f' => \$min_ks,
+              'max_ks=f' => \$max_ks,
+              'num_threads=i' => \$num_threads
+              );
+
+if (!$config_dir || !File::Spec->file_name_is_absolute($config_dir)) {
+	$config_dir = "$home/config";
+}
+
+my %utilies;
+open (IN, "$config_dir/plantTribes.config") or die "can't open $config_dir/plantTribes.config file\n";
+while (<IN>) {
+	chomp;
+	if ($_ !~ /^\w+/) { next; }
+	my @F = split(/\=/, $_);
+	$utilies{$F[0]} = $F[1];
+}
+close IN;
+
+my $makeblastdb = $utilies{'makeblastdb'};
+my $blastn = $utilies{'blastn'};
+my $mafft = $utilies{'mafft'};
+my $codeml = $utilies{'codeml'};
+my $emmix = $utilies{'emmix'};
+
+# validate options 
+unless ( $options ) { die $usage; }
+unless ( $coding_sequences_species_1 and $proteins_species_1 and $comparison ) { print "\nOne or more required options not set\n"; die $usage; }
+my %comparisons = ( "paralogs", "paralogous", "orthologs", "orthologous" );
+unless ( $comparisons{$comparison} ) { print "$comparison is not a valid input for --comparison option\n"; die $usage; }
+if ( $comparison eq "orthologs" and (!$coding_sequences_species_2 or !$proteins_species_2) ) { 
+  print "Orthologous synonymous (ks) analysis requires both coding (CDS) and amino acid (proteins) sequences for the second species\n"; die $usage;
+}
+if ( $min_coverage < 0.3 ) { print "0.3 (30%) is the required minimum sequence pairwise coverage length between homologous pairs\n"; die $usage; }
+if ( $fit_components and !$num_of_components ) { 
+  print "Fitting a mixture model of multivariate normal components to synonymous (ks) distribution requires number of components to be set (--num_of_components)\n"; die $usage;
+}
+
+# defaults
+if (!$min_coverage) { $min_coverage = 0.5; }
+if (!$num_threads) { $num_threads = 1; }
+if (!$codeml_ctl_file) { $codeml_ctl_file = "$config_dir/codeml.ctl.args" }
+
+print "\n";
+print localtime()." - Starting nonsynonymous (ka) and synonymous (ks) analysis\n\n";
+
+# create output directory
+my $dirname = "./kaksAnalysis_dir";
+if (-d $dirname) { die "Exiting...!\nKaKs analysis output directory ($dirname) already exists!\n\n"; }
+make_directory($dirname);
+
+get_homologs ( $coding_sequences_species_1, $proteins_species_1, $coding_sequences_species_2, $proteins_species_2, $comparison, $num_threads, $makeblastdb, $blastn, $dirname );
+
+compute_kaks ( $comparison, $codeml_ctl_file, $recalibration_rate, $min_coverage, $min_ks, $max_ks, $num_threads, $mafft, $codeml, $dirname );
+
+if ( $fit_components ) {
+  fit_components ( $num_of_components, $comparison, $emmix, $dirname )
+}
+
+print localtime()." - Completed nonsynonymous (ka) and synonymous (ks) analysis\n\n";
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # sub-routines # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+sub make_directory {
+  my ( $new_dir ) = @_;
+  if (!-d $new_dir) {
+    mkdir($new_dir, 0755);
+  }
+}
+
+sub get_homologs {
+
+  my ( $coding_sequences_species_1, $proteins_species_1, $coding_sequences_species_2, $proteins_species_2, $comparison, $num_threads, $makeblastdb, $blastn, $dirname ) = @_;
+  # create dna blast database and run blastn against self/cross-species
+  my ( %best1, %max1, %best2, %max2, %rbhb );
+  system "cp $coding_sequences_species_1 $dirname/species1.fna";
+  system "cp $proteins_species_1 $dirname/species1.faa";
+  if ( $comparison eq "orthologs") {
+    print localtime()." - Determining orthologous pairs using BLASTN\n\n";
+    system "cp $coding_sequences_species_2 $dirname/species2.fna";
+    system "cp $proteins_species_2 $dirname/species2.faa";
+    system "$makeblastdb -in $dirname/species2.fna -dbtype nucl  >/dev/null 2>/dev/null";
+    system "$blastn -outfmt 6 -evalue 1e-10 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species2.fna -out $dirname/species1.fna.blastn.orthologs  >/dev/null 2>/dev/null";
+    system "$makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null 2>/dev/null";
+    system "$blastn -outfmt 6 -evalue 1e-10 -num_threads $num_threads -query $dirname/species2.fna -db $dirname/species1.fna -out $dirname/species2.fna.blastn.orthologs  >/dev/null 2>/dev/null";
+    open (OUT, ">$dirname/species1and2.fna.blastn.orthologs.rbhb") or die "can't open $dirname/species1and2.fna.blastn.orthologs.rbhb file\n";
+    open (IN, "$dirname/species1.fna.blastn.orthologs") or die "can't open $dirname/species1.fna.blastn.orthologs file\n";
+    while (<IN>) {
+      chomp;
+      my @F=split(/\t/, $_);
+      if ($F[0] eq $F[1]) { next; }
+      if (!$best1{$F[0]}) { $best1{$F[0]} = $_; $max1{$F[0]} = $F[11]; }
+      else { if ($F[11] > $max1{$F[0]}) { $best1{$F[0]} = $_; $max1{$F[0]} = $F[11]; } }
+    }
+    close IN;
+    open (IN, "$dirname/species2.fna.blastn.orthologs") or die "can't open $dirname/species2.fna.blastn.orthologs file\n";
+    while (<IN>) {
+      chomp;
+      my @F=split(/\t/, $_);
+      if ($F[0] eq $F[1]) { next; }
+      if (!$best2{$F[0]}) { $best2{$F[0]} = $_; $max2{$F[0]} = $F[11]; }
+      else { if ($F[11] > $max2{$F[0]}) { $best2{$F[0]} = $_; $max2{$F[0]} = $F[11]; } }
+    } 
+    close IN;
+    foreach (keys %best1) {
+      if ($rbhb{$_}) { next; } 
+      my @F = split(/\t/, $best1{$_});
+      my @S = split(/\t/, $best2{$F[1]}) if $best2{$F[1]};
+      if (!$S[1]) { next; } 
+      if ($F[0] eq $S[1]) { print OUT "$F[0]\t$F[1]\n"; $rbhb{$F[0]} = $F[0]; $rbhb{$F[1]} = $F[1]; }
+    }
+    close OUT;
+  }
+  else { # $comparison eq "paralogs"
+    print localtime()." - Determining paralogous pairs using BLASTN\n\n";
+    system "$makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null 2>/dev/null";
+    system "$blastn -outfmt 6 -evalue 1e-10 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species1.fna -out $dirname/species1.fna.blastn.paralogs  >/dev/null 2>/dev/null";
+    open (OUT, ">$dirname/species1.fna.blastn.paralogs.rbhb") or die "can't open $dirname/species1.fna.blastn.paralogs.rbhb file\n";
+    open (IN, "$dirname/species1.fna.blastn.paralogs") or die "can't open $dirname/species1.fna.blastn.paralogs file\n";
+    while (<IN>) {
+      chomp;
+      my @F = split(/\t/, $_);
+      if ($F[0] eq $F[1]) { next; }
+      if (!$best1{$F[0]}) { $best1{$F[0]} = $_; $max1{$F[0]} = $F[11]; }
+      else { if ($F[11] > $max1{$F[0]}) { $best1{$F[0]} = $_; $max1{$F[0]} = $F[11]; } }
+    }
+    close IN;
+    foreach (keys %best1) {
+      if ($rbhb{$_}) { next; } 
+      my @F = split(/\t/, $best1{$_});
+      my @S = split(/\t/, $best1{$F[1]}) if $best1{$F[1]};
+      if (!$S[1]) { next; } 
+      if ($F[0] eq $S[1]) { print OUT "$F[0]\t$F[1]\n"; $rbhb{$F[0]} = $F[0]; $rbhb{$F[1]} = $F[1]; }
+    }
+    close OUT; 
+  }
+}
+
+sub compute_kaks {
+  my ( $comparison, $codeml_ctl_file, $recalibration_rate, $min_coverage, $min_ks, $max_ks, $num_threads, $mafft, $codeml, $dirname ) = @_;
+  my ( %cds1, %pep1, %cds2, %pep2, $pair, $shorter, $longer, $longer_len, $shorter_len, $kaks);
+  %cds1 = get_sequences ("$dirname/species1.fna");
+  %pep1 = get_sequences ("$dirname/species1.faa");
+  if ( $comparison eq "orthologs" ) {
+    print localtime()." - Performing orthologous pairwise alignment and kaks analysis with MAFFT and CODEML respectively\n\n";
+    %cds2 = get_sequences ("$dirname/species2.fna");
+    %pep2 = get_sequences ("$dirname/species2.faa");
+    open (KAKS, ">$dirname/species1and2.fna.blastn.orthologs.rbhb.kaks") or die "can't open $dirname/species1and2.fna.blastn.orthologs.rbhb.kaks file\n";
+    print KAKS "SEQ1\tSEQ2\tKa\tKs\tKa\\Ks\n";
+    open (RBHB, "$dirname/species1and2.fna.blastn.orthologs.rbhb") or die "can't open $dirname/species1and2.fna.blastn.orthologs.rbhb file\n";
+    while (<RBHB>) {
+      chomp;
+      $pair = $_;
+      my @F = split(/\t/, $pair);
+      if (length($cds1{$F[0]}) > length($cds2{$F[1]})) { $longer = $F[0]; $shorter = $F[1]; $longer_len = length($cds1{$F[0]}); $shorter_len = length($cds2{$F[1]}); }
+      else { $longer = $F[1]; $shorter = $F[0]; $longer_len = length($cds2{$F[1]}); $shorter_len = length($cds1{$F[0]}); }
+      open (DNA, ">$dirname/dna.tmp") or die "can't open $dirname/dna.tmp file\n";
+      open (AA, ">$dirname/aa.tmp") or die "can't open $dirname/aa.tmp file\n";
+      print DNA ">$F[0]\n$cds1{$F[0]}\n";
+      print AA ">$F[0]\n$pep1{$F[0]}\n";
+      print DNA ">$F[1]\n$cds2{$F[1]}\n";
+      print AA ">$F[1]\n$pep2{$F[1]}\n";
+      close DNA;
+      close AA;
+      # run alignment on the pair
+      system "$mafft --maxiterate 1000 --thread $num_threads --localpair $dirname/aa.tmp > $dirname/aa.tmp.aln 2>/dev/null";
+      if ( -z "$dirname/aa.tmp.aln" ) { print "Mafft could not align $longer and $shorter pair...\nskipping $longer and $shorter pair...\n\n"; next; }
+      my ( $aa_aln, $dna_aln, $dna, %seq, $aln_len, $coverage);
+      $aa_aln = "$dirname/aa.tmp.aln";
+      $dna_aln = "$dirname/dna.tmp.aln";
+      $dna = "$dirname/dna.tmp";
+      create_codon_alignments ( $aa_aln, $dna_aln, $dna );
+      %seq = get_sequences ("$dirname/dna.tmp.aln");
+      open (PHY, ">$dirname/dna.tmp.aln.phylip") or die "can't open $dirname/dna.tmp.aln.phylip file\n";
+      $aln_len = length($seq{$longer});
+      print PHY "2 $aln_len\n";
+      print PHY "$longer  $seq{$longer}\n";
+      print PHY "$shorter  $seq{$shorter}\n";
+      close PHY;  
+      $coverage = 1.0 - ((length($seq{$longer}) - $longer_len) / $shorter_len);
+      if ($coverage >= $min_coverage) {
+        # run paml on the the alignment
+        open (CODEML, ">codeml.ctl") or die "can't open codeml.ctl file\n";
+        print CODEML "seqfile = $dirname/dna.tmp.aln.phylip\n";
+        print CODEML "outfile = $dirname/dna.tmp.aln.phylip.codeml\n";
+        close CODEML;
+        system "cat $codeml_ctl_file >> codeml.ctl";
+        system "$codeml >/dev/null 2>/dev/null";
+        #chdir("$dirname") or die "cant change directory to $dirname";";
+        # remove paml files
+        system "rm rst rst1 rub 2ML.dN 2ML.dS 2ML.t 2NG.dN 2NG.dS 2NG.t codeml.ctl >/dev/null 2>/dev/null";    
+        # parse paml-codeml results and write to output file
+        open (CODEML, "$dirname/dna.tmp.aln.phylip.codeml") or die "can't open $dirname/dna.tmp.aln.phylip.codeml file\n";
+        while (<CODEML>) {
+          if ($_ =~ /^t=\s+\d+\.\d+\s+S=\s+\d+\.\d+\s+N=\s+\d+\.\d+\s+dN\/dS=\s+(\d+\.\d+)\s+dN\s+=\s+(\d+\.\d+)\s+dS\s+=\s+(\d+\.\d+)/) {
+            my ($ka, $ks, $kaks);
+            $ka = $2; 
+            $ks = $3;
+            $kaks = $1;
+            if ($min_ks and !$max_ks and !$recalibration_rate) { if ($ks >= $min_ks) { print KAKS "$pair\t$ka\t$ks\t$kaks\n"; } }
+            elsif ($max_ks and !$min_ks and !$recalibration_rate) { if ($ks <= $max_ks) { print KAKS "$pair\t$ka\t$ks\t$kaks\n"; } }
+            elsif ($min_ks and $max_ks and !$recalibration_rate) { 
+              if ($ks >= $min_ks and $ks <= $max_ks) { print KAKS "$pair\t$ka\t$ks\t$kaks\n"; } 
+            }
+            elsif ($recalibration_rate and !$min_ks and !$max_ks) { 
+              $ks = sprintf("%.4f", ($ks * $recalibration_rate)); 
+              print KAKS "$pair\t-\t$ks\t-\n"; 
+            }
+            elsif ($recalibration_rate and $min_ks and !$max_ks) { 
+              $ks = sprintf("%.4f", ($ks * $recalibration_rate)); 
+              if ($ks >= $min_ks) { print KAKS "$pair\t-\t$ks\t-\n"; }
+            }
+            elsif ($recalibration_rate and $max_ks and !$min_ks) {
+              $ks = sprintf("%.4f", ($ks * $recalibration_rate));
+              if ($ks <= $max_ks) { print KAKS "$pair\t-\t$ks\t-\n"; }
+            }
+            elsif ($recalibration_rate and $min_ks and $max_ks) {
+              $ks = sprintf("%.4f", ($ks * $recalibration_rate));
+              if ($ks >= $min_ks and $ks <= $max_ks) { print KAKS "$pair\t-\t$ks\t-\n"; }
+            }
+            else { print KAKS "$pair\t$ka\t$ks\t$kaks\n"; }
+            #t= 1.6915  S=   278.8  N=   942.2  dN/dS=  0.4533  dN = 0.4421  dS = 0.9752
+          }
+        }
+        close CODEML; 
+      }
+    } 
+    close RBHB;
+    close KAKS;
+    # remove tmp files 
+    system "rm $dirname/aa.tmp* $dirname/dna.tmp* $dirname/*.nhr $dirname/*.nin $dirname/*.nsq >/dev/null 2>/dev/null";       
+  }
+  else { # $comparison eq "paralogs"
+    print localtime()." - Performing paralogous pairwise alignment and kaks analysis with MAFFT and CODEML respectively\n\n";
+    open (KAKS, ">$dirname/species1.fna.blastn.paralogs.rbhb.kaks") or die "can't open $dirname/species1.fna.blastn.paralogs.rbhb.kaks file\n";
+    print KAKS "SEQ1\tSEQ2\tKa\tKs\tKa\\Ks\n";
+    open (RBHB, "$dirname/species1.fna.blastn.paralogs.rbhb") or die "can't open $dirname/species1.fna.blastn.paralogs.rbhb file\n";
+    while (<RBHB>) {
+      chomp;
+      $pair = $_;
+      my @F = split(/\t/, $pair);
+      if (length($cds1{$F[0]}) > length($cds1{$F[1]})) { $longer = $F[0]; $shorter = $F[1]; $longer_len = length($cds1{$F[0]}); $shorter_len = length($cds1{$F[1]}); }
+      else { $longer = $F[1]; $shorter = $F[0]; $longer_len = length($cds1{$F[1]}); $shorter_len = length($cds1{$F[0]}); }
+      open (DNA, ">$dirname/dna.tmp") or die "can't open $dirname/dna.tmp file\n";
+      open (AA, ">$dirname/aa.tmp") or die "can't open $dirname/aa.tmp file\n\n";
+      print DNA ">$F[0]\n$cds1{$F[0]}\n";
+      print AA ">$F[0]\n$pep1{$F[0]}\n";
+      print DNA ">$F[1]\n$cds1{$F[1]}\n";
+      print AA ">$F[1]\n$pep1{$F[1]}\n";
+      close DNA;
+      close AA;
+      # run alignment on the pair
+      system "$mafft --maxiterate 1000 --thread $num_threads --localpair $dirname/aa.tmp > $dirname/aa.tmp.aln 2>/dev/null";
+      if ( -z "$dirname/aa.tmp.aln" ) { print "Mafft could not align $longer and $shorter pair...\nskipping $longer and $shorter pair...\n\n"; next; }
+      my ( $aa_aln, $dna_aln, $dna, %seq, $aln_len, $coverage);
+      $aa_aln = "$dirname/aa.tmp.aln";
+      $dna_aln = "$dirname/dna.tmp.aln";
+      $dna = "$dirname/dna.tmp";
+      create_codon_alignments ( $aa_aln, $dna_aln, $dna );
+      %seq = get_sequences ("$dirname/dna.tmp.aln");
+      open (PHY, ">$dirname/dna.tmp.aln.phylip") or die "can't open $dirname/dna.tmp.aln.phylip file\n";
+      $aln_len = length($seq{$longer});
+      print PHY "2 $aln_len\n";
+      print PHY "$longer  $seq{$longer}\n";
+      print PHY "$shorter  $seq{$shorter}\n";
+      close PHY;  
+      $coverage = 1.0 - ((length($seq{$longer}) - $longer_len) / $shorter_len);
+      if ($coverage >= $min_coverage) {
+        # run paml on the the alignment
+        open (CODEML, ">codeml.ctl") or die "can't open codeml.ctl file\n";
+        print CODEML "seqfile = $dirname/dna.tmp.aln.phylip\n";
+        print CODEML "outfile = $dirname/dna.tmp.aln.phylip.codeml\n";
+        close CODEML;
+        system "cat $codeml_ctl_file >> codeml.ctl";
+        system "$codeml >/dev/null 2>/dev/null";
+        #chdir("$dirname") or die "cant change directory to $dirname";";
+        # remove paml files
+        system "rm rst rst1 rub 2ML.dN 2ML.dS 2ML.t 2NG.dN 2NG.dS 2NG.t codeml.ctl >/dev/null 2>/dev/null";    
+        # parse paml-codeml results and write to output file
+        open (CODEML, "$dirname/dna.tmp.aln.phylip.codeml") or die "can't open $dirname/dna.tmp.aln.phylip.codeml file\n";
+        while (<CODEML>) {
+          if ($_ =~ /^t=\s+\d+\.\d+\s+S=\s+\d+\.\d+\s+N=\s+\d+\.\d+\s+dN\/dS=\s+(\d+\.\d+)\s+dN\s+=\s+(\d+\.\d+)\s+dS\s+=\s+(\d+\.\d+)/) {
+            my ($ka, $ks, $kaks);
+            $ka = $2; 
+            $ks = $3;
+            $kaks = $1;
+            if ($min_ks and !$max_ks and !$recalibration_rate) { if ($ks >= $min_ks) { print KAKS "$pair\t$ka\t$ks\t$kaks\n"; } }
+            elsif ($max_ks and !$min_ks and !$recalibration_rate) { if ($ks <= $max_ks) { print KAKS "$pair\t$ka\t$ks\t$kaks\n"; } }
+            elsif ($min_ks and $max_ks and !$recalibration_rate) { 
+              if ($ks >= $min_ks and $ks <= $max_ks) { print KAKS "$pair\t$ka\t$ks\t$kaks\n"; } 
+            }
+            elsif ($recalibration_rate and !$min_ks and !$max_ks) { 
+              $ks = sprintf("%.4f", ($ks * $recalibration_rate)); 
+              print KAKS "$pair\t-\t$ks\t-\n"; 
+            }
+            elsif ($recalibration_rate and $min_ks and !$max_ks) { 
+              $ks = sprintf("%.4f", ($ks * $recalibration_rate)); 
+              if ($ks >= $min_ks) { print KAKS "$pair\t-\t$ks\t-\n"; }
+            }
+            elsif ($recalibration_rate and $max_ks and !$min_ks) {
+              $ks = sprintf("%.4f", ($ks * $recalibration_rate));
+              if ($ks <= $max_ks) { print KAKS "$pair\t-\t$ks\t-\n"; }
+            }
+            elsif ($recalibration_rate and $min_ks and $max_ks) {
+              $ks = sprintf("%.4f", ($ks * $recalibration_rate));
+              if ($ks >= $min_ks and $ks <= $max_ks) { print KAKS "$pair\t-\t$ks\t-\n"; }
+            }
+            else { print KAKS "$pair\t$ka\t$ks\t$kaks\n"; }
+            #t= 1.6915  S=   278.8  N=   942.2  dN/dS=  0.4533  dN = 0.4421  dS = 0.9752
+          }
+        }
+        close CODEML; 
+      }
+    } 
+    close RBHB;
+    close KAKS;
+    # remove tmp files 
+    system "rm $dirname/aa.tmp* $dirname/dna.tmp* $dirname/*.nhr $dirname/*.nin $dirname/*.nsq >/dev/null 2>/dev/null"; 
+  }
+  
+}
+
+sub fit_components {
+  my ( $num_of_components, $comparison, $emmix, $dirname ) = @_;
+
+  if ($comparison eq "orthologs") {
+    print localtime()." - Fitting a mixture model of multivariate normal components to orthologous ks distribution\n\n";
+    open (OUT, ">$dirname/species1and2.fna.blastn.orthologs.rbhb.kaks.components") or die "can't open $dirname/species1and2.fna.blastn.orthologs.rbhb.kaks.components file\n";
+    open (IN, "$dirname/species1and2.fna.blastn.orthologs.rbhb.kaks") or die "can't open $dirname/species1and2.fna.blastn.orthologs.rbhb.kaks file\n";  
+    # Generate input data file for EMMIX assuming log-normal ks 
+    open (DAT, ">emmix.ks.dat") or die "can't open emmix.ks.dat file\n";
+    my $rows = 0; 
+    my $rand;
+    while (<IN>) { chomp; if (/^SEQ1/) { next; } my @F = split(/\t/, $_); print DAT log($F[3]),"\n"; $rows++; }
+    close IN;
+    close DAT;
+    # Generate input control file for EMMIX with three random starts <30000
+    if (!$rows) { die "Error! no ks data read for fitting components!\nExiting...\n\n";};
+    open (CTR, ">emmix.ks.ctr") or die "can't open emmix.ks.ctr file\n";
+    print CTR "3\nemmix.ks.dat\nemmix.ks.mix\nYes\n$rows\n1\n1\n1\n$num_of_components\n4\n100\n100\n10\nN\n";
+    foreach (1..3) { $rand = int(rand() * 30000); print CTR $rand,"\n"; }
+    close CTR;
+    # run EMMIX 
+    system "$emmix < emmix.ks.ctr > /dev/null"; 
+    open (EMMIX, "emmix.ks.mix") or die "can't open emmix.ks.mix file\n";;
+    print OUT "species\tn\tnumber_comp\tlnL\tAIC\tBIC\tmean\tvariance\tporportion\n";
+    my ( @means, @variances, $mean, $variance, $mix, @mixpi, $oldbic, $bic, $aic, $likelihood, $lnL, $crit, $nobs, $val, $len, $species );
+    $mixpi[0] = 1;
+    while (<EMMIX>) {
+      $_ =~ s/^\s+//;
+      if (/number of entities: (\d+)/) { $nobs = $1; next; }
+      if (/Mixing proportion/) { $mix = 1; next; }
+      if (/Final Log-likelihood is\s+(-\d+\.\d+)/i) { $lnL = $1; next; }
+      if (/Estimated mean.*for each component/) { $mean = 1; next; }
+      if (/Estimated\s.*matrix/) { $variance = 1; $mean = 0; next; }
+      if (/AIC  BIC/) { $crit = 1; next; } 
+      if ($mean) { $val = $_; $val =~ s/\s//; chomp($val); push(@means, $val); next; }
+      if ($variance) { $val = $_; $val =~ s/\s//; chomp($val); push(@variances, $val); $variance = 0; next; }
+      if ($mix) { chomp($_); @mixpi = split(/\s+/, $_); $mix = 0; next; }
+      if (/(\d+\.\d+)\s+(\d+\.\d+)/ and $crit) { 
+        $aic = $1; $bic = $2; $species = "species1and2";
+        # print out mixture
+        $len = $#means;
+        if ($oldbic && $bic > $oldbic) { last; }
+        printf OUT ("%s\t%d\t%d\t%.4f\t%.2f\t%.2f\t%.4f\t%.4f\t%.2f\n", $species, $nobs, $len, $lnL, $aic, $bic, exp($means[0]), $variances[0] * exp(2 * $means[0]), $mixpi[0]);
+        $oldbic = $bic; 
+        foreach my $i (1..$len-1) {
+          #transform to exp(x)
+          printf OUT ("\t\t\t\t\t\t%.4f\t%.4f\t%.2f\n", exp($means[$i]), $variances[$i] * exp(2 * $means[$i]), $mixpi[$i]);
+        }
+        @means = ();
+        @variances = ();
+        @mixpi = ();
+        $crit = 0;
+      }
+    }
+    close EMMIX;
+    close OUT;
+  }
+  else { # $comparison eq "paralogs" 
+    print localtime()." - Fitting a mixture model of multivariate normal components to paralogous ks distribution\n\n";
+    open (OUT, ">$dirname/species1.fna.blastn.paralogs.rbhb.kaks.components") or die "can't open $dirname/species1.fna.blastn.paralogs.rbhb.kaks.components file\n";
+    open (IN, "$dirname/species1.fna.blastn.paralogs.rbhb.kaks") or die "can't open $dirname/species1.fna.blastn.paralogs.rbhb.kaks file\n";  
+    # Generate input data file for EMMIX assuming log-normal ks 
+    open (DAT, ">emmix.ks.dat") or die "can't open emmix.ks.dat file\n";
+    my $rows = 0; 
+    my $rand;
+    while (<IN>) { chomp; if (/^SEQ1/) { next; } my @F = split(/\t/, $_); print DAT log($F[3]),"\n"; $rows++; }
+    close IN;
+    close DAT;
+    # Generate input control file for EMMIX with three random starts <30000
+    if (!$rows) { die "Error! no ks data read for fitting components!\nExiting...\n\n";};
+    open (CTR, ">emmix.ks.ctr") or die "can't open emmix.ks.ctr file\n";
+    print CTR "3\nemmix.ks.dat\nemmix.ks.mix\nYes\n$rows\n1\n1\n1\n$num_of_components\n4\n100\n100\n10\nN\n";
+    foreach (1..3) { $rand = int(rand() * 30000); print CTR $rand,"\n"; }
+    close CTR;
+    # run EMMIX 
+    system "$emmix < emmix.ks.ctr > /dev/null"; 
+    open (EMMIX, "emmix.ks.mix") or die "can't open emmix.ks.mix file\n";;
+    print OUT "species\tn\tnumber_comp\tlnL\tAIC\tBIC\tmean\tvariance\tporportion\n";
+    my ( @means, @variances, $mean, $variance, $mix, @mixpi, $oldbic, $bic, $aic, $likelihood, $lnL, $crit, $nobs, $val, $len, $species );
+    $mixpi[0] = 1;
+    while (<EMMIX>) {
+      $_ =~ s/^\s+//;
+      if (/number of entities: (\d+)/) { $nobs = $1; next; }
+      if (/Mixing proportion/) { $mix = 1; next; }
+      if (/Final Log-likelihood is\s+(-\d+\.\d+)/i) { $lnL = $1; next; }
+      if (/Estimated mean.*for each component/) { $mean = 1; next; }
+      if (/Estimated\s.*matrix/) { $variance = 1; $mean = 0; next; }
+      if (/AIC  BIC/) { $crit = 1; next; } 
+      if ($mean) { $val = $_; $val =~ s/\s//; chomp($val); push(@means, $val); next; }
+      if ($variance) { $val = $_; $val =~ s/\s//; chomp($val); push(@variances, $val); $variance = 0; next; }
+      if ($mix) { chomp($_); @mixpi = split(/\s+/, $_); $mix = 0; next; }
+      if (/(\d+\.\d+)\s+(\d+\.\d+)/ and $crit) { 
+        $aic = $1; $bic = $2; $species = "species1";
+        # print out mixture
+        my $len = $#means;
+        if ($oldbic && $bic > $oldbic) { last; }
+        printf OUT ("%s\t%d\t%d\t%.4f\t%.2f\t%.2f\t%.4f\t%.4f\t%.2f\n", $species, $nobs, $len, $lnL, $aic, $bic, exp($means[0]), $variances[0] * exp(2 * $means[0]), $mixpi[0]);
+        $oldbic = $bic; 
+        foreach my $i (1..$len-1) {
+          #transform to exp(x)
+          printf OUT ("\t\t\t\t\t\t%.4f\t%.4f\t%.2f\n", exp($means[$i]), $variances[$i] * exp(2 * $means[$i]), $mixpi[$i]);
+        }
+        @means = ();
+        @variances = ();
+        @mixpi = ();
+        $crit = 0;
+      }
+    }
+    close EMMIX;
+    close OUT;  
+  }
+  system "rm emmix.ks.dat emmix.ks.ctr emmix.ks.mix >/dev/null 2>/dev/null"; 
+}
+
+sub create_codon_alignments {
+  my ( $aa_aln, $dna_aln, $cds ) = @_;
+  my (%seq, @seq_order, $aa_id, $dna_id, $id);
+  $aa_aln =~ /(\d+)(.*)/;
+  my  $ortho_id = $1;
+  open (IN, "$aa_aln") or die "can't open $aa_aln file\n";
+  while (<IN>) {
+    chomp;
+        if (/^>(\S+)/) { $aa_id = $1; push (@seq_order, $aa_id); } 
+        else { s/\s+//g; $seq{$aa_id}{aa} .= $_; }
+  }
+  close IN;
+  open (IN, "$cds") or die "can't open $cds file\n";
+  while (<IN>) {
+    chomp;
+        if (/^>(\S+)/) { $dna_id = $1; } 
+        else { s/\s+//g; s/X/N/g; s/x/n/g; $seq{$dna_id}{dna} .= $_; }
+    }
+  close IN;
+  open (OUT, ">$dna_aln") or die "can't open $dna_aln file\n";
+  foreach $id (@seq_order) {
+    unless ($seq{$id}{aa} && $seq{$id}{dna}) { print "Skipping sequence $id in orthogroup $ortho_id does not have a valid aa and dna\n\n"; next; }
+        my $aln = $seq{$id}{aa};
+        my $aln_no_gaps = $aln;
+        $aln_no_gaps =~ s/-//g;
+        my $dna = $seq{$id}{dna};
+        if (int(length($dna)/3) < length($aln_no_gaps)) { 
+          print "Skipping sequence $id in orthogroup $ortho_id has dna condon length less than aa length\n\n";
+          next; 
+        }
+        if (length($dna) % length($aln_no_gaps) != 0) {
+                # check to see if the last 3 bases are stop codon -> TAA,TAG,TGA
+                my $last_codon = substr($dna,-3);
+                if ($last_codon eq "TAA" || $last_codon eq "TAG" || $last_codon eq "TGA" || $last_codon eq "taa" || $last_codon eq "tag" || $last_codon eq "tga") { 
+                  $dna = substr($dna, 0, -3);
+                } 
+                else { print "Skipping sequence $id in orthogroup $ortho_id not in codon frame\n\n"; next; }
+        }
+        my @aa_aln = split("", $aln);
+        my @codon = unpack("a3" x int(length($dna)/3) ,$dna);
+        if (length($aln_no_gaps) != ($#codon + 1)) { print "Skipping sequence $id in orthogroup $ortho_id not in codon frame\n\n"; next; }
+        my $index = 0;
+        my $codon_aln = "";
+        foreach my $aa (@aa_aln) {
+          if ($aa eq "-") { $codon_aln .= "---"; }
+          elsif ($aa eq "?") { $codon_aln .= "???"; $index++; }
+          else { $codon_aln .= $codon[$index]; $index++; }
+        }
+        $codon_aln =~ s/.{60}(?=.)/$&\n/g;
+        print OUT ">$id\n$codon_aln\n";
+    }
+    close OUT;
+}
+
+sub get_sequences {
+  my ( $file ) = @_;
+  my (%sequences, $id);
+  open (IN, "$file") or die "can't open $file file\n";
+  while (<IN>) {
+    if ($_ =~ />(\S+)/){ $id = $1; }
+    else { s/\s+//g; $sequences{$id} .= $_; }
+  }
+  close IN;
+  return %sequences; 
+}
