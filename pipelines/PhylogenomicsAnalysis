@@ -145,11 +145,9 @@ my $bootstrap_replicates;
 my $automated_trimming;
 my $gap_trimming;
 my $remove_sequences;
-my $scaffold_dir;
 my $config_dir;
 my $num_threads;
 my $max_memory;
-my $pasta;
 my $pasta_iter_limit;
 my $pasta_script_path;
 my $orthogroup_fna;
@@ -171,7 +169,6 @@ my $options = GetOptions (  'orthogroup_faa=s' => \$orthogroup_faa,
               'automated_trimming' => \$automated_trimming,
               'gap_trimming=f' => \$gap_trimming,
               'remove_sequences=f' => \$remove_sequences,
-              'scaffold_dir=s' => \$scaffold_dir,
 	      'config_dir=s' => \$config_dir,
               'num_threads=i' => \$num_threads,
               'max_memory=i' => \$max_memory,
@@ -194,13 +191,11 @@ while (<IN>) {
 }
 close IN;
 
-if (File::Spec->file_name_is_absolute($scaffold)) {
-	$scaffold_dir = $scaffold;
-	$scaffold = basename($scaffold);
-} else {
-	$scaffold_dir = "$home/data/$scaffold";
-}
-
+my $mafft = $utilies{'mafft'};
+my $trimal = $utilies{'trimal'};
+my $raxml = $utilies{'raxml'};
+my $fasttree = $utilies{'fasttree'};
+my $pasta;
 if ($pasta_script_path) {
     # Use the specified path to the run_pasta.py script.
     $pasta = $pasta_script_path;
@@ -208,17 +203,20 @@ if ($pasta_script_path) {
     $pasta = $utilies{'pasta'};
 }
 
-my $mafft = $utilies{'mafft'};
-my $trimal = $utilies{'trimal'};
-my $raxml = $utilies{'raxml'};
-my $fasttree = $utilies{'fasttree'};
+my $scaffold_dir;
+if (File::Spec->file_name_is_absolute($scaffold)) {
+	$scaffold_dir = $scaffold;
+	$scaffold = basename($scaffold);
+} else {
+	$scaffold_dir = "$home/data/$scaffold";
+}
 
 # validate options
 my %scaffolds = ("12Gv1.0", "Monocots clusters (version 1.0)",  "22Gv1.0", "Angiosperms clusters (version 1.0)",
 	"22Gv1.1", "Angiosperms clusters (version 1.1)", "26Gv2.0", "Angiosperms clusters (version 2.0)", "31Gv1.0", "Green plants clusters (version 1.0)");
 my %methods = ("gfam", "GFam", "orthofinder", "OrthoFinder", "orthomcl", "OrthoMCL");
 unless ( $options ) { die $usage; }
-unless ( $orthogroup_faa and $scaffolds{$scaffold} and $methods{$method}) { print "\nOne or more required options not set\n";die $usage; }
+unless ( $orthogroup_faa and $scaffolds{$scaffold} and $methods{$method}) { print "\nOne or more required options not set\n"; die $usage; }
 if ( ($create_alignments and $add_alignments) or ($create_alignments and $pasta_alignments) or ($add_alignments and $pasta_alignments) ) { 
 	print "\nThe alignment building algorithm options are incompatible with one another\n"; die $usage; 
 }
