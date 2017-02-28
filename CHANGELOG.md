@@ -6,7 +6,7 @@
 ##### Version 0.2.0 (Nov, 18, 2016)
  - Targeted gene family module added to AssemblyPostProcessor pipeline
  
- ##### Version 0.2.0 (Nov, 18, 2016)
+##### Version 0.7.0 (Feb, 27, 2017)
  - Addition of KaksAnalysis pipeline to PlantTribes
  
  
