@@ -25,7 +25,7 @@ my $usage = <<__EOUSAGE__;
 #  --coding_sequences_species_1 <string>   : Coding sequences (CDS) fasta file for the first species (species1.fna)
 #
 #  
-#  --proteins_species_1 <string>   		     : Aamino acids (proteins) sequences fasta file for the first species (species1.faa) 
+#  --proteins_species_1 <string>           : Aamino acids (proteins) sequences fasta file for the first species (species1.faa) 
 #
 #
 #  --comparison <string>                   : pairwise sequence comparison to determine homolgous pairs
@@ -40,7 +40,7 @@ my $usage = <<__EOUSAGE__;
 #                                            requires "--comparison" to be set to "orthologs" 
 #
 #
-#  --proteins_species_2 <string>   		     : Aamino acids (proteins) sequences fasta file for the first species (species2.faa)
+#  --proteins_species_2 <string>           : Aamino acids (proteins) sequences fasta file for the first species (species2.faa)
 #                                            requires "--comparison" to be set to "orthologs" 
 #
 #
@@ -49,12 +49,12 @@ my $usage = <<__EOUSAGE__;
 #
 #  --recalibration_rate <float>            : Recalibrate synonymous subsitutions (ks) of species using a predetermined evoutionary rate that can
 #                                            be determined from a species tree inferred from a collection single copy genes from taxa of interest
-#                                            (Cui et al., 2006) - applies only paralogous ks
+#                                            (Cui et al., 2006) - mainly applies only paralogous ks analysis
 #
-#  --codeml_ctl_file <string>             : PAML's codeml control file to carry out ML analysis of protein-coding DNA sequences using codon 
-#                                           substitution models. The "codeml.ctl.args" template in config directory of the installation will be used 
-#                                           if not provided. NOTE: input (seqfile, treefile) and output (outfile) parameters of codeml are not
-#                                           included in the template.
+#  --codeml_ctl_file <string>              : PAML's codeml control file to carry out ML analysis of protein-coding DNA sequences using codon 
+#                                            substitution models. The "codeml.ctl.args" template in config directory of the installation will be used 
+#                                            if not provided. NOTE: input (seqfile, treefile) and output (outfile) parameters of codeml are not
+#                                            included in the template.
 #
 #
 #  --fit_components                        : Fit a mixture model of multivariate normal components to synonymous (ks) distribution to identify
@@ -146,7 +146,7 @@ unless ( $comparisons{$comparison} ) { print "$comparison is not a valid input f
 if ( $comparison eq "orthologs" and (!$coding_sequences_species_2 or !$proteins_species_2) ) { 
   print "Orthologous synonymous (ks) analysis requires both coding (CDS) and amino acid (proteins) sequences for the second species\n"; die $usage;
 }
-if ( $min_coverage < 0.3 ) { print "0.3 (30%) is the required minimum sequence pairwise coverage length between homologous pairs\n"; die $usage; }
+if ( $min_coverage and ($min_coverage < 0.3) ) { print "0.3 (30%) is the required minimum sequence pairwise coverage length between homologous pairs\n"; die $usage; }
 if ( $fit_components and !$num_of_components ) { 
   print "Fitting a mixture model of multivariate normal components to synonymous (ks) distribution requires number of components to be set (--num_of_components)\n"; die $usage;
 }
