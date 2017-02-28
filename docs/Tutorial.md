@@ -136,6 +136,7 @@ phylogenomicsAnalysis_dir/orthogroups_tree/ - orthogroup phylogenetic trees dire
 
 ### KaKsAnalysis Pipeline
 1). Performing paralogous ks analysis limiting ks values between 0.02 and 4.0
+
 `PlantTribes/pipelines/KaKsAnalysis --coding_sequences_species_1 PlantTribes/test/species1.fna --proteins_species_1 PlantTribes/test/species1.faa --comparison paralogs --min_ks 0.02 --max_ks 4.0 --num_threads 10`
 
 ```
@@ -148,6 +149,7 @@ kaksAnalysis_dir/species1.fna.blastn.paralogs.kaks - species1 ka/ks analysis res
 ```
 
 2). Performing orthologous ks analysis limiting ks values between 0.02 and 4.0
+
 `PlantTribes/pipelines/KaKsAnalysis --coding_sequences_species_1 PlantTribes/test/species1.fna --proteins_species_1 PlantTribes/test/species1.faa --comparison orthologs --coding_sequences_species_2 PlantTribes/test/species2.fna --proteins_species_2 PlantTribes/test/species2.faa --min_ks 0.02 --max_ks 4.0 --num_threads 10`
 
 ```
@@ -163,6 +165,7 @@ kaksAnalysis_dir/species1and2.fna.blastn.orthologs.rbhb.kaks - species1 vs speci
 ```
 
 3). Performing paralogous ks analysis limiting ks values between 0.02 and 4.0, and fitting upto 4 mixture model of multivariate normal components to identify significant duplication event(s) in a genome
+
 `PlantTribes/pipelines/KaKsAnalysis --coding_sequences_species_1 PlantTribes/test/species1.fna --proteins_species_1 PlantTribes/test/species1.faa --comparison paralogs --fit_components --num_of_components 4 --min_ks 0.02 --max_ks 4.0 --num_threads 10`
 
 ```
@@ -176,6 +179,7 @@ kaksAnalysis_dir/species1.fna.blastn.paralogs.kaks.components - significant comp
 ```
 
 4). Performing orthologous ks analysis limiting ks values between 0.02 and 4.0, and fitting upto 4 mixture model of multivariate normal components to identify significant duplication event(s) in a genome
+
 `PlantTribes/pipelines/KaKsAnalysis --coding_sequences_species_1 PlantTribes/test/species1.fna --proteins_species_1 PlantTribes/test/species1.faa --comparison orthologs --coding_sequences_species_2 PlantTribes/test/species2.fna --proteins_species_2 PlantTribes/test/species2.faa --fit_components --num_of_components 4 --min_ks 0.02 --max_ks 4.0 --num_threads 10`
 
 ```
