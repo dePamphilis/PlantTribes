@@ -135,13 +135,60 @@ phylogenomicsAnalysis_dir/orthogroups_tree/ - orthogroup phylogenetic trees dire
 ```
 
 ### KaKsAnalysis Pipeline
+1). Performing paralogous ks analysis limiting ks values between 0.02 and 4.0
+`PlantTribes/pipelines/KaKsAnalysis --coding_sequences_species_1 PlantTribes/test/species1.fna --proteins_species_1 PlantTribes/test/species1.faa --comparison paralogs --min_ks 0.02 --max_ks 4.0 --num_threads 10`
+
 ```
-Detailed usage will soon be available.
+output:
+kaksAnalysis_dir/species1.fna - species1 input coding sequences (CDS)
+kaksAnalysis_dir/species1.faa - species1 input amino acids (proteins)
+kaksAnalysis_dir/species1.fna.blastn.paralogs - species1 self blastn results
+kaksAnalysis_dir/species1.fna.blastn.paralogs - species1 paralogous pairs
+kaksAnalysis_dir/species1.fna.blastn.paralogs.kaks - species1 ka/ks analysis results 
 ```
 
+2). Performing orthologous ks analysis limiting ks values between 0.02 and 4.0
+`PlantTribes/pipelines/KaKsAnalysis --coding_sequences_species_1 PlantTribes/test/species1.fna --proteins_species_1 PlantTribes/test/species1.faa --comparison orthologs --coding_sequences_species_2 PlantTribes/test/species2.fna --proteins_species_2 PlantTribes/test/species2.faa --min_ks 0.02 --max_ks 4.0 --num_threads 10`
+
+```
+output:
+kaksAnalysis_dir/species1.fna - species1 input coding sequences (CDS)
+kaksAnalysis_dir/species1.faa - species1 input amino acids (proteins)
+kaksAnalysis_dir/species2.fna - species2 input coding sequences (CDS)
+kaksAnalysis_dir/species2.faa - species2 input amino acids (proteins)
+kaksAnalysis_dir/species1.fna.blastn.orthologs - species1 vs species2.blastdb blastn results
+kaksAnalysis_dir/species2.fna.blastn.orthologs - species2 vs species1.blastdb blastn results
+kaksAnalysis_dir/species1and2.fna.blastn.orthologs.rbhb - species1 vs species2 orthologous pairs
+kaksAnalysis_dir/species1and2.fna.blastn.orthologs.rbhb.kaks - species1 vs species2 ka/ks analysis results
+```
+
+3). Performing paralogous ks analysis limiting ks values between 0.02 and 4.0, and fitting upto 4 mixture model of multivariate normal components to identify significant duplication event(s) in a genome
+`PlantTribes/pipelines/KaKsAnalysis --coding_sequences_species_1 PlantTribes/test/species1.fna --proteins_species_1 PlantTribes/test/species1.faa --comparison paralogs --fit_components --num_of_components 4 --min_ks 0.02 --max_ks 4.0 --num_threads 10`
+
+```
+output:
+kaksAnalysis_dir/species1.fna - species1 input coding sequences (CDS)
+kaksAnalysis_dir/species1.faa - species1 input amino acids (proteins)
+kaksAnalysis_dir/species1.fna.blastn.paralogs - species1 self blastn results
+kaksAnalysis_dir/species1.fna.blastn.paralogs - species1 paralogous pairs
+kaksAnalysis_dir/species1.fna.blastn.paralogs.kaks - species1 ka/ks analysis results
+kaksAnalysis_dir/species1.fna.blastn.paralogs.kaks.components - significant components in the ks distribution of species1
+```
+
+4). Performing orthologous ks analysis limiting ks values between 0.02 and 4.0, and fitting upto 4 mixture model of multivariate normal components to identify significant duplication event(s) in a genome
+`PlantTribes/pipelines/KaKsAnalysis --coding_sequences_species_1 PlantTribes/test/species1.fna --proteins_species_1 PlantTribes/test/species1.faa --comparison orthologs --coding_sequences_species_2 PlantTribes/test/species2.fna --proteins_species_2 PlantTribes/test/species2.faa --fit_components --num_of_components 4 --min_ks 0.02 --max_ks 4.0 --num_threads 10`
+
+```
+output:
+kaksAnalysis_dir/species1.fna - species1 input coding sequences (CDS)
+kaksAnalysis_dir/species1.faa - species1 input amino acids (proteins)
+kaksAnalysis_dir/species2.fna - species2 input coding sequences (CDS)
+kaksAnalysis_dir/species2.faa - species2 input amino acids (proteins)
+kaksAnalysis_dir/species1.fna.blastn.orthologs - species1 vs species2.blastdb blastn results
+kaksAnalysis_dir/species2.fna.blastn.orthologs - species2 vs species1.blastdb blastn results
+kaksAnalysis_dir/species1and2.fna.blastn.orthologs.rbhb - species1 vs species2 orthologous pairs
+kaksAnalysis_dir/species1and2.fna.blastn.orthologs.rbhb.kaks - species1 vs species2 ka/ks analysis results
+kaksAnalysis_dir/species1and2.fna.blastn.orthologs.rbhb.kaks.components - significant components in the ks distribution of species1 vs species2
+```
 
 Consult the PlantTribes [manual](PlantTribes.md) for usage of other optimization options not used in this tutorial. 
-
-
-
-
