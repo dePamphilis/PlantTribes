@@ -51,7 +51,10 @@ The execulables for the PlantTribes pipelines are in the [pipelines](../pipeline
   - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and raxml Phylogenetic trees inference method:
     - `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl  --add_alignments  --tree_inference raxml`
 - **KaKsAnalysis pipeline**
-  - Usage will soon be available.
+  - Display all usage options:
+    - `PlantTribes/pipelines/KaKsAnalysis`
+  - Basic run using for paralogous analysis:
+    - `KaKsAnalysis --coding_sequences_species_1 species1.fna --proteins_species_1 species1.faa --comparison paralogs --num_threads 4`
 
 ## Pipeline options
 
@@ -223,7 +226,51 @@ Others Options:
 ```
 #### KaKsAnalysis pipeline
 ```
-Detailed usage will soon be available.
+Required Options:
+
+--coding_sequences_species_1 <string>   : Coding sequences (CDS) fasta file for the first species (species1.fna)
+
+--proteins_species_1 <string>   		    : Aamino acids (proteins) sequences fasta file for the first species (species1.faa) 
+
+--comparison <string>                   : pairwise sequence comparison to determine homolgous pairs
+                                          If self species comparison: paralogs
+                                          If cross species comparison: orthologs (requires second species data)
+                                          
+Others Options:
+
+--coding_sequences_species_2 <string>   : Coding sequences (CDS) fasta file for the first species (species2.fna)
+                                          requires "--comparison" to be set to "orthologs" 
+
+--proteins_species_2 <string>   		    : Aamino acids (proteins) sequences fasta file for the first species (species2.faa)
+                                          requires "--comparison" to be set to "orthologs" 
+
+--min_coverage <float>                  : Minimum sequence pairwise coverage length between homologous pairs
+                                          Default: 0.5 (50% coverage) - [0.3 to 1.0]
+
+--recalibration_rate <float>            : Recalibrate synonymous subsitutions (ks) of species using a predetermined evoutionary rate that 
+                                          can be determined from a species tree inferred from a collection single copy genes from taxa of 
+                                          interest (Cui et al., 2006) - applies only paralogous ks
+
+--codeml_ctl_file <string>              : PAML's codeml control file to carry out ML analysis of protein-coding DNA sequences using codon
+                                          substitution models. The "codeml.ctl.args" template in config directory of the installation will 
+                                          be used if not provided. NOTE: input (seqfile, treefile) and output (outfile) parameters of
+                                          codeml are not included in the template.
+
+--fit_components                        : Fit a mixture model of multivariate normal components to synonymous (ks) distribution to
+                                          identify significant duplication event(s) in a genome
+                                          
+--num_of_components <int>               : Number components to fit to synonymous subsitutions (ks) distribution - required if 
+                                          "--fit_components"
+
+--min_ks <float>                        : Lower limit of synonymous subsitutions (ks) - necessary if fitting components to the
+                                           distribution to reduce background noise from young paralogous pairs due to normal gene births
+                                           and deaths in a genome.  
+                                           
+--max_ks <float>                        : Upper limit of synonymous subsitutions (ks) - necessary if fitting components to the
+                                          distribution to exclude likey ancient paralogous pairs.
+                                          
+--num_threads <int>                     : number of threads (CPUs)   
+                                          Default: 1
 ```
 
 ## License
