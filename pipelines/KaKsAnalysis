@@ -195,9 +195,9 @@ sub get_homologs {
     system "cp $coding_sequences_species_2 $dirname/species2.fna";
     system "cp $proteins_species_2 $dirname/species2.faa";
     system "$makeblastdb -in $dirname/species2.fna -dbtype nucl  >/dev/null 2>/dev/null";
-    system "$blastn -outfmt 6 -evalue 1e-10 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species2.fna -out $dirname/species1.fna.blastn.orthologs  >/dev/null 2>/dev/null";
+    system "$blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species2.fna -out $dirname/species1.fna.blastn.orthologs  >/dev/null 2>/dev/null";
     system "$makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null 2>/dev/null";
-    system "$blastn -outfmt 6 -evalue 1e-10 -num_threads $num_threads -query $dirname/species2.fna -db $dirname/species1.fna -out $dirname/species2.fna.blastn.orthologs  >/dev/null 2>/dev/null";
+    system "$blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species2.fna -db $dirname/species1.fna -out $dirname/species2.fna.blastn.orthologs  >/dev/null 2>/dev/null";
     open (OUT, ">$dirname/species1and2.fna.blastn.orthologs.rbhb") or die "can't open $dirname/species1and2.fna.blastn.orthologs.rbhb file\n";
     open (IN, "$dirname/species1.fna.blastn.orthologs") or die "can't open $dirname/species1.fna.blastn.orthologs file\n";
     while (<IN>) {
@@ -229,7 +229,7 @@ sub get_homologs {
   else { # $comparison eq "paralogs"
     print localtime()." - Determining paralogous pairs using BLASTN\n\n";
     system "$makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null 2>/dev/null";
-    system "$blastn -outfmt 6 -evalue 1e-10 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species1.fna -out $dirname/species1.fna.blastn.paralogs  >/dev/null 2>/dev/null";
+    system "$blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species1.fna -out $dirname/species1.fna.blastn.paralogs  >/dev/null 2>/dev/null";
     open (OUT, ">$dirname/species1.fna.blastn.paralogs.rbhb") or die "can't open $dirname/species1.fna.blastn.paralogs.rbhb file\n";
     open (IN, "$dirname/species1.fna.blastn.paralogs") or die "can't open $dirname/species1.fna.blastn.paralogs file\n";
     while (<IN>) {
