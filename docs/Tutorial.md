@@ -144,8 +144,8 @@ output:
 kaksAnalysis_dir/species1.fna - species1 input coding sequences (CDS)
 kaksAnalysis_dir/species1.faa - species1 input amino acids (proteins)
 kaksAnalysis_dir/species1.fna.blastn.paralogs - species1 self blastn results
-kaksAnalysis_dir/species1.fna.blastn.paralogs - species1 paralogous pairs
-kaksAnalysis_dir/species1.fna.blastn.paralogs.kaks - species1 ka/ks analysis results 
+kaksAnalysis_dir/species1.fna.blastn.paralogs.rbhb - species1 paralogous pairs
+kaksAnalysis_dir/species1.fna.blastn.paralogs.rbhb.kaks - species1 ka/ks analysis results 
 ```
 
 2). Performing orthologous ks analysis limiting ks values between 0.02 and 4.0
@@ -173,9 +173,9 @@ output:
 kaksAnalysis_dir/species1.fna - species1 input coding sequences (CDS)
 kaksAnalysis_dir/species1.faa - species1 input amino acids (proteins)
 kaksAnalysis_dir/species1.fna.blastn.paralogs - species1 self blastn results
-kaksAnalysis_dir/species1.fna.blastn.paralogs - species1 paralogous pairs
-kaksAnalysis_dir/species1.fna.blastn.paralogs.kaks - species1 ka/ks analysis results
-kaksAnalysis_dir/species1.fna.blastn.paralogs.kaks.components - significant components in the ks distribution of species1
+kaksAnalysis_dir/species1.fna.blastn.paralogs.rbhb - species1 paralogous pairs
+kaksAnalysis_dir/species1.fna.blastn.paralogs.rbhb.kaks - species1 ka/ks analysis results
+kaksAnalysis_dir/species1.fna.blastn.paralogs.rbhb.kaks.components - significant components in the ks distribution of species1
 ```
 
 4). Performing orthologous ks analysis limiting ks values between 0.02 and 4.0, and fitting upto 4 mixture model of multivariate normal components to identify significant duplication event(s) in a genome
