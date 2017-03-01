@@ -47,7 +47,7 @@ my $usage = <<__EOUSAGE__;
 #  --config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
 #                                    for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
 #                                    /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
-#                                    default configuration files is set to ~home/config.
+#                                    default configuration files is set to $home/config.
 #
 #  --num_threads <int>             : number of threads (CPUs) to used for HMMScan, BLASTP, and MAFFT
 #                                    Default: 1 
