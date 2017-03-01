@@ -71,6 +71,9 @@ my $usage = <<__EOUSAGE__;
 #  --max_ks <float>                        : Upper limit of synonymous subsitutions (ks) - necessary if fitting components to the distribution to
 #                                            exclude likey ancient paralogous pairs.
 #
+#  --config_dir <string>                   : (Optional) Absolute path to the directory containing the default configuration files. If this parameter 
+#                                            is not used, the directory containing the default configuration files is set to $home/config.
+#
 # 
 #  --num_threads <int>                     : number of threads (CPUs) 
 #                                            Default: 1
