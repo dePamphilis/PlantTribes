@@ -95,7 +95,6 @@ my $proteins_species_1;
 my $comparison;
 my $coding_sequences_species_2;
 my $proteins_species_2;
-my $config_dir;
 my $min_coverage;
 my $codeml_ctl_file;
 my $recalibration_rate;
@@ -103,6 +102,7 @@ my $fit_components;
 my $num_of_components;
 my $min_ks;
 my $max_ks;
+my $config_dir;
 my $num_threads;
 
 my $options = GetOptions (  'coding_sequences_species_1=s' => \$coding_sequences_species_1,
@@ -118,6 +118,7 @@ my $options = GetOptions (  'coding_sequences_species_1=s' => \$coding_sequences
               'num_of_components=i' => \$num_of_components, 
               'min_ks=f' => \$min_ks,
               'max_ks=f' => \$max_ks,
+	      'config_dir=s' => \$config_dir, 
               'num_threads=i' => \$num_threads
               );
 
