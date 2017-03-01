@@ -16,7 +16,7 @@ PlantTribes pipeline scripts have many external dependencies that need to be ins
 - **PhylogenomicsAnalysis pipeline**:  
 [MAFFT (version 7.215 )](http://mafft.cbrc.jp/alignment/software/), [PASTA](https://github.com/smirarab/pasta), [trimAl (version 1.4.rev8)](http://trimal.cgenomics.org/), [RAxML (version 8.1.16)](http://sco.h-its.org/exelixis/web/software/raxml/index.html), and [FastTreeMP (version 2.1.7 SSE3)](http://meta.microbesonline.org/fasttree/).
 - **KaKsAnalysis pipeline**:  
-[BLASTP (NCBI BLAST version 2.2.29+)](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download), [PAML (version 4.8)](http://abacus.gene.ucl.ac.uk/software/paml.html#download), and [EMMIX (version 1.3)](http://www.maths.uq.edu.au/~gjm/).
+[BLASTN (NCBI BLAST version 2.2.29+)](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download), [MAFFT (version 7.215 )](http://mafft.cbrc.jp/alignment/software/), [PAML (version 4.8)](http://abacus.gene.ucl.ac.uk/software/paml.html#download), and [EMMIX (version 1.3)](https://people.smp.uq.edu.au/GeoffMcLachlan/emmix/emmix.html).
 
 #### PlantTribes scaffolds data 
 - **22 plant genomes (Angiosperms clusters, version 1.0)**  
@@ -53,7 +53,10 @@ The execulables for the PlantTribes pipelines are in the [pipelines](pipelines) 
   - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and raxml Phylogenetic trees inference method:
     - `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl  --add_alignments  --tree_inference raxml`
 - **KaKsAnalysis pipeline**
-  - Usage will soon be available.
+  - Display all usage options:
+    - `PlantTribes/pipelines/KaKsAnalysis`
+  - Basic run using for paralogous analysis:
+    - `KaKsAnalysis --coding_sequences_species_1 species1.fna --proteins_species_1 species1.faa --comparison paralogs --num_threads 4`
 
 Please consult the PlantTribes [manual](docs/PlantTribes.md) and [tutorial](docs/Tutorial.md) for a detailed description and usage of all options for the pipelines respectively.
 
