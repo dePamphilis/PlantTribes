@@ -181,26 +181,12 @@ if (!$config_dir || !File::Spec->file_name_is_absolute($config_dir)) {
 	$config_dir = "$home/config";
 }
 
-my %utilies;
-open (IN, "$config_dir/plantTribes.config") or die "can't open $config_dir/plantTribes.config file\n";
-while (<IN>) {
-	chomp;
-	if ($_ !~ /^\w+/) { next; }
-	my @F = split(/\=/, $_);
-	$utilies{$F[0]} = $F[1];
-}
-close IN;
-
-my $mafft = $utilies{'mafft'};
-my $trimal = $utilies{'trimal'};
-my $raxml = $utilies{'raxml'};
-my $fasttree = $utilies{'fasttree'};
 my $pasta;
 if ($pasta_script_path) {
     # Use the specified path to the run_pasta.py script.
     $pasta = $pasta_script_path;
 } else {
-    $pasta = $utilies{'pasta'};
+    $pasta = 'run_pasta.py';
 }
 
 my $scaffold_dir;
@@ -264,22 +250,22 @@ make_directory($dirname);
 get_orthogroup_fasta ( $orthogroup_faa, $orthogroup_fna, $scaffold, $method, $dirname, $scaffold_dir );
 
 if ( $create_alignments or $add_alignments or $pasta_alignments ) {
-	create_orthogroup_alignments ( $mafft, $pasta, $orthogroup_faa, $orthogroup_fna, $create_alignments, $add_alignments, $pasta_alignments, $codon_alignments,
+	create_orthogroup_alignments ( $pasta, $orthogroup_faa, $orthogroup_fna, $create_alignments, $add_alignments, $pasta_alignments, $codon_alignments,
 		$scaffold, $method, $num_threads, $max_memory, $pasta_iter_limit, $dirname, $scaffold_dir );
 }
 
 if ( $automated_trimming or $gap_trimming ) {
-	trim_orthogroup_alignments ( $trimal, $codon_alignments, $iterative_realignment, $automated_trimming, $gap_trimming, $remove_sequences, $dirname );
+	trim_orthogroup_alignments ( $codon_alignments, $iterative_realignment, $automated_trimming, $gap_trimming, $remove_sequences, $dirname );
 }
 
 if ( $iterative_realignment ) {
-	realign_filtered_orthogroup_alignments ( $iterative_realignment, $mafft, $pasta, $trimal, $create_alignments, $pasta_alignments, $codon_alignments,
+	realign_filtered_orthogroup_alignments ( $iterative_realignment, $pasta, $create_alignments, $pasta_alignments, $codon_alignments,
 		$automated_trimming, $gap_trimming, $remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname );
 }
 
 if ( $tree_inference ) {
 	build_orthogroup_trees ( $tree_inference, $max_orthogroup_size, $min_orthogroup_size, $sequence_type, $rooting_order, $bootstrap_replicates,
-		$automated_trimming, $gap_trimming, $remove_sequences, $raxml, $fasttree, $num_threads, $scaffold, $dirname, $config_dir );
+		$automated_trimming, $gap_trimming, $remove_sequences, $num_threads, $scaffold, $dirname, $config_dir );
 }
 
 print localtime()." - Completed phylogenomics analysis\n\n";
@@ -319,7 +305,7 @@ sub get_orthogroup_fasta {
 }
 
 sub create_orthogroup_alignments {
-	my ( $mafft, $pasta, $orthogroup_faa, $orthogroup_fna, $create_alignments, $add_alignments, $pasta_alignments, $codon_alignments,
+	my ( $pasta, $orthogroup_faa, $orthogroup_fna, $create_alignments, $add_alignments, $pasta_alignments, $codon_alignments,
 		$scaffold, $method, $num_threads, $max_memory, $pasta_iter_limit, $dirname, $scaffold_dir ) = @_;
 	print localtime()." - Creating orthogroup alignments\n\n";
 	my $orthogroups_fasta = "$dirname/orthogroups_fasta";
@@ -337,10 +323,10 @@ sub create_orthogroup_alignments {
 		close IN;
 		if ($seq_count < 3) { next; }
 		if ($create_alignments) {
-			system "$mafft --maxiterate 1000 --thread $num_threads --localpair $orthogroups_fasta/$ortho_id.faa > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null"; 
+			system "mafft --maxiterate 1000 --thread $num_threads --localpair $orthogroups_fasta/$ortho_id.faa > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null"; 
 		}
 		if ($add_alignments) {
-			system "$mafft --add $orthogroup_faa/$ortho_id.faa $scaffold_dir/alns/$method/$ortho_id.aln > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null";
+			system "mafft --add $orthogroup_faa/$ortho_id.faa $scaffold_dir/alns/$method/$ortho_id.aln > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null";
 		}
 		if ($pasta_alignments) {
 			my $pasta_temp = "$dirname/pasta_temp";
@@ -368,7 +354,7 @@ sub create_orthogroup_alignments {
 }
 
 sub trim_orthogroup_alignments {
-	my ( $trimal, $codon_alignments, $iterative_realignment, $automated_trimming, $gap_trimming, $remove_sequences, $dirname ) = @_;
+	my ( $codon_alignments, $iterative_realignment, $automated_trimming, $gap_trimming, $remove_sequences, $dirname ) = @_;
 	print localtime()." - Trimming and filtering orthogroup alignments\n\n";
 	my (%pep_aln, %cds_aln);
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
@@ -383,15 +369,15 @@ sub trim_orthogroup_alignments {
 	}	
 	foreach my $ortho_id (keys %pep_aln) {
 		if ($automated_trimming) {
-			system "$trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null 2>/dev/null";
+			system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null 2>/dev/null";
 			if ($codon_alignments and $cds_aln{$ortho_id}) { 
-				system "$trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null 2>/dev/null"; 
+				system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null 2>/dev/null"; 
 			}
 		}
 		if ($gap_trimming) {
-			system "$trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null";
+			system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null";
 			if ($codon_alignments and $cds_aln{$ortho_id}) { 
-				system "$trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null"; 
+				system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null"; 
 			}
 		}
 		if ($remove_sequences) {
@@ -420,21 +406,21 @@ sub trim_orthogroup_alignments {
 }
 
 sub realign_filtered_orthogroup_alignments {
-	my ( $iterative_realignment, $mafft, $pasta, $trimal, $create_alignments, $pasta_alignments, $codon_alignments, $automated_trimming, $gap_trimming,
+	my ( $iterative_realignment, $pasta, $create_alignments, $pasta_alignments, $codon_alignments, $automated_trimming, $gap_trimming,
 		$remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname ) = @_;
 	print localtime()." - Iteratively realigning filtered orthogroup alignments\n\n";
 	my $iterator = 1;
 	my $log_file = "$dirname/needsIterativeRealgnment.log";	
 	my $temp_dir = "$dirname/temp_dir";
 	print "-- ".localtime()." - Starting iteration $iterator of iterative realignment\n\n";
-	prepare_alignments ( $log_file, $temp_dir, $mafft, $pasta, $trimal, $create_alignments, $pasta_alignments, $codon_alignments, $automated_trimming,
+	prepare_alignments ( $log_file, $temp_dir, $pasta, $create_alignments, $pasta_alignments, $codon_alignments, $automated_trimming,
 		$gap_trimming, $remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname );
 	while (-e $log_file) {
     	if ((-z $log_file) or ($iterator == $iterative_realignment)) { print "-- ".localtime()." - Completed iterative realignment in $iterator iterations\n\n"; last; }
     	else {
 			$iterator++;
 			print "-- ".localtime()." - Starting iteration $iterator of iterative realignment\n\n";
-			prepare_alignments ( $log_file, $temp_dir, $mafft, $pasta, $trimal, $create_alignments, $pasta_alignments, $codon_alignments, $automated_trimming,
+			prepare_alignments ( $log_file, $temp_dir, $pasta, $create_alignments, $pasta_alignments, $codon_alignments, $automated_trimming,
 				$gap_trimming, $remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname );
     	}
     }
@@ -443,7 +429,7 @@ sub realign_filtered_orthogroup_alignments {
 
 sub build_orthogroup_trees {
 	my ( $tree_inference, $max_orthogroup_size, $min_orthogroup_size, $sequence_type, $rooting_order, $bootstrap_replicates, $automated_trimming,
-		$gap_trimming, $remove_sequences, $raxml, $fasttree, $num_threads, $scaffold, $dirname, $config_dir ) = @_;
+		$gap_trimming, $remove_sequences, $num_threads, $scaffold, $dirname, $config_dir ) = @_;
 	print localtime()." - Building orthogroup phylogenetic trees\n\n";	
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
 	make_directory($orthogroups_aln);
@@ -483,10 +469,10 @@ sub build_orthogroup_trees {
 			foreach $id (@seq_order) { print OUT $id." ".$seq{$id}."\n"; }
 			close OUT;
 			if ($seq_type eq "fna") {
-				system "$raxml -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m GTRGAMMA -s $orthogroups_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null 2>/dev/null";
+				system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m GTRGAMMA -s $orthogroups_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null 2>/dev/null";
 			}
 			else {
-				system "$raxml -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m PROTGAMMAJTT -s $orthogroups_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null 2>/dev/null";
+				system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m PROTGAMMAJTT -s $orthogroups_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null 2>/dev/null";
 			}
 			system "rm RAxML_bestTree.* RAxML_bipartitionsBranchLabels.* RAxML_bootstrap.* RAxML_info.*";
     		system "mv RAxML_bipartitions.* $orthogroups_tree/$filename.tree";
@@ -599,7 +585,7 @@ sub remove_gappy_sequences {
 }
 
 sub prepare_alignments {
-	my ($log_file, $temp_dir, $mafft, $pasta, $trimal, $create_alignments, $pasta_alignments, $codon_alignments, $automated_trimming,
+	my ($log_file, $temp_dir, $pasta, $create_alignments, $pasta_alignments, $codon_alignments, $automated_trimming,
 		$gap_trimming, $remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname) = @_;
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
 	my $temp_aln = "$temp_dir/aln_dir";
@@ -632,7 +618,7 @@ sub prepare_alignments {
 			system "rm -r $pasta_temp";
 		}
 		else {
-			system "$mafft --maxiterate 1000 --thread $num_threads --localpair $temp_dir/$ortho_id.faa > $temp_aln/$ortho_id.faa.aln 2>/dev/null";
+			system "mafft --maxiterate 1000 --thread $num_threads --localpair $temp_dir/$ortho_id.faa > $temp_aln/$ortho_id.faa.aln 2>/dev/null";
 		}
 		if ($codon_alignments) {
 			my $aa_aln = "$temp_aln/$ortho_id.faa.aln";
@@ -641,15 +627,15 @@ sub prepare_alignments {
 			create_codon_alignments ( $aa_aln, $dna_aln, $cds );
 		}
 		if ($automated_trimming) {
-			system "$trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null 2>/dev/null";
+			system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null 2>/dev/null";
 			if ($codon_alignments) { 
-				system "$trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null 2>/dev/null"; 
+				system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null 2>/dev/null"; 
 			}
 		}
 		if ($gap_trimming) {
-			system "$trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null";
+			system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null";
 			if ($codon_alignments) { 
-				system "$trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null"; 
+				system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null"; 
 			}
 		}
 		if ($remove_sequences) {
