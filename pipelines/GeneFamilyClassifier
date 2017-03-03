@@ -126,19 +126,6 @@ if ($single_copy_custom && $single_copy_custom eq "default") {
     $single_copy_custom = "$config_dir/$scaffold.singleCopy.config";
 }
 
-my %utilies;
-open (IN, "$config_dir/plantTribes.config") or die "can't open $config_dir/plantTribes.config file\n";
-while (<IN>) {
-	chomp;
-	if ($_ !~ /^\w+/) { next; }
-	my @F = split(/\=/, $_);
-	$utilies{$F[0]} = $F[1];
-}
-close IN;
-
-my $blastp = $utilies{'blastp'};
-my $hmmscan = $utilies{'hmmscan'};
- 
 # validate options            
 my %scaffolds = ("12Gv1.0", "Monocots clusters (version 1.0)",  "22Gv1.0", "Angiosperms clusters (version 1.0)",
 	"22Gv1.1", "Angiosperms clusters (version 1.1)", "26Gv2.0", "Angiosperms clusters (version 2.0)", "31Gv1.0", "Green plants clusters (version 1.0)");
@@ -171,13 +158,13 @@ if (-d $dirname) { die "Exiting...!\nGene family classification output directory
 make_directory($dirname);
 
 if ( $classifier eq "blastp" ) {
-	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir );
+	sort_sequences ( $classifier, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir );
 }
 elsif ( $classifier eq "hmmscan" ) {
-	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir );
+	sort_sequences ( $classifier, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir );
 }
 elsif ( $classifier eq "both" ) {
-	sort_sequences ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir );
+	sort_sequences ( $classifier, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir );
 	get_blast_hmmscan_orthos ( $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir );
 }
 else { die "Unknown protein classification method.\n\n$usage"; }
@@ -204,19 +191,19 @@ sub make_directory {
 }
 
 sub sort_sequences {
-	my ( $classifier, $blastp, $hmmscan, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir ) = @_;
+	my ( $classifier, $proteins, $scaffold, $method, $num_threads, $super_orthogroups, $dirname, $scaffold_dir ) = @_;
 	print localtime()." - Sorting protein sequences\n";
 	if ( (!$super_orthogroups) or ($super_orthogroups ne "min_evalue") or ($super_orthogroups ne "avg_evalue") ) { $super_orthogroups = "min_evalue" } 
 	if ( ($classifier eq "blastp") or ($classifier eq "both") ) {
 		print "-- ".localtime()." - Running BLASTP\n\n";
-		system "$blastp -db_soft_mask 21 -outfmt 6 -evalue 1e-5 -num_threads $num_threads -query $proteins -db $scaffold_dir/db/blast/$method -out $dirname/proteins.blastp.$scaffold  >/dev/null 2>/dev/null";
+		system "blastp -db_soft_mask 21 -outfmt 6 -evalue 1e-5 -num_threads $num_threads -query $proteins -db $scaffold_dir/db/blast/$method -out $dirname/proteins.blastp.$scaffold  >/dev/null 2>/dev/null";
 		print "-- ".localtime()." - Getting best BLASTP hits\n\n";
 		my $results = "proteins.blastp.$scaffold";
 		get_best_blastp_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir );
 	}
 	if ( ($classifier eq "hmmscan") or ($classifier eq "both") ) {
 		print "-- ".localtime()." - Running HMMScan\n\n";
-		system "$hmmscan -E 1e-5 --cpu $num_threads --noali --tblout $dirname/proteins.hmmscan.$scaffold -o $dirname/hmmscan.log $scaffold_dir/db/hmm/$method $proteins >/dev/null 2>/dev/null";
+		system "hmmscan -E 1e-5 --cpu $num_threads --noali --tblout $dirname/proteins.hmmscan.$scaffold -o $dirname/hmmscan.log $scaffold_dir/db/hmm/$method $proteins >/dev/null 2>/dev/null";
 		print "-- ".localtime()." - Getting best HMMScan hits\n\n";
 		my $results = "proteins.hmmscan.$scaffold";
 		get_best_hmmscan_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir );

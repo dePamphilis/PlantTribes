@@ -7,7 +7,7 @@ All questions and inquires should be addressed to our user email group: `PlantTr
 In addition to this README file, you can consult the PlantTribes [manual](docs/PlantTribes.md) for more detailed information.
 
 ## Installation
-PlantTribes pipeline scripts have many external dependencies that need to be installed before the pipelines can be used. Executables of external dependencies should be set in the `plantTribes.config` file that is in the [config](config) sub-directory of the installation. 
+PlantTribes pipeline scripts have many external dependencies that need to be installed and available on the environment's $PATH before the pipelines can be used.
 #### Pipelines dependencies
 - **AssemblyPostProcesser pipeline**:  
 [ESTScan (version 2.1)](http://estscan.sourceforge.net/), [TransDecoder (version 3.0.1)](https://github.com/TransDecoder/TransDecoder/releases), and [GenomeTools (version 1.5.4)](http://genometools.org/).
