@@ -319,8 +319,13 @@ sub compute_kaks {
         open (CODEML, ">codeml.ctl") or die "can't open codeml.ctl file\n";
         print CODEML "seqfile = $dirname/dna.tmp.aln.phylip\n";
         print CODEML "outfile = $dirname/dna.tmp.aln.phylip.codeml\n";
-        close CODEML;
-        system "cat $codeml_ctl_file >> codeml.ctl";
+        if (File::Spec->file_name_is_absolute($codeml_ctl_file)) {
+          close CODEML;
+          system "cat $codeml_ctl_file >> codeml.ctl";
+        } else {
+          print CODEML "$codeml_ctl_file";
+          close CODEML;
+        }
         system "codeml >/dev/null 2>/dev/null";
         #chdir("$dirname") or die "cant change directory to $dirname";";
         # remove paml files
@@ -406,8 +411,13 @@ sub compute_kaks {
         open (CODEML, ">codeml.ctl") or die "can't open codeml.ctl file\n";
         print CODEML "seqfile = $dirname/dna.tmp.aln.phylip\n";
         print CODEML "outfile = $dirname/dna.tmp.aln.phylip.codeml\n";
-        close CODEML;
-        system "cat $codeml_ctl_file >> codeml.ctl";
+        if (File::Spec->file_name_is_absolute($codeml_ctl_file)) {
+          close CODEML;
+          system "cat $codeml_ctl_file >> codeml.ctl";
+        } else {
+          print CODEML "$codeml_ctl_file";
+          close CODEML;
+        }
         system "codeml >/dev/null 2>/dev/null";
         #chdir("$dirname") or die "cant change directory to $dirname";";
         # remove paml files
