@@ -134,9 +134,9 @@ Others Options:
                                   (see the single copy configuration files the config sub-directory of the installation
                                   on how to customize the single copy selection)	
                                     
---single_copy_taxa <int>        : Minumum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
+--single_copy_taxa <int>        : Minimum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
 
---taxa_present <int>            : Minumum taxa required in single copy orthogroup - requires "--single_copy_taxa"
+--taxa_present <int>            : Minimum taxa required in single copy orthogroup - requires "--single_copy_taxa"
 
 --orthogroup_fasta              : Create orthogroup fasta files - requires "--coding_sequences" for CDS orthogroup fasta
                                     
