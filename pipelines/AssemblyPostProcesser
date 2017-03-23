@@ -40,13 +40,20 @@ my $usage = <<__EOUSAGE__;
 #                                    path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
 #                                    or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
 #                                    the scaffold to create the absolute path.
+#                                    If Monocots clusters (version 1.0): 12Gv1.0
 #                                    If Angiosperms clusters (version 1.0): 22Gv1.0
 #                                    If Angiosperms clusters (version 1.1): 22Gv1.1
+#                                    If Green plants clusters (version 1.0): 30Gv1.0
+#                                    If Other non PlantTribes clusters: XGY.Z (Where X is number species in the scaffold,
+#                                    and Y.Z version number such as 1.0. Please look one of the PlantTribes scaffold data
+#                                    on how data files and directories are named, formated, and organized)
 #
 #  --method <string>               : Protein clustering method - required by "--gene_family_search"
 #                                    If GFam: gfam
 #                                    If OrthoFinder: orthofinder
 #                                    If OrthoMCL: orthomcl
+#                                    If Others non PlantTribes method: stringname (Where "stringname" is a piain string name
+#                                    of your method without embedded special charaters)
 #
 #  --gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
 #                                    Default: 0.1
