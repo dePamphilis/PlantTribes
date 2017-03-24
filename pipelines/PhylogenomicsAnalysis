@@ -28,14 +28,20 @@ my $usage = <<__EOUSAGE__;
 #                                    path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
 #                                    or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
 #                                    the scaffold to create the absolute path.
-#
+#                                    If Monocots clusters (version 1.0): 12Gv1.0
 #                                    If Angiosperms clusters (version 1.0): 22Gv1.0
 #                                    If Angiosperms clusters (version 1.1): 22Gv1.1
+#                                    If Green plants clusters (version 1.0): 30Gv1.0
+#                                    If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
+#                                    and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
+#                                    data on how data files and directories are named, formated, and organized.
 #
 #  --method <string>               : Protein clustering method for the classification scaffold
 #                                    If GFam: gfam
 #                                    If OrthoFinder: orthofinder
 #                                    If OrthoMCL: orthomcl
+#                                    If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
+#                                    word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
 #
 # # # # # # # # # # # # # # # # # #
 #  Multiple Sequence Alignments:
@@ -198,11 +204,12 @@ if (File::Spec->file_name_is_absolute($scaffold)) {
 }
 
 # validate options
-my %scaffolds = ("12Gv1.0", "Monocots clusters (version 1.0)",  "22Gv1.0", "Angiosperms clusters (version 1.0)",
-	"22Gv1.1", "Angiosperms clusters (version 1.1)", "26Gv2.0", "Angiosperms clusters (version 2.0)", "31Gv1.0", "Green plants clusters (version 1.0)");
-my %methods = ("gfam", "GFam", "orthofinder", "OrthoFinder", "orthomcl", "OrthoMCL");
 unless ( $options ) { die $usage; }
-unless ( $orthogroup_faa and $scaffolds{$scaffold} and $methods{$method}) { print "\nOne or more required options not set\n"; die $usage; }
+unless ( $orthogroup_faa and $scaffold and $method ) { print "\nOne or more required options not set\n"; die $usage; 
+if ( $scaffold !~ /^\d+Gv\d+\.\d+$/) { print "\nOrthogroups or gene families proteins scaffold name $scaffold is not in the required format";
+	print " i.e. XGvY.Z, where X is number species in the scaffold, and Y.Z version number such as 12Gv1.0.\n"; die $usage; }
+if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
+	print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
 if ( ($create_alignments and $add_alignments) or ($create_alignments and $pasta_alignments) or ($add_alignments and $pasta_alignments) ) { 
 	print "\nThe alignment building algorithm options are incompatible with one another\n"; die $usage; 
 }
@@ -231,7 +238,7 @@ if (!$pasta_iter_limit) { $pasta_iter_limit = 3; }
 
 print "\n";
 print localtime()." - Starting phylogenomics analysis\n";
-print "-- Scaffold: $scaffolds{$scaffold}\n-- Method: $methods{$method}";
+print "-- Scaffold: $scaffold\n-- Method: $method";
 if ($create_alignments) { print "\n-- Multiple sequence alignments: MAFFT (create alignments)"; }
 if ($add_alignments) { 
 	print "\n-- Multiple sequence alignments: MAFFT (add alignments)"; 
