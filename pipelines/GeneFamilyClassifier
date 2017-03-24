@@ -28,13 +28,21 @@ my $usage = <<__EOUSAGE__;
 #                                    path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
 #                                    or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
 #                                    the scaffold to create the absolute path.
+#                                    the scaffold to create the absolute path.
+#                                    If Monocots clusters (version 1.0): 12Gv1.0
 #                                    If Angiosperms clusters (version 1.0): 22Gv1.0
-#                                    If Angiosperms clusters (version 1.1): 22Gv1.1	
+#                                    If Angiosperms clusters (version 1.1): 22Gv1.1
+#                                    If Green plants clusters (version 1.0): 30Gv1.0
+#                                    If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
+#                                    and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
+#                                    data on how data files and directories are named, formated, and organized.	
 #
 #  --method <string>               : Protein clustering method
 #                                    If GFam: gfam
 #                                    If OrthoFinder: orthofinder
 #                                    If OrthoMCL: orthomcl
+#                                    If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
+#                                    word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
 #
 #  --classifier <string>           : Protein classification method 
 #                                    If BLASTP: blastp
@@ -127,14 +135,12 @@ if ($single_copy_custom && $single_copy_custom eq "default") {
 }
 
 # validate options            
-my %scaffolds = ("12Gv1.0", "Monocots clusters (version 1.0)",  "22Gv1.0", "Angiosperms clusters (version 1.0)",
-	"22Gv1.1", "Angiosperms clusters (version 1.1)", "26Gv2.0", "Angiosperms clusters (version 2.0)", "31Gv1.0", "Green plants clusters (version 1.0)");
-my %methods = ("gfam", "GFam", "orthofinder", "OrthoFinder", "orthomcl", "OrthoMCL");
 unless ( $options ) { die $usage; }
-unless ( $proteins and $scaffolds{$scaffold} and $methods{$method} ) { print "\nOne or more required options not set\n"; die $usage; }
-if ( ($scaffold eq "22Gv1.0") and ($method eq "orthomcl") and ($super_orthogroups eq "avg_evalue") ) {
-    print "\nAverage super orthogroups MCL clustering for OrthoMCL method of scaffold 22Gv1.0 not available\n"; die $usage;
-}
+unless ( $proteins and $scaffold and $method ) { print "\nOne or more required options not set\n"; die $usage; }
+if ( $scaffold !~ /\d+G\d+\.\d+/) { print "\nOrthogroups or gene families proteins scaffold name $scaffold is not in the required format";
+	print " i.e. XGvY.Z, where X is number species in the scaffold, and Y.Z version number such as 12Gv1.0.\n"; die $usage; }
+if ( $method !~ /\w+/) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
+	print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
 if ( $single_copy_custom and $single_copy_taxa ) { 
 	print "\nSingle copy custom selection is incompatibale with minumum single copy taxa required\n"; die $usage; 
 }
@@ -150,7 +156,7 @@ if (!$num_threads) { $num_threads = 1; }
 
 print "\n";
 print localtime()." - Starting gene family classification\n";
-print "-- Scaffold: $scaffolds{$scaffold}\n-- Method: $methods{$method}\n-- Classifier: $classifier\n\n";
+print "-- Scaffold: $scaffold\n-- Method: $method\n-- Classifier: $classifier\n\n";
 
 # create output directory
 my $dirname ="./geneFamilyClassification_dir";
