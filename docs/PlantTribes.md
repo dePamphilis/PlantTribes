@@ -7,7 +7,7 @@ All questions and inquires should be addressed to our user email group: `PlantTr
 ## Installation
 PlantTribes pipeline scripts have many external dependencies that need to be installed before the pipelines can be used. Executables of external dependencies should be set in the `plantTribes.config` file that is in the [config](../config) subdirectory of the installation. 
 #### Pipeline dependencies
-- **AssemblyPostProcesser pipeline**:  
+- **AssemblyPostProcessor pipeline**:  
 [ESTScan (version 2.1)](http://estscan.sourceforge.net/), [TransDecoder (version 3.0.1)](https://github.com/TransDecoder/TransDecoder/releases), and [GenomeTools (version 1.5.4)](http://genometools.org/).
 - **GeneFamilyClassifier pipeline**:  
 [BLASTP (NCBI BLAST version 2.2.29+)](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download), and [HMMScan (HMMER version 3.1b1)](http://hmmer.janelia.org/).
@@ -35,7 +35,7 @@ MD5 checksum: `0025188cdeccfb828fbebabb923963bd`
 ## Using PlantTribes
 The execulables for the PlantTribes pipelines are in the [pipelines](../pipelines) subdrectory of the installation. You can either add them to your PATH environment variable or execute directly from the PlantTribes installation.
 
-- **AssemblyPostProcesser pipeline**: 
+- **AssemblyPostProcessor pipeline**: 
   - Display all usage options: 
     - `PlantTribes/pipelines/AssemblyPostProcesser`
   - Basic run using ESTScan prediction method:
@@ -58,7 +58,7 @@ The execulables for the PlantTribes pipelines are in the [pipelines](../pipeline
 
 ## Pipeline options
 
-#### AssemblyPostProcesser pipeline
+#### AssemblyPostProcessor pipeline
 ```
 Required Options:
 
