@@ -4,11 +4,11 @@ This tutorial uses the test data `assembly.fasta`, a small set of *de novo* tran
 ### AssemblyPostProcesser Pipeline
 1). The following command will post processes `assembly.fasta` using ESTScan coding regions prediction method with aid of Arabidopsis thaliana  references matrices in strand specific mode, and removes similar (sub)sequences and sequences shorter than 200 bp.
 
-`PlantTribes/pipelines/AssemblyPostProcesser  --transcripts assembly.fasta --prediction_method estscan --score_matrices /path/to/score/matrices//Arabidopsis_thaliana.smat --strand_specific --dereplicate --min_length 200`
+`PlantTribes/pipelines/AssemblyPostProcessor  --transcripts assembly.fasta --prediction_method estscan --score_matrices /path/to/score/matrices//Arabidopsis_thaliana.smat --strand_specific --dereplicate --min_length 200`
 
 2). The following command as in 1) above will post processes `assembly.fasta` using TransDecoder coding regions prediction method in strand specific mode, and remove similar (sub)sequences and sequences shorter than 200 bp.
 
-`PlantTribes/pipelines/AssemblyPostProcesser --transcripts assembly.fasta --prediction_method transdecoder --strand_specific --dereplicate --min_length 200`
+`PlantTribes/pipelines/AssemblyPostProcessor --transcripts assembly.fasta --prediction_method transdecoder --strand_specific --dereplicate --min_length 200`
 
 ```
 Output:
@@ -21,7 +21,7 @@ assemblyPostProcessing_dir/transcripts.cleaned.nr.pep
 ```
 3). Including the targeted gene family options to the commands in 1) and 2) attempt to reassemble fragmented contigs assigned to targeted gene families (orthogroups) listed in the `targetOrthos.ids` file located in the [test](../test) sub-directory of PlantTribes installation into contiguous transcripts whenever possible.
 
-`PlantTribes/pipelines/AssemblyPostProcesser  --transcripts assembly.fasta --prediction_method transdecoder --gene_family_search targetOrthos.ids --scaffold 22Gv1.1 --method orthomcl --strand_specific --dereplicate --min_length 200 --num_threads 10`
+`PlantTribes/pipelines/AssemblyPostProcessor  --transcripts assembly.fasta --prediction_method transdecoder --gene_family_search targetOrthos.ids --scaffold 22Gv1.1 --method orthomcl --strand_specific --dereplicate --min_length 200 --num_threads 10`
 
 ```
 Output:
