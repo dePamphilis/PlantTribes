@@ -1,7 +1,7 @@
 # PlantTribes Tutorial
 This tutorial uses the test data `assembly.fasta`, a small set of *de novo* transcriptome contigs, located in the [test](../test) sub-directory of PlantTribes installation to show how to perform an analysis using the various pipelines of PlantTribes.
 
-### AssemblyPostProcesser Pipeline
+### AssemblyPostProcessor Pipeline
 1). The following command will post processes `assembly.fasta` using ESTScan coding regions prediction method with aid of Arabidopsis thaliana  references matrices in strand specific mode, and removes similar (sub)sequences and sequences shorter than 200 bp.
 
 `PlantTribes/pipelines/AssemblyPostProcessor  --transcripts assembly.fasta --prediction_method estscan --score_matrices /path/to/score/matrices//Arabidopsis_thaliana.smat --strand_specific --dereplicate --min_length 200`
