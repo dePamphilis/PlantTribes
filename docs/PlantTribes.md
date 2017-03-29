@@ -37,9 +37,9 @@ The execulables for the PlantTribes pipelines are in the [pipelines](../pipeline
 
 - **AssemblyPostProcessor pipeline**: 
   - Display all usage options: 
-    - `PlantTribes/pipelines/AssemblyPostProcesser`
+    - `PlantTribes/pipelines/AssemblyPostProcessor`
   - Basic run using ESTScan prediction method:
-    - `PlantTribes/pipelines/AssemblyPostProcesser  --transcripts transcripts.fasta --prediction_method estscan --score_matrices /path/to/score/matrices/Arabidopsis_thaliana.smat`
+    - `PlantTribes/pipelines/AssemblyPostProcessor  --transcripts transcripts.fasta --prediction_method estscan --score_matrices /path/to/score/matrices/Arabidopsis_thaliana.smat`
 - **GeneFamilyClassifier pipeline**: 
   - Display all usage options: 
     - `PlantTribes/pipelines/GeneFamilyClassifier`
