@@ -1,7 +1,7 @@
 # All PlantTribes pipelines should be placed in this loacation - "PlanTribes/pipelines"
 
 # Available pipelines: 
-AssemblyPostProcesser - transcriptome asssembly post processing
+AssemblyPostProcessor - transcriptome asssembly post processing
 GeneFamilyClassifier - gene family classification
 PhylogenomicsAnalysis - phylogenomics analysis
 KaKsAnalysis - nonsynonymous (ka) and synonymous (ks) analysis
