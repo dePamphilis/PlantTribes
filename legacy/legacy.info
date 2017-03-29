@@ -1,1 +1,5 @@
 
+# All legacy pipelines and scripts should be placed in this loacation - "PlanTribes/legacy"
+
+# Available pipelines: 
+PhylogenomicsAnalysis - phylogenomics analysis
