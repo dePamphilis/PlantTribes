@@ -216,11 +216,11 @@ if ( ($create_alignments and $add_alignments) or ($create_alignments and $pasta_
 if ( $codon_alignments and !$orthogroup_fna ) { print "\nCodon alignmeents requires corresponding gene family classification orthogroups CDS fasta files\n"; die $usage; }
 if ( $iterative_realignment and !$remove_sequences ) { print "\nIterative multiple sequence alignment requires gappy sequence removal before realignment\n"; die $usage; }
 if ( $automated_trimming and $gap_trimming ) { print "\nAutomated alignment trimming is incompatible with gap alignment trimming\n"; die $usage; }
-if ( $remove_sequences and (!$automated_trimming and !$gap_trimming) ) { print "\nRemoval of gappy sequences requires alignment trimming\n"; die $usage; }
-if ( $tree_inference and ($tree_inference ne "raxml") and ($tree_inference ne "fasttree") ) { print "\nUnknown phylogenetic tree inference methods\n"; die $usage; }
+if ( $remove_sequences and (!$automated_trimming or !$gap_trimming) ) { print "\nRemoval of gappy sequences requires alignment trimming\n"; die $usage; }
+if ( $tree_inference and (($tree_inference ne "raxml") or ($tree_inference ne "fasttree")) ) { print "\nUnknown phylogenetic tree inference methods\n"; die $usage; }
 if ( $min_orthogroup_size and ($min_orthogroup_size < 4) ) { print "\nMinimum number of sequences in orthogroup alignments required for phylogenetic tree inference is 4\n";
 	die $usage; }
-if ( $sequence_type and ($sequence_type ne "protein") and ($sequence_type ne "dna") ) { print "\nUnknown phylogenetic tree inference sequence type\n"; die $usage; }
+if ( $sequence_type and ($sequence_type ne "protein") or ($sequence_type ne "dna") ) { print "\nUnknown phylogenetic tree inference sequence type\n"; die $usage; }
 if ( $sequence_type and ($sequence_type eq "dna") and !$codon_alignments){ print "\nNucleotide based phylogenetic tree inference requires codon alignments\n";
 	die $usage; }
 if ( $rooting_order and ($tree_inference ne "raxml") ) { print "\nOrthogroup rooting order requires RAxML phylogenetic tree inference method\n"; die $usage; }
