@@ -160,7 +160,7 @@ if ( $scaffold !~ /^\d+Gv\d+\.\d+$/) { print "\nOrthogroups or gene families pro
 	print " i.e. XGvY.Z, where X is number species in the scaffold, and Y.Z version number such as 12Gv1.0.\n"; die $usage; }
 if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
 	print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
-if ( $alignment_method and ($alignment_method ne "mafft") and ($alignment_method ne "pasta") ) { 
+if ( $alignment_method and (($alignment_method ne "mafft") or ($alignment_method ne "pasta")) ) { 
 	print "\nUnknown multiple sequence alignment methods\n"; die $usage; }
 if ( $codon_alignments and !$orthogroup_fna ) { print "\nCodon alignmeents requires corresponding gene family classification orthogroups CDS fasta files\n"; die $usage; }
 if ( $iterative_realignment and !$remove_sequences ) { print "\nIterative multiple sequence alignment requires gappy sequence removal before realignment\n"; die $usage; }
