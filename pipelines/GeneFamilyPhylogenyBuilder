@@ -1,0 +1,248 @@
+#!/usr/bin/env perl
+# Author: Eric Wafula
+# Email: ekw10@psu.edu
+# Institution: Penn State University, Biology Dept, Claude dePamphilis Lab
+# Date: 03-30-2017
+
+use strict;
+use warnings;
+use File::Spec;
+use File::Basename;
+use Getopt::Long qw(:config no_ignore_case);
+use FindBin;
+
+my $home =  "$FindBin::Bin/..";
+
+my $usage = <<__EOUSAGE__;
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+#                                  GENE FAMILY PHYLOGENETIC INFERENCE
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Required Options:
+#
+#  --orthogroup_aln <string>       : Directory containing gene family orthogroup protein alignment files
+#
+#  --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
+#                                    path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
+#                                    or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
+#                                    the scaffold to create the absolute path.
+#                                    If Monocots clusters (version 1.0): 12Gv1.0
+#                                    If Angiosperms clusters (version 1.0): 22Gv1.0
+#                                    If Angiosperms clusters (version 1.1): 22Gv1.1
+#                                    If Green plants clusters (version 1.0): 30Gv1.0
+#                                    If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
+#                                    and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
+#                                    data on how data files and directories are named, formated, and organized.
+#
+#  --method <string>               : Protein clustering method for the classification scaffold
+#                                    If GFam: gfam
+#                                    If OrthoFinder: orthofinder
+#                                    If OrthoMCL: orthomcl
+#                                    If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
+#                                    word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
+#
+#  --tree_inference <string>       : Phylogenetic trees inference method
+#                                    If RAxML: raxml
+#                                    If FastTree: fasttree
+#
+# # # # # # # # # # # # # # # # # #
+#  Others Options:
+#
+#  --config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
+#                                    for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
+#                                    /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
+#                                    default configuration files is set to ~home/config.
+#
+#  --alignment_type <string>             : Input alignments type produces by the GeneFamilyAligner 
+#                                    If Primary alignments: aln (default)
+#                                    If trimmed alignmets: trim 
+#                                    If filtered alignments: filter
+#
+#  --max_orthogroup_size <int>     : Maximum number of sequences in orthogroup alignments
+#                                    Default: 100  
+#
+#  --min_orthogroup_size <int>     : Minimum number of sequences in orthogroup alignments
+#                                    Default: 4
+#
+#  --sequence_type <string>        : Sequence type used in the phylogenetic inference - "dna" requires "--codon_alignments"
+#                                    If amino acid based: protein (default)
+#                                    If nucleotide based: dna
+#
+#  --rooting_order <string>        : File with a list of string fragments matching sequences identifiers of species in the 
+#                                    classification (including scaffold taxa) to be used for determining the most basal taxa in
+#                                    the orthogroups for rooting trees. Should be listed in decreasing order from older to younger
+#                                    lineages. If the file is not provided, trees will be rooted using the most distant taxon
+#                                    present in the orthogroup (see example rooting order configuration files in config sub-directory
+#                                    of the installation). 
+#                                    - requires "--tree_inference" with RAxML
+#
+#  --bootstrap_replicates <int>    : Number of replicates for rapid bootstrap analysis and search for the best-scoring ML tree
+#                                    - requires "--tree_inference" with RAxML
+#                                    Default: 100
+#
+#  --num_threads <int>             : number of threads (CPUs) to assign to external utilities (RAxML)
+#                                    Default: 1 
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Example Usage:
+#
+#  GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln --scaffold 22Gv1.1  --method orthomcl --tree_inference fasttree
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ 
+__EOUSAGE__
+    ; 
+
+# Declare and initialize variables;
+my $orthogroup_aln;
+my $scaffold;
+my $method;
+my $tree_inference;
+my $config_dir;
+my $alignment_type; 
+my $max_orthogroup_size;
+my $min_orthogroup_size;
+my $sequence_type;
+my $rooting_order;
+my $bootstrap_replicates;
+my $num_threads;
+
+my $options = GetOptions (  'orthogroup_aln=s' => \$orthogroup_aln,
+              'scaffold=s' => \$scaffold,
+              'method=s' => \$method,
+              'tree_inference=s' => \$tree_inference,
+              'config_dir=s' => \$config_dir,
+              'alignment_type=s' => \$alignment_type,
+              'max_orthogroup_size=i' => \$max_orthogroup_size,
+              'min_orthogroup_size=i' => \$min_orthogroup_size,
+              'sequence_type=s' => \$sequence_type,
+              'rooting_order=s' => \$rooting_order,
+              'bootstrap_replicates=i' => \$bootstrap_replicates,
+              'num_threads=i' => \$num_threads
+              );
+
+if (!$config_dir || !File::Spec->file_name_is_absolute($config_dir)) {
+	$config_dir = "$home/config";
+}
+
+my $scaffold_dir;
+if (File::Spec->file_name_is_absolute($scaffold)) {
+	$scaffold_dir = $scaffold;
+	$scaffold = basename($scaffold);
+} else {
+	$scaffold_dir = "$home/data/$scaffold";
+}
+
+# validate options
+unless ( $options ) { die $usage; }
+unless ( $orthogroup_aln and $scaffold and $method and $tree_inference ) { print "\nOne or more required options not set\n"; die $usage; }
+if ( $scaffold !~ /^\d+Gv\d+\.\d+$/) { print "\nOrthogroups or gene families proteins scaffold name $scaffold is not in the required format";
+	print " i.e. XGvY.Z, where X is number species in the scaffold, and Y.Z version number such as 12Gv1.0.\n"; die $usage; }
+if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
+	print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
+if ( $tree_inference and ($tree_inference ne "raxml") and ($tree_inference ne "fasttree") ) { print "\nUnknown phylogenetic tree inference methods\n"; die $usage; }
+if ( $alignment_type and ($alignment_type ne "aln") and ($alignment_type ne "trim") and ($alignment_type ne "filter") ) { print "\nUnknown GeneFamilyAligner alignment type\n"; die $usage; }
+if ( $min_orthogroup_size and ($min_orthogroup_size < 4) ) { print "\nMinimum number of sequences in orthogroup alignments required for phylogenetic tree inference is 4\n";
+	die $usage; }
+if ( $sequence_type and ($sequence_type ne "protein") and ($sequence_type ne "dna") ) { print "\nUnknown phylogenetic tree inference sequence type\n"; die $usage; }
+if ( $rooting_order and ($tree_inference ne "raxml") ) { print "\nOrthogroup rooting order requires RAxML phylogenetic tree inference method\n"; die $usage; }
+if ( $bootstrap_replicates and ($tree_inference ne "raxml") ) { print "\nBootstrap analysis requires RAxML phylogenetic tree inference method\n"; die $usage; }
+
+# defaults
+if (!$max_orthogroup_size) { $max_orthogroup_size = 100; }
+if (!$min_orthogroup_size) { $min_orthogroup_size = 4; }
+if (!$bootstrap_replicates) { $bootstrap_replicates = 100; }
+if (!$num_threads) { $num_threads = 1; }
+
+print "\n";
+print localtime()." - Starting gene family phylogenetic inference\n";
+print "-- Scaffold: $scaffold\n-- Method: $method";
+if ($tree_inference and ($tree_inference eq "raxml") ) { print "\n-- Phylogenetic tree inference: RAxML"; }
+if ($tree_inference and ($tree_inference eq "fasttree") ) { print "\n-- Phylogenetic tree inference: FastTree"; }
+print "\n\n";
+
+# create output directory
+my $dirname ="./geneFamilyPhylogenies_dir";
+if (-d $dirname) { die "Exiting...!\nPhylogenetic tree inference output directory ($dirname) already exists!\n\n"; }
+make_directory($dirname);
+
+
+build_orthogroup_trees ( $orthogroup_aln, $tree_inference, $alignment_type, $max_orthogroup_size, $min_orthogroup_size, $sequence_type,
+	$rooting_order, $bootstrap_replicates, $num_threads, $scaffold, $dirname, $config_dir );
+
+print localtime()." - Completed gene family phylogenetic inference\n\n";
+
+exit(0);
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #  sub-routines # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+sub make_directory {
+	my ( $new_dir ) = @_;
+	if (!-d $new_dir) {
+		mkdir($new_dir, 0755);
+	}
+}
+
+sub build_orthogroup_trees {
+	my ( $orthogroup_aln, $tree_inference, $alignment_type, $max_orthogroup_size, $min_orthogroup_size, $sequence_type, $rooting_order,
+		$bootstrap_replicates, $num_threads, $scaffold, $dirname, $config_dir ) = @_;
+	print localtime()." - Building orthogroup phylogenetic trees\n\n";
+	my $phylip_aln = "$dirname/phylip_aln";	
+	my $orthogroups_tree = "$dirname/orthogroups_tree";
+	make_directory($orthogroups_tree);
+	my ($seq_type, $aln_type, $max_seq, $min_seq);
+	if ($sequence_type and ($sequence_type eq "dna")) { $seq_type = "fna"; } else { $seq_type = "faa"; }
+	if ($alignment_type and ($alignment_type eq "trim")) { $aln_type = "trim"; } 
+	elsif ($alignment_type and ($alignment_type eq "filter")) { $aln_type = "filter"; } 
+	else { $aln_type = "aln"; }
+	opendir (DIR, "$orthogroup_aln") or die "can't open $orthogroup_aln file\n";
+	while ( my $filename = readdir(DIR) ) {
+		if ($filename !~ /^(\d+)\.$seq_type(.*)$aln_type$/) { next; }
+		my (%seq, @seq_order, $seq_id);
+		open (IN, "$orthogroup_aln/$filename") or die "can't open $orthogroup_aln/$filename file\n";
+		while (<IN>) {
+			chomp;
+			if (/^>(\S+)/) { $seq_id = $1; push (@seq_order, $seq_id); } else { s/\s+//g; $seq{$seq_id}.= $_; }
+		}
+		close IN;
+		if ( (keys(%seq) > $max_orthogroup_size) or (keys(%seq) < $min_orthogroup_size) ) { next; }
+		if ($tree_inference eq "raxml") {
+			my ($id, $species, $outgroup, @root_order);
+			if (!$rooting_order) { $rooting_order = "$config_dir/$scaffold.rootingOrder.config"; }
+			open (IN, "$rooting_order") or die "can't open $rooting_order file\n";
+			while (<IN>) {
+				chomp;
+				if ($_ !~ /^\w+/) { next; } my @F = split(/\=/, $_); push (@root_order, $F[1]);
+			}
+			close IN;
+			foreach $species (@root_order) {
+        		foreach $id (keys %seq) { if ($id =~ /$species/) {$outgroup = $id; last} }
+        		if ($outgroup) {last;}
+    		}
+			open (OUT, ">$phylip_aln/$filename.phylip") or die "can't open $phylip_aln/$filename.phylip file\n";
+			print OUT keys(%seq)." ".length($seq{$seq_order[0]})."\n";
+			foreach $id (@seq_order) { print OUT $id." ".$seq{$id}."\n"; }
+			close OUT;
+			if ($seq_type eq "fna") {
+				system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m GTRGAMMA -s $phylip_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null 2>/dev/null";
+			}
+			else {
+				system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m PROTGAMMAJTT -s $$phylip_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null 2>/dev/null";
+			}
+			system "rm RAxML_bestTree.* RAxML_bipartitionsBranchLabels.* RAxML_bootstrap.* RAxML_info.*";
+    		system "mv RAxML_bipartitions.* $orthogroups_tree/$filename.tree";
+		}
+		else {
+			if ($seq_type eq "fna") {
+			    system "FastTreeMP -nt -gtr -gamma -out $orthogroups_tree/$filename.tree $phylip_aln/$filename >/dev/null 2>/dev/null";
+			}
+			else {
+			    system "FastTreeMP -wag -gamma -out $orthogroups_tree/$filename.tree $phylip_aln/$filename >/dev/null 2>/dev/null";
+			}
+		}
+	}
+	closedir DIR;	
+}
+
