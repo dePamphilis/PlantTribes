@@ -76,7 +76,7 @@ my $usage = <<__EOUSAGE__;
 #                                    /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
 #                                    default configuration files is set to ~home/config.
 #
-#  --num_threads <int>             : number of threads (CPUs) to assign to external utilities (MAFFT, PASTA, and RAxML)
+#  --num_threads <int>             : number of threads (CPUs) to assign to external utilities (MAFFT and PASTA)
 #                                    Default: 1 
 #
 #  --max_memory <int>              : maximum memory (in mb) available to PASTA's java tools - requires "--alignment_method = pasta" 
