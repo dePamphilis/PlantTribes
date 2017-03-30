@@ -1,0 +1,541 @@
+#!/usr/bin/env perl
+# Author: Eric Wafula
+# Email: ekw10@psu.edu
+# Institution: Penn State University, Biology Dept, Claude dePamphilis Lab
+# Date: 03-30-2017
+
+use strict;
+use warnings;
+use File::Spec;
+use File::Basename;
+use Getopt::Long qw(:config no_ignore_case);
+use FindBin;
+
+my $home =  "$FindBin::Bin/..";
+
+my $usage = <<__EOUSAGE__;
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+#                                  ALIGN GENE FAMILY SEQUENCES
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Required Options:
+#
+#  --orthogroup_faa <string>       : Directory containing gene family classification orthogroups protein fasta files
+#
+#  --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
+#                                    path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
+#                                    or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
+#                                    the scaffold to create the absolute path.
+#                                    If Monocots clusters (version 1.0): 12Gv1.0
+#                                    If Angiosperms clusters (version 1.0): 22Gv1.0
+#                                    If Angiosperms clusters (version 1.1): 22Gv1.1
+#                                    If Green plants clusters (version 1.0): 30Gv1.0
+#                                    If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
+#                                    and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
+#                                    data on how data files and directories are named, formated, and organized.
+#
+#  --method <string>               : Protein clustering method for the classification scaffold
+#                                    If GFam: gfam
+#                                    If OrthoFinder: orthofinder
+#                                    If OrthoMCL: orthomcl
+#                                    If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
+#                                    word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
+#
+#  --alignment_method <string>     : Multiple sequence alignment method:
+#                                    If MAFFT algorithm: mafft
+#                                    If PASTA algorithm: pasta 
+#
+# # # # # # # # # # # # # # # # # #
+#  Codon Alignments:
+#
+#  --orthogroup_fna                : Corresponding gene family classification orthogroups CDS fasta files. Files should be in the
+#                                    same directory with input orthogroups protein fasta files. 
+#
+#  --codon_alignments              : Construct orthogroup multiple codon alignments - requires "--orthogroup_fna"
+#
+# # # # # # # # # # # # # # # # # #
+#  MSA Quality Control Options:
+#
+#  --automated_trimming            : Trims alignments using trimAl's ML heuristic trimming approach - incompatible "--gap_trimming"  
+#                                    
+#  --gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
+#
+#  --remove_sequences <float>      : Removes gappy sequences in alignments (i.e. 0.5 removes sequences with 50% gaps): [0.1 to 1.0]
+#                                    - requires either "--automated_trimming" or "--gap_trimming"
+#
+#  --iterative_realignment <int>   : Iterative orthogroups realignment, trimming and fitering - requires "--remove_sequences"
+#                                    (maximum number of iterations) 
+#
+# # # # # # # # # # # # # # # # # # 
+#  Others Options:
+#
+#  --config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
+#                                    for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
+#                                    /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
+#                                    default configuration files is set to ~home/config.
+#
+#  --num_threads <int>             : number of threads (CPUs) to assign to external utilities (MAFFT, PASTA, and RAxML)
+#                                    Default: 1 
+#
+#  --max_memory <int>              : maximum memory (in mb) available to PASTA's java tools - requires "--alignment_method = pasta" 
+#                                    Default: 256
+# 
+#  --pasta_iter_limit <int>        : Maximum number of iteration that the PASTA algorithm will run - requires "--alignment_method = pasta"  
+#                                    Default: 3
+#
+#  --pasta_script_path <string>    : Optional path to the location of the run_pasta.py script. which is used for running PASTA
+#                                    from the command line (useful since the script is a .py file).  Using this will override
+#                                    the default defined in ~home/config/plantTribes.
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Example Usage:
+#
+#  PhylogenomicsAnalysis --orthogroup_faa integratedGeneFamilies_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ 
+__EOUSAGE__
+    ; 
+
+# Declare and initialize variables;
+my $orthogroup_faa;
+my $scaffold;
+my $method;
+my $alignment_method;
+my $orthogroup_fna;
+my $codon_alignments;
+my $automated_trimming;
+my $gap_trimming;
+my $remove_sequences;
+my $iterative_realignment;
+my $config_dir;
+my $num_threads;
+my $max_memory;
+my $pasta_iter_limit;
+my $pasta_script_path;
+
+my $options = GetOptions (  'orthogroup_faa=s' => \$orthogroup_faa,
+              'scaffold=s' => \$scaffold,
+              'method=s' => \$method,
+              'alignment_method=s' => \$alignment_method,
+              'orthogroup_fna' => \$orthogroup_fna,
+              'codon_alignments' => \$codon_alignments,
+              'automated_trimming' => \$automated_trimming,
+              'gap_trimming=f' => \$gap_trimming,
+              'remove_sequences=f' => \$remove_sequences,
+              'iterative_realignment=i' => \$iterative_realignment,
+              'config_dir=s' => \$config_dir,
+              'num_threads=i' => \$num_threads,
+              'max_memory=i' => \$max_memory,
+              'pasta_iter_limit=i'=> \$pasta_iter_limit,
+              'pasta_script_path=s'=>\$pasta_script_path
+              );
+
+if (!$config_dir || !File::Spec->file_name_is_absolute($config_dir)) {
+	$config_dir = "$home/config";
+}
+
+my $pasta;
+if ($pasta_script_path) {
+    # Use the specified path to the run_pasta.py script.
+    $pasta = $pasta_script_path;
+} else {
+    $pasta = 'run_pasta.py';
+}
+
+my $scaffold_dir;
+if (File::Spec->file_name_is_absolute($scaffold)) {
+	$scaffold_dir = $scaffold;
+	$scaffold = basename($scaffold);
+} else {
+	$scaffold_dir = "$home/data/$scaffold";
+}
+
+# validate options
+unless ( $options ) { die $usage; }
+unless ( $orthogroup_faa and $scaffold and $method ) { print "\nOne or more required options not set\n"; die $usage; }
+if ( $scaffold !~ /^\d+Gv\d+\.\d+$/) { print "\nOrthogroups or gene families proteins scaffold name $scaffold is not in the required format";
+	print " i.e. XGvY.Z, where X is number species in the scaffold, and Y.Z version number such as 12Gv1.0.\n"; die $usage; }
+if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
+	print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
+if ( $alignment_method and ($alignment_method ne "mafft") and ($alignment_method ne "pasta") ) { 
+	print "\nUnknown multiple sequence alignment methods\n"; die $usage; }
+if ( $codon_alignments and !$orthogroup_fna ) { print "\nCodon alignmeents requires corresponding gene family classification orthogroups CDS fasta files\n"; die $usage; }
+if ( $iterative_realignment and !$remove_sequences ) { print "\nIterative multiple sequence alignment requires gappy sequence removal before realignment\n"; die $usage; }
+if ( $automated_trimming and $gap_trimming ) { print "\nAutomated alignment trimming is incompatible with gap alignment trimming\n"; die $usage; }
+if ( $remove_sequences and (!$automated_trimming and !$gap_trimming) ) { print "\nRemoval of gappy sequences requires alignment trimming\n"; die $usage; }
+if ( $max_memory and ($alignment_method ne "pasta") ) { print "\nThe maximum memory available to PASTA's java tools requires PASTA alignment algorithm option\n"; die $usage; }
+if ( $pasta_iter_limit and ($alignment_method ne "pasta") ) { print "\nThe maximum number of iteration that the PASTA algorithm will run requires PASTA alignment algorithm option\n"; die $usage; }
+
+# defaults
+if (!$num_threads) { $num_threads = 1; }
+if (!$max_memory) { $max_memory = 256; }
+if (!$pasta_iter_limit) { $pasta_iter_limit = 3; }
+
+print "\n";
+print localtime()." - Starting aligning gene family sequences\n";
+print "-- Scaffold: $scaffold\n-- Method: $method";
+if ($alignment_method eq "mafft") { print "\n-- Multiple sequence alignments: MAFFT (MAFFT algorithm)"; }
+if ($alignment_method eq "pasta") { print "\n-- Multiple sequence alignments: PASTA (PASTA algorithm"; }
+print "\n\n";
+
+# create output directory
+my $dirname ="./geneFamilyAlignments_dir";
+if (-d $dirname) { die "Exiting...!\nGene family alignments output directory ($dirname) already exists!\n\n"; }
+make_directory($dirname);
+
+create_orthogroup_alignments ( $pasta, $orthogroup_faa, $orthogroup_fna, $alignment_method, $codon_alignments, $scaffold, $method, $num_threads,
+	$max_memory, $pasta_iter_limit, $dirname, $scaffold_dir );
+
+if ( $automated_trimming or $gap_trimming ) {
+	trim_orthogroup_alignments ( $orthogroup_faa, $codon_alignments, $iterative_realignment, $automated_trimming, $gap_trimming, $remove_sequences, $dirname );
+}
+
+if ( $iterative_realignment ) {
+	realign_filtered_orthogroup_alignments ( $iterative_realignment, $pasta, $alignment_method, $codon_alignments,
+		$automated_trimming, $gap_trimming, $remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname );
+}
+
+print localtime()." - Completed aligning gene family sequences\n\n";
+
+exit(0);
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #  sub-routines # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+sub make_directory {
+	my ( $new_dir ) = @_;
+	if (!-d $new_dir) {
+		mkdir($new_dir, 0755);
+	}
+}
+
+sub create_orthogroup_alignments {
+	my ( $pasta, $orthogroup_faa, $orthogroup_fna, $alignment_method, $codon_alignments, $scaffold, $method, $num_threads,
+		$max_memory, $pasta_iter_limit, $dirname, $scaffold_dir ) = @_;
+	print localtime()." - Creating orthogroup alignments\n\n";
+	my $orthogroups_aln = "$dirname/orthogroups_aln";
+	make_directory($orthogroups_aln);
+	my %pep;
+	opendir (DIR, "$orthogroup_faa") or die "can't open $orthogroup_faa file\n";
+	while ( my $filename = readdir(DIR) ) { if ($filename =~ /^(\d+)\.faa$/) { $pep{$1} = $1; } }
+	closedir DIR;
+	foreach my $ortho_id (keys %pep) {
+		my $seq_count = 0;
+		open (IN, "$orthogroup_faa/$ortho_id.faa") or die "can't open $orthogroup_faa/$ortho_id.faa file\n";
+		while (<IN>) { if (/^>(.*)/) { $seq_count++; } }
+		close IN;
+		if ($seq_count < 3) { next; }
+		if ($alignment_method eq "mafft") {
+			system "mafft --maxiterate 1000 --thread $num_threads --localpair $orthogroup_faa/$ortho_id.faa > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null"; 
+		}
+		if ($alignment_method eq "pasta") {
+			my $pasta_temp = "$dirname/pasta_temp";
+			make_directory($pasta_temp);
+			system "python $pasta -d Protein -i $orthogroup_faa/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null";
+			my $pasta_aln = 0;
+			opendir (DIR, "$pasta_temp") or die "can't $pasta_temp directory\n";
+			while ( my $filename = readdir(DIR)) {
+				if ($filename =~ /\.aln$/){ $pasta_aln++; }
+			}
+			if($pasta_aln == 0) {
+				print "PASTA multiple alignments was not successful.\nEither PASTA is properly installed or your input fasta file is not in the required format.\nTerminating...\n\n";
+				exit(0);
+			}
+			system "mv $pasta_temp/*.$ortho_id.faa.aln $orthogroups_aln/$ortho_id.faa.aln";
+			system "rm -r $pasta_temp";
+		}
+		if ($codon_alignments) {
+			my $aa_aln = "$orthogroups_aln/$ortho_id.faa.aln";
+			my $dna_aln = "$orthogroups_aln/$ortho_id.fna.aln";
+			my $cds = "$orthogroup_faa/$ortho_id.fna"; 
+			create_codon_alignments ( $aa_aln, $dna_aln, $cds );
+		}
+	}
+}
+
+sub trim_orthogroup_alignments {
+	my ( $orthogroup_faa, $codon_alignments, $iterative_realignment, $automated_trimming, $gap_trimming, $remove_sequences, $dirname ) = @_;
+	print localtime()." - Trimming and filtering orthogroup alignments\n\n";
+	my (%pep_aln, %cds_aln);
+	my $orthogroups_aln = "$dirname/orthogroups_aln";
+	opendir (DIR, "$orthogroups_aln") or die "can't open $orthogroups_aln file\n";
+	while ( my $filename = readdir(DIR) ) {
+		if ($filename =~ /^(\d+)\.faa\.aln$/) { $pep_aln{$1} = $1; }
+		if ($filename =~ /^(\d+)\.fna\.aln$/) { $cds_aln{$1} = $1; }
+	}
+	closedir DIR;
+	if ( $codon_alignments and keys(%pep_aln) != keys(%cds_aln) ) { 
+		die "Exiting...!\nOrthogroup classification protein and CDS alignments fasta files not equivalent in $orthogroups_aln directory\n\n";
+	}	
+	foreach my $ortho_id (keys %pep_aln) {
+		if ($automated_trimming) {
+			system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null 2>/dev/null";
+			if ($codon_alignments and $cds_aln{$ortho_id}) { 
+				system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null 2>/dev/null"; 
+			}
+		}
+		if ($gap_trimming) {
+			system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null";
+			if ($codon_alignments and $cds_aln{$ortho_id}) { 
+				system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null"; 
+			}
+		}
+		if ($remove_sequences) {
+			my $aa_aln_trim = "$orthogroups_aln/$ortho_id.faa.aln.trim";
+			my $dna_aln_trim;
+			if ($codon_alignments and $cds_aln{$ortho_id}) { $dna_aln_trim = "$orthogroups_aln/$ortho_id.fna.aln.trim"; }
+			remove_gappy_sequences ( $aa_aln_trim, $dna_aln_trim, $remove_sequences );
+			if ($iterative_realignment) {
+				my (%unfiltered_aln, %filtered_aln);
+				open (IN, "$orthogroups_aln/$ortho_id.faa.aln") or die "can't open $orthogroups_aln/$ortho_id.faa.aln file\n";
+				while (<IN>) { chomp; if (/^>(\S+)/) { $unfiltered_aln{$1} = $1; } }
+				close IN;
+				open (IN, "$orthogroups_aln/$ortho_id.faa.aln.trim.filter") or die "can't open $orthogroups_aln/$ortho_id.faa.aln.trim.filter file\n";
+				while (<IN>) { chomp; if (/^>(\S+)/) { $filtered_aln{$1} = $1; } }
+				close IN;
+				if ( keys(%unfiltered_aln) != keys(%filtered_aln) ) {
+					my $temp_dir = "$dirname/temp_dir";
+					make_directory($temp_dir);
+					get_sequences ( $orthogroup_faa, $temp_dir, $ortho_id, \%filtered_aln, $codon_alignments );				
+				}		              
+			}
+		}					
+	}
+}
+
+sub realign_filtered_orthogroup_alignments {
+	my ( $iterative_realignment, $pasta, $alignment_method, $codon_alignments, $automated_trimming, $gap_trimming, $remove_sequences,
+		$num_threads, $max_memory, $pasta_iter_limit, $dirname ) = @_;
+	print localtime()." - Iteratively realigning filtered orthogroup alignments\n\n";
+	my $iterator = 1;
+	my $log_file = "$dirname/needsIterativeRealgnment.log";	
+	my $temp_dir = "$dirname/temp_dir";
+	print "-- ".localtime()." - Starting iteration $iterator of iterative realignment\n\n";
+	prepare_alignments ( $log_file, $temp_dir, $pasta, $alignment_method, $codon_alignments, $automated_trimming, $gap_trimming,
+		$remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname );
+	while (-e $log_file) {
+    	if ((-z $log_file) or ($iterator == $iterative_realignment)) { print "-- ".localtime()." - Completed iterative realignment in $iterator iterations\n\n"; last; }
+    	else {
+			$iterator++;
+			print "-- ".localtime()." - Starting iteration $iterator of iterative realignment\n\n";
+			prepare_alignments ( $log_file, $temp_dir, $pasta, $alignment_method, $codon_alignments, $automated_trimming, $gap_trimming,
+				$remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname );
+    	} 
+    }
+    system "rm -r $temp_dir";
+}
+
+sub create_codon_alignments {
+	my ( $aa_aln, $dna_aln, $cds ) = @_;
+	my (%seq, @seq_order, $aa_id, $dna_id, $id);
+	$aa_aln =~ /(\d+)(.*)/;
+	my  $ortho_id = $1;
+	open (IN, "$aa_aln") or die "can't open $aa_aln file\n";
+	while (<IN>) {
+		chomp;
+        if (/^>(\S+)/) { $aa_id = $1; push (@seq_order, $aa_id); } 
+        else { s/\s+//g; $seq{$aa_id}{aa} .= $_; }
+	}
+	close IN;
+	open (IN, "$cds") or die "can't open $cds file\n";
+	while (<IN>) {
+		chomp;
+        if (/^>(\S+)/) { $dna_id = $1; } 
+        else { s/\s+//g; s/X/N/g; s/x/n/g; $seq{$dna_id}{dna} .= $_; }
+    }
+	close IN;
+	open (OUT, ">$dna_aln") or die "can't open $dna_aln file\n";
+	foreach $id (@seq_order) {
+		unless ($seq{$id}{aa} && $seq{$id}{dna}) { print "Skipping sequence $id in orthogroup $ortho_id does not have a valid aa and dna\n\n"; next; }
+        my $aln = $seq{$id}{aa};
+        my $aln_no_gaps = $aln;
+        $aln_no_gaps =~ s/-//g;
+        my $dna = $seq{$id}{dna};
+        if (int(length($dna)/3) < length($aln_no_gaps)) { 
+        	print "Skipping sequence $id in orthogroup $ortho_id has dna condon length less than aa length\n\n";
+        	next; 
+        }
+        if (length($dna) % length($aln_no_gaps) != 0) {
+                # check to see if the last 3 bases are stop codon -> TAA,TAG,TGA
+                my $last_codon = substr($dna,-3);
+                if ($last_codon eq "TAA" || $last_codon eq "TAG" || $last_codon eq "TGA" || $last_codon eq "taa" || $last_codon eq "tag" || $last_codon eq "tga") { 
+                	$dna = substr($dna, 0, -3);
+                } 
+                else { print "Skipping sequence $id in orthogroup $ortho_id not in codon frame\n\n"; next; }
+        }
+        my @aa_aln = split("", $aln);
+        my @codon = unpack("a3" x int(length($dna)/3) ,$dna);
+        if (length($aln_no_gaps) != ($#codon + 1)) { print "Skipping sequence $id in orthogroup $ortho_id not in codon frame\n\n"; next; }
+        my $index = 0;
+        my $codon_aln = "";
+        foreach my $aa (@aa_aln) {
+        	if ($aa eq "-") { $codon_aln .= "---"; }
+        	elsif ($aa eq "?") { $codon_aln .= "???"; $index++; }
+        	else { $codon_aln .= $codon[$index]; $index++; }
+        }
+        $codon_aln =~ s/.{60}(?=.)/$&\n/g;
+        print OUT ">$id\n$codon_aln\n";
+    }
+    close OUT;
+}
+
+sub remove_gappy_sequences {
+	my ( $aa_aln_trim, $dna_aln_trim, $remove_sequences ) = @_;
+	my (%seq, @seq_order, $aa_id, $dna_id, $id, $aln);
+	open (IN, "$aa_aln_trim") or die "can't open $aa_aln_trim file\n";
+	while (<IN>) {
+		chomp;
+		if (/>(\S+)/) { $aa_id = $1; push (@seq_order, $aa_id); }
+		else { s/\s+//g; $seq{$aa_id}{aa} .= $_; }
+	}
+	close IN;
+	if ($dna_aln_trim) { 
+		open (IN, "$dna_aln_trim") or die "can't open $dna_aln_trim file\n";
+		while (<IN>) {
+			chomp;
+			if (/>(\S+)/) { $dna_id = $1; }
+			else { s/\s+//g; $seq{$dna_id}{dna} .= $_; }
+		}
+		close IN;
+	}
+	open (PEP, ">$aa_aln_trim.filter") or die "can't open $aa_aln_trim.filter file\n";
+	if ($dna_aln_trim) { open (CDS, ">$dna_aln_trim.filter") or die "can't open $dna_aln_trim.filter file\n"; }
+	foreach $id (@seq_order) {
+		$aln = $seq{$id}{aa};
+		$aln =~ s/-//g;
+		if ((length($aln) / length($seq{$id}{aa})) >= $remove_sequences) {
+			$seq{$id}{aa} =~ s/.{60}(?=.)/$&\n/g;
+			print PEP ">$id\n$seq{$id}{aa}\n";
+		}
+		if ($dna_aln_trim) {
+			$aln = $seq{$id}{dna};
+			$aln =~ s/-//g;
+			if ((length($aln) / length($seq{$id}{dna})) >= $remove_sequences) {
+				$seq{$id}{dna} =~ s/.{60}(?=.)/$&\n/g;
+				print CDS ">$id\n$seq{$id}{dna}\n";
+			}		
+		}
+	}
+	close PEP;
+	close CDS;
+}
+
+sub prepare_alignments {
+	my ($log_file, $temp_dir, $pasta, $alignment_method, $codon_alignments, $automated_trimming, $gap_trimming,
+		$remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname) = @_;
+	my $orthogroups_aln = "$dirname/orthogroups_aln";
+	my $temp_aln = "$temp_dir/aln_dir";
+	make_directory($temp_aln);
+	my %pep;
+	opendir (DIR, "$temp_dir") or die "can't open $temp_dir file\n";
+	while ( my $filename = readdir(DIR) ) { if ($filename =~ /^(\d+)\.faa$/) { $pep{$1} = $1; } }
+	closedir DIR;
+	open (LOG, ">$log_file") or die "can't open $log_file file\n";
+	foreach my $ortho_id (keys %pep) {
+		my $seq_count = 0;
+		open (IN, "$temp_dir/$ortho_id.faa") or die "can't open $temp_dir/$ortho_id.faa file\n";
+		while (<IN>) { if (/^>(.*)/) { $seq_count++; } }
+		close IN;
+		if ($seq_count < 3) { next; }		
+		if ($alignment_method eq "pasta"){
+			my $pasta_temp = "$dirname/pasta_temp";
+			make_directory($pasta_temp);
+			system "python $pasta -d Protein -i $temp_dir/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null 2>/dev/null";
+			my $pasta_aln = 0;
+			opendir (DIR, "$pasta_temp") or die "can't $pasta_temp directory\n";
+			while ( my $filename = readdir(DIR)) {
+				if ($filename =~ /\.aln$/){ $pasta_aln++; }
+			}
+			if($pasta_aln == 0) {
+				print "PASTA multiple alignments was not successful.\nEither PASTA is properly installed or your input fasta file is not in the required format.\nTerminating...\n\n";
+				exit(0);
+			}
+			system "mv $pasta_temp/*.$ortho_id.faa.aln $temp_aln/$ortho_id.faa.aln";
+			system "rm -r $pasta_temp";
+		}
+		else {
+			system "mafft --maxiterate 1000 --thread $num_threads --localpair $temp_dir/$ortho_id.faa > $temp_aln/$ortho_id.faa.aln 2>/dev/null";
+		}
+		if ($codon_alignments) {
+			my $aa_aln = "$temp_aln/$ortho_id.faa.aln";
+			my $dna_aln = "$temp_aln/$ortho_id.fna.aln";
+			my $cds = "$temp_dir/$ortho_id.fna"; 
+			create_codon_alignments ( $aa_aln, $dna_aln, $cds );
+		}
+		if ($automated_trimming) {
+			system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null 2>/dev/null";
+			if ($codon_alignments) { 
+				system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null 2>/dev/null"; 
+			}
+		}
+		if ($gap_trimming) {
+			system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null";
+			if ($codon_alignments) { 
+				system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null"; 
+			}
+		}
+		if ($remove_sequences) {
+			my $aa_aln_trim = "$temp_aln/$ortho_id.faa.aln.trim";
+			my $dna_aln_trim;
+			if ($codon_alignments) { $dna_aln_trim = "$temp_aln/$ortho_id.fna.aln.trim"; }
+			remove_gappy_sequences ( $aa_aln_trim, $dna_aln_trim, $remove_sequences );
+		}
+		my (%unfiltered_aln, %filtered_aln);
+		open (IN, "$temp_aln/$ortho_id.faa.aln") or die "can't open $temp_aln/$ortho_id.faa.aln file\n";
+		while (<IN>) { chomp; if (/^>(\S+)/) { $unfiltered_aln{$1} = $1; } }
+		close IN;
+		open (IN, "$temp_aln/$ortho_id.faa.aln.trim.filter") or die "can't open $temp_aln/$ortho_id.faa.aln.trim.filter file\n";
+		while (<IN>) { chomp; if (/^>(\S+)/) { $filtered_aln{$1} = $1; } }
+		close IN;
+		if ( keys(%unfiltered_aln) != keys(%filtered_aln) ) { 
+			print LOG "$ortho_id\n";
+			get_sequences ( $temp_dir, $temp_dir, $ortho_id, \%filtered_aln, $codon_alignments );
+		}
+		else { 
+			system "mv $temp_aln/$ortho_id.faa.aln.trim $orthogroups_aln/$ortho_id.faa.aln.trim";
+			system "mv $temp_aln/$ortho_id.faa.aln.trim.filter $orthogroups_aln/$ortho_id.faa.aln.trim.filter";
+    		system "rm $temp_aln/$ortho_id.faa.aln";
+    		system "rm $temp_dir/$ortho_id.faa";  
+    		if ($codon_alignments) { 
+    			system "mv $temp_aln/$ortho_id.fna.aln.trim $orthogroups_aln/$ortho_id.fna.aln.trim";
+    			system "mv $temp_aln/$ortho_id.fna.aln.trim.filter $orthogroups_aln/$ortho_id.fna.aln.trim.filter";
+    			system "rm $temp_aln/$ortho_id.fna.aln";
+    			system "rm $temp_dir/$ortho_id.fna";
+    		}
+    	}
+	}
+	close LOG;		
+}
+
+sub get_sequences {
+	my ( $in_dir, $out_dir, $ortho_id, $filtered_aln, $codon_alignments ) = @_;
+	my (%seq, @seq_order, $aa_id, $dna_id, $id);
+	open (IN, "$in_dir/$ortho_id.faa") or die "can't open $in_dir/$ortho_id.faa file\n";
+	while (<IN>) {
+		chomp;
+		if (/^>(\S+)/) { $aa_id = $1; push (@seq_order, $aa_id); }
+		else { s/\s+//g; $seq{$aa_id}{aa} .= $_; }
+	}
+	close IN;
+	if ($codon_alignments) {
+		open (IN, "$in_dir/$ortho_id.fna") or die "can't open $in_dir/$ortho_id.fna file\n";
+		while (<IN>) {
+			chomp;
+			if (/^>(\S+)/) { $dna_id = $1; }
+			else { s/\s+//g; $seq{$dna_id}{dna} .= $_; }
+		}
+		close IN;
+	}
+	open (PEP, ">$out_dir/$ortho_id.faa") or die "can't open $out_dir/$ortho_id.faa file\n";
+	if ($codon_alignments) { open (CDS, ">$out_dir/$ortho_id.fna") or die "can't open $out_dir/$ortho_id.fna file\n"; }
+	foreach $id (@seq_order) {
+		if ($$filtered_aln{$id}) {
+			print PEP ">$id\n$seq{$id}{aa}\n";
+			if ($codon_alignments) { print CDS ">$id\n$seq{$id}{dna}\n"; }
+		}	
+	}
+	close PEP;
+	close CDS;
+}
