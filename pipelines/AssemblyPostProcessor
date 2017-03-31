@@ -332,7 +332,7 @@ sub run_estscan {
 sub run_transdecoder {
     my ( $transcripts, $stranded, $length, $gene_family_search, $out_dir ) = @_;
     print localtime()." - Predicting coding regions with TransDecoder\n\n";
-    if ($stranded) { system "TransDecoder.LongOrfs -t $transcripts -S >/dev/null 2>/dev/null"; } else { system "TransDecoder.LongOrfs -t $transcripts >/dev/null 2>/dev/null"; }
+    system "TransDecoder.LongOrfs -t $transcripts >/dev/null 2>/dev/null";
     my @file_path = split (/\/+/, $transcripts);
     my $transcripts_file = $file_path[$#file_path];
     system "mv $transcripts_file.transdecoder_dir/longest_orfs.cds $out_dir/transcripts.cds";
@@ -359,7 +359,7 @@ sub run_transdecoder {
 			# CDS: >Gene.1::contig_1::g.1::m.1 type:internal len:115 contig_1:344-3(-) PEP: >Gene.1::contig_1::g.1::m.1 type:internal len:115 gc:universal contig_1:344-3(-) = minus strand
 			# CDS: >Gene.1::contig_2::g.1::m.1 type:3prime_partial len:413 contig_2:1-1236(+) PEP: >Gene.1::contig_2::g.1::m.1 type:3prime_partial len:413 gc:universal contig_2:1-1236(+) = plus strand
 			if (/^>(\S+)/) { $id = $1; if (/\(\-\)$/) { $strand = 1; } else { $strand = 0; } } 
-	  		else { s/\s+//g; if ($strand == 0) { $plus{$id} .= $_; } if ($strand == 1) { $minus{$1} .= $_; } }
+	  		else { s/\s+//g; if ($strand == 0) { $plus{$id} .= $_; } if ($strand == 1) { $minus{$id} .= $_; } }
         	}
 		close IN;
 		my $plus_count = keys(%plus);
