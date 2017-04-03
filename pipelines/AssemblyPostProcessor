@@ -34,6 +34,8 @@ my $usage = <<__EOUSAGE__;
 #  Target Gene Family Assembly:
 #
 #  --gene_family_search <string>   : File with a list of orthogroup identifiers for target gene families to assemble
+#                                    Orthogroup identifiers can be obtained from the scaffold function annotation table -
+#                                    "Orthogroup ID" field of .summary file in the config directory of the installation.
 #                                    - requires "--scaffold" and "--method" 
 #
 #  --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
