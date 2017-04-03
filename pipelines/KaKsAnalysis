@@ -52,9 +52,9 @@ my $usage = <<__EOUSAGE__;
 #                                            (Cui et al., 2006) - mainly applies only paralogous ks analysis
 #
 #  --codeml_ctl_file <string>              : PAML's codeml control file to carry out ML analysis of protein-coding DNA sequences using codon 
-#                                            substitution models. The "codeml.ctl.args" template in config directory of the installation will be used 
-#                                            if not provided. NOTE: input (seqfile, treefile) and output (outfile) parameters of codeml are not
-#                                            included in the template.
+#                                            substitution models. The defaults in the "codeml.ctl.args" template in the config directory of
+#                                            the installation will be used if not provided. NOTE: input (seqfile, treefile) and output (outfile)
+#                                            parameters of codeml are not included in the template.
 #
 #
 #  --fit_components                        : Fit a mixture model of multivariate normal components to synonymous (ks) distribution to identify
