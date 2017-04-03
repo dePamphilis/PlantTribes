@@ -52,6 +52,21 @@ The execulables for the PlantTribes pipelines are in the [pipelines](pipelines) 
     - `PlantTribes/pipelines/PhylogenomicsAnalysis`
   - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and raxml Phylogenetic trees inference method:
     - `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl  --add_alignments  --tree_inference raxml`
+- **GeneFamilyIntegrator**: 
+  - Display all usage options: 
+    - `PlantTribes/pipelines/GeneFamilyIntegrator`
+  - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method:
+    - `GeneFamilyIntegrator --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl`
+- **GeneFamilyAligner pipeline**:  
+  - Display all usage options: 
+    - `PlantTribes/pipelines/GeneFamilyAligner`
+  - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and mafft alignment method:
+    - `GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir/orthogroups_fasta --scaffold 22Gv1.1 --method orthomcl --alignment_method mafft`
+- **GeneFamilyPhylogenyBuilder pipeline**:  
+  - Display all usage options: 
+    - `PlantTribes/pipelines/GeneFamilyPhylogenyBuilder`
+  - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and fastree Phylogenetic trees inference method:
+    - `GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln --scaffold 22Gv1.1  --method orthomcl --tree_inference fasttree`     
 - **KaKsAnalysis pipeline**
   - Display all usage options:
     - `PlantTribes/pipelines/KaKsAnalysis`
