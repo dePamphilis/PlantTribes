@@ -3,5 +3,7 @@
 # Available pipelines: 
 AssemblyPostProcessor - transcriptome asssembly post processing
 GeneFamilyClassifier - gene family classification
-
+GeneFamilyIntegrator - integrate scaffold and classified gene families
+GeneFamilyAligner - align gene family sequences
+GeneFamilyPhylogenyBuilder - gene family phylogenetic inference
 KaKsAnalysis - nonsynonymous (ka) and synonymous (ks) analysis
