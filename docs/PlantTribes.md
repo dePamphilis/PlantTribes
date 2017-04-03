@@ -74,18 +74,28 @@ Required Options:
 Target Gene Family Assembly:
 
 --gene_family_search <string>   : File with a list of orthogroup identifiers for target gene families to assemble
-                                  (see example target orthogroups configuration files in config sub-directory of 
-                                  the installation).
+                                  Orthogroup identifiers can be obtained from the scaffold function annotation table -
+                                  "Orthogroup ID" field of .summary file in the config directory of the installation.
                                   - requires "--scaffold" and "--method" 
                                   
---scaffold <string>             : Orthogroups or gene families proteins scaffold - required by "--gene_family_search"
+--scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
+                                  path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
+                                  or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
+                                  the scaffold to create the absolute path.
+                                  If Monocots clusters (version 1.0): 12Gv1.0
                                   If Angiosperms clusters (version 1.0): 22Gv1.0
-                                  If Angiosperms clusters (version 1.1): 22Gv1.1	
+                                  If Angiosperms clusters (version 1.1): 22Gv1.1
+                                  If Green plants clusters (version 1.0): 30Gv1.0
+                                  If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
+                                  and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
+                                  data on how data files and directories are named, formated, and organized.
 
 --method <string>               : Protein clustering method - required by "--gene_family_search"
                                   If GFam: gfam
                                   If OrthoFinder: orthofinder
                                   If OrthoMCL: orthomcl
+                                  If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
+                                  word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
 
 --gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
                                   Default: 0.1
@@ -99,7 +109,8 @@ Others Options:
 
 --min_length <int>              : Minimum sequence length of predicted coding regions
 
---num_threads <int>             : number of threads (CPUs) - only required for targeted gene family assembly                                                             Default: 1
+--num_threads <int>             : number of threads (CPUs) - only required for targeted gene family assembly                          
+                                  Default: 1
 ```
 #### GeneFamilyClassifier Pipeline
 ```
@@ -107,21 +118,36 @@ Required Options:
 
 --proteins <string>             : Amino acids (proteins) sequences fasta file (proteins.fasta)
 
---scaffold <string>             : Orthogroups or gene families proteins scaffold
+--scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
+                                  path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
+                                  or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
+                                  the scaffold to create the absolute path.
+                                  If Monocots clusters (version 1.0): 12Gv1.0
                                   If Angiosperms clusters (version 1.0): 22Gv1.0
                                   If Angiosperms clusters (version 1.1): 22Gv1.1
+                                  If Green plants clusters (version 1.0): 30Gv1.0
+                                  If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
+                                  and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
+                                  data on how data files and directories are named, formated, and organized.
 
 --method <string>               : Protein clustering method
                                   If GFam: gfam
                                   If OrthoFinder: orthofinder
                                   If OrthoMCL: orthomcl
-
+                                  If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
+                                  word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
+                                  
 --classifier <string>           : Protein classification method 
                                   If BLASTP: blastp
                                   If HMMScan: hmmscan
                                   If BLASTP and HMMScan: both
                   
 Others Options:
+
+--config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
+                                  for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
+                                  /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
+                                  default configuration files is set to ~home/config.
 
 --num_threads <int>             : number of threads (CPUs) to used for HMMScan, BLASTP, and MAFFT
                                   Default: 1 
@@ -130,9 +156,12 @@ Others Options:
                                   If minimum e-value: min_evalue (default) 
                                   If average e-value: avg_evalue
 
---single_copy_custom            : Single copy orthogroup custom selection - incompatible with "--single_copy_taxa"
-                                  (see the single copy configuration files the config sub-directory of the installation
-                                  on how to customize the single copy selection)	
+--single_copy_custom <string>   : Configuration file for single copy orthogroup custom selection - incompatible with
+                                   "--single_copy_taxa".  This must be an absolute path to the configuration file
+                                   (e.g., '~/home/scaffolds/22Gv1.1.singleCopy.config') or the string 'default'.   If the
+                                   latter, the config is defined to be ~/config_dir/~scaffold.singleCopy.config.  See the
+                                   single copy configuration files the config sub-directory of the installation on how to
+                                   customize the single copy selection.	
                                     
 --single_copy_taxa <int>        : Minimum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
 
@@ -142,20 +171,30 @@ Others Options:
                                     
 --coding_sequences <string>     : Corresponding coding sequences (CDS) fasta file (cds.fasta)
 ```
-#### PhylogenomicsAnalysis pipeline
+#### PhylogenomicsAnalysis pipeline (legacy pipeline)
 ```
 Required Options:
 
 --orthogroup_faa <string>       : Directory containing gene family classification orthogroups protein fasta files
 
---scaffold <string>             : Orthogroups gene families proteins classification scaffold
+--scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
+                                  path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
+                                  or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
+                                  the scaffold to create the absolute path.
+                                  If Monocots clusters (version 1.0): 12Gv1.0
                                   If Angiosperms clusters (version 1.0): 22Gv1.0
-                                  If Angiosperms clusters (version 1.1): 22Gv1.1	
+                                  If Angiosperms clusters (version 1.1): 22Gv1.1
+                                  If Green plants clusters (version 1.0): 30Gv1.0
+                                  If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
+                                  and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
+                                  data on how data files and directories are named, formated, and organized.	
 
---method <string>               : Protein clustering method for the classification scaffold
+--method <string>               : Protein clustering method
                                   If GFam: gfam
                                   If OrthoFinder: orthofinder
                                   If OrthoMCL: orthomcl
+                                  If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
+                                  word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
 
 Multiple Sequence Alignments:
 
@@ -212,6 +251,11 @@ MSA Quality Control Options:
 
 Others Options:
 
+--config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
+                                  for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
+                                  /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
+                                  default configuration files is set to ~home/config.
+
 --num_threads <int>             : number of threads (CPUs) to assign to external utilities (MAFFT, PASTA, and RAxML)
                                   Default: 1 
 
@@ -223,6 +267,166 @@ Others Options:
                                  
 --orthogroup_fna                : Corresponding gene family classification orthogroups CDS fasta files. Files should be in the
                                   same directory with input orthogroups protein fasta files.
+```
+#### GeneFamilyIntegrator
+```
+Required Options:
+
+--orthogroup_faa <string>       : Directory containing gene family classification orthogroups protein fasta files
+
+--scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
+                                  path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
+                                  or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
+                                  If Monocots clusters (version 1.0): 12Gv1.0
+                                  If Angiosperms clusters (version 1.0): 22Gv1.0
+                                  If Angiosperms clusters (version 1.1): 22Gv1.1
+                                  If Green plants clusters (version 1.0): 30Gv1.0
+                                  If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
+                                  and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
+                                  data on how data files and directories are named, formated, and organized.
+
+--method <string>               : Protein clustering method for the classification scaffold
+                                  If GFam: gfam
+                                  If OrthoFinder: orthofinder
+                                  If OrthoMCL: orthomcl
+                                  If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
+                                  word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
+                                    
+Others Options:
+
+--orthogroup_fna                : Corresponding gene family classification orthogroups CDS fasta files. Files should be in the
+                                  same directory with input orthogroups protein fasta files. 
+```
+#### GeneFamilyAligner
+```
+Required Options:
+
+--orthogroup_faa <string>       : Directory containing gene family classification orthogroup protein fasta files
+
+--scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
+                                  path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
+                                  or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
+                                  the scaffold to create the absolute path.
+                                  If Monocots clusters (version 1.0): 12Gv1.0
+                                  If Angiosperms clusters (version 1.0): 22Gv1.0
+                                  If Angiosperms clusters (version 1.1): 22Gv1.1
+                                  If Green plants clusters (version 1.0): 30Gv1.0
+                                  If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
+                                  and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
+                                  data on how data files and directories are named, formated, and organized.
+--method <string>                : Protein clustering method for the classification scaffold
+                                   If GFam: gfam
+                                   If OrthoFinder: orthofinder
+                                   If OrthoMCL: orthomcl
+                                   If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
+                                   word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
+
+--alignment_method <string>      : Multiple sequence alignment method:
+                                   If MAFFT algorithm: mafft
+                                   If PASTA algorithm: pasta 
+
+
+Codon Alignments:
+
+--orthogroup_fna                 : Corresponding gene family classification orthogroups CDS fasta files. Files should be in the
+                                   same directory with input orthogroups protein fasta files. 
+
+--codon_alignments               : Construct orthogroup multiple codon alignments - requires "--orthogroup_fna"
+
+MSA Quality Control Options:
+
+--automated_trimming             : Trims alignments using trimAl's ML heuristic trimming approach - incompatible "--gap_trimming"  
+                                   
+--gap_trimming <float>           : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
+
+--remove_sequences <float>       : Removes gappy sequences in alignments (i.e. 0.5 removes sequences with 50% gaps): [0.1 to 1.0]
+                                   - requires either "--automated_trimming" or "--gap_trimming"
+
+--iterative_realignment <int>    : Iterative orthogroups realignment, trimming and fitering - requires "--remove_sequences"
+                                   (maximum number of iterations)    
+Others Options:
+
+--config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
+                                  for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
+
+--num_threads <int>             : number of threads (CPUs) to assign to external utilities (MAFFT and PASTA)
+                                   Default: 1 
+
+--max_memory <int>              : maximum memory (in mb) available to PASTA's java tools - requires "--alignment_method = pasta" 
+                                    Default: 256
+ 
+--pasta_iter_limit <int>        : Maximum number of iteration that the PASTA algorithm will run - requires "--alignment_method = pasta"  
+                                   Default: 3
+
+--pasta_script_path <string>    : Optional path to the location of the run_pasta.py script. which is used for running PASTA
+                                  from the command line (useful since the script is a .py file).  Using this will override
+                                  the default defined in ~home/config/plantTribes.
+```
+#### GeneFamilyPhylogenyBuilder
+```
+Required Options:
+
+--orthogroup_aln <string>       : Directory containing gene family orthogroup protein alignment files
+
+--scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
+                                  path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
+                                  or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
+                                  the scaffold to create the absolute path.
+                                  If Monocots clusters (version 1.0): 12Gv1.0
+                                  If Angiosperms clusters (version 1.0): 22Gv1.0
+                                  If Angiosperms clusters (version 1.1): 22Gv1.1
+                                  If Green plants clusters (version 1.0): 30Gv1.0
+                                  If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
+                                  and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
+                                  data on how data files and directories are named, formated, and organized.
+
+--method <string>               : Protein clustering method for the classification scaffold
+                                  If GFam: gfam
+                                  If OrthoFinder: orthofinder
+                                  If OrthoMCL: orthomcl
+                                  If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
+                                  word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
+
+--tree_inference <string>       : Phylogenetic trees inference method
+                                  If RAxML: raxml
+                                  If FastTree: fasttree
+                                    
+ Others Options:
+
+--config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
+                                  for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
+                                  /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
+                                  default configuration files is set to ~home/config.
+
+--alignment_type <string>       : Input alignments type produces by the GeneFamilyAligner 
+                                  If Primary alignments: aln (default)
+                                  If trimmed alignmets: trim 
+                                  If filtered alignments: filter
+
+--max_orthogroup_size <int>     : Maximum number of sequences in orthogroup alignments
+                                  Default: 100  
+
+--min_orthogroup_size <int>     : Minimum number of sequences in orthogroup alignments
+                                  Default: 4
+
+--sequence_type <string>        : Sequence type used in the phylogenetic inference - "dna" requires "--codon_alignments"
+                                  If amino acid based: protein (default)
+                                  If nucleotide based: dna
+
+--rooting_order <string>        : File with a list of string fragments matching sequences identifiers of species in the 
+                                  classification (including scaffold taxa) to be used for determining the most basal taxa in
+                                  the orthogroups for rooting trees. Should be listed in decreasing order from older to younger
+                                  lineages. If the file is not provided, trees will be rooted using the most distant taxon
+                                  present in the orthogroup (see example rooting order configuration files in config sub-directory
+                                  of the installation). 
+                                  - requires "--tree_inference" with RAxML
+
+--bootstrap_replicates <int>    : Number of replicates for rapid bootstrap analysis and search for the best-scoring ML tree
+                                  - requires "--tree_inference" with RAxML
+                                  Default: 100
+
+--num_threads <int>             : number of threads (CPUs) to assign to external utilities (RAxML)
+                                  Default: 1 
 ```
 #### KaKsAnalysis pipeline
 ```
@@ -252,9 +456,9 @@ Others Options:
                                           interest (Cui et al., 2006) - applies only paralogous ks
 
 --codeml_ctl_file <string>              : PAML's codeml control file to carry out ML analysis of protein-coding DNA sequences using codon
-                                          substitution models. The "codeml.ctl.args" template in config directory of the installation will 
-                                          be used if not provided. NOTE: input (seqfile, treefile) and output (outfile) parameters of
-                                          codeml are not included in the template.
+                                          substitution models. The defaults in the "codeml.ctl.args" template in the config directory 
+                                          of the installation will be used if not provided. NOTE: input (seqfile, treefile) and output 
+                                          (outfile) parameters of codeml are not included in the template.
 
 --fit_components                        : Fit a mixture model of multivariate normal components to synonymous (ks) distribution to
                                           identify significant duplication event(s) in a genome
@@ -263,8 +467,8 @@ Others Options:
                                           "--fit_components"
 
 --min_ks <float>                        : Lower limit of synonymous subsitutions (ks) - necessary if fitting components to the
-                                           distribution to reduce background noise from young paralogous pairs due to normal gene births
-                                           and deaths in a genome.  
+                                          distribution to reduce background noise from young paralogous pairs due to normal gene births
+                                          and deaths in a genome.  
                                            
 --max_ks <float>                        : Upper limit of synonymous subsitutions (ks) - necessary if fitting components to the
                                           distribution to exclude likey ancient paralogous pairs.
