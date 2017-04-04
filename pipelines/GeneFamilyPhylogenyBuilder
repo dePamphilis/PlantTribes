@@ -188,8 +188,7 @@ sub make_directory {
 sub build_orthogroup_trees {
 	my ( $orthogroup_aln, $tree_inference, $alignment_type, $max_orthogroup_size, $min_orthogroup_size, $sequence_type, $rooting_order,
 		$bootstrap_replicates, $num_threads, $scaffold, $dirname, $config_dir ) = @_;
-	print localtime()." - Building orthogroup phylogenetic trees\n\n";
-	my $phylip_aln = "$dirname/phylip_aln";	
+	print localtime()." - Building orthogroup phylogenetic trees\n\n";	
 	my $orthogroups_tree = "$dirname/orthogroups_tree";
 	make_directory($orthogroups_tree);
 	my ($seq_type, $aln_type, $max_seq, $min_seq);
@@ -209,6 +208,8 @@ sub build_orthogroup_trees {
 		close IN;
 		if ( (keys(%seq) > $max_orthogroup_size) or (keys(%seq) < $min_orthogroup_size) ) { next; }
 		if ($tree_inference eq "raxml") {
+			my $phylip_aln = "$dirname/phylip_aln";
+			make_directory($phylip_aln);
 			my ($id, $species, $outgroup, @root_order);
 			if (!$rooting_order) { $rooting_order = "$config_dir/$scaffold.rootingOrder.config"; }
 			open (IN, "$rooting_order") or die "can't open $rooting_order file\n";
@@ -236,10 +237,10 @@ sub build_orthogroup_trees {
 		}
 		else {
 			if ($seq_type eq "fna") {
-			    system "FastTreeMP -nt -gtr -gamma -out $orthogroups_tree/$filename.tree $phylip_aln/$filename >/dev/null 2>/dev/null";
+			    system "FastTreeMP -nt -gtr -gamma -out $orthogroups_tree/$filename.tree $orthogroup_aln/$filename >/dev/null 2>/dev/null";
 			}
 			else {
-			    system "FastTreeMP -wag -gamma -out $orthogroups_tree/$filename.tree $phylip_aln/$filename >/dev/null 2>/dev/null";
+			    system "FastTreeMP -wag -gamma -out $orthogroups_tree/$filename.tree $orthogroup_aln/$filename >/dev/null 2>/dev/null";
 			}
 		}
 	}
