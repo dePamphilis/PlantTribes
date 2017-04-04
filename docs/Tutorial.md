@@ -157,6 +157,11 @@ geneFamilyAlignments_dir/orthogroups_aln/ - orthogroup multiple sequence alignme
 1). Building maximum-likelihood gene family phylogenetic trees with RAxML
 
 `PlantTribes/pipelines/GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln --scaffold 22Gv1.1  --method orthomcl --tree_inference raxml`
+```
+Output:
+geneFamilyPhylogenies_dir/phylip_aln/ - orthogroup phylip multiple sequence alignments directory
+geneFamilyPhylogenies_dir/orthogroups_tree/ - orthogroup phylogenetic trees directory
+```
 
 2). Building approximately-maximum-likelihood gene family phylogenetic trees with FastTree - faster
 
