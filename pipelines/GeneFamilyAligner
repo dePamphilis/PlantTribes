@@ -48,12 +48,11 @@ my $usage = <<__EOUSAGE__;
 #                                    If PASTA algorithm: pasta 
 #
 # # # # # # # # # # # # # # # # # #
-#  Codon Alignments:
+#  Codon Alignments: 
 #
-#  --orthogroup_fna                : Corresponding gene family classification orthogroups CDS fasta files. Files should be in the
-#                                    same directory with input orthogroups protein fasta files. 
-#
-#  --codon_alignments              : Construct orthogroup multiple codon alignments - requires "--orthogroup_fna"
+#  --codon_alignments              : Construct orthogroup multiple codon alignments - corresponding gene family classification
+#                                    orthogroups CDS fasta files should be in the same directory with input orthogroups protein
+#                                    fasta files.
 #
 # # # # # # # # # # # # # # # # # #
 #  MSA Quality Control Options:
@@ -104,7 +103,6 @@ my $orthogroup_faa;
 my $scaffold;
 my $method;
 my $alignment_method;
-my $orthogroup_fna;
 my $codon_alignments;
 my $automated_trimming;
 my $gap_trimming;
@@ -120,7 +118,6 @@ my $options = GetOptions (  'orthogroup_faa=s' => \$orthogroup_faa,
               'scaffold=s' => \$scaffold,
               'method=s' => \$method,
               'alignment_method=s' => \$alignment_method,
-              'orthogroup_fna' => \$orthogroup_fna,
               'codon_alignments' => \$codon_alignments,
               'automated_trimming' => \$automated_trimming,
               'gap_trimming=f' => \$gap_trimming,
@@ -162,7 +159,6 @@ if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is no
 	print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
 if ( $alignment_method and ($alignment_method ne "mafft") and ($alignment_method ne "pasta") ) { 
 	print "\nUnknown multiple sequence alignment methods\n"; die $usage; }
-if ( $codon_alignments and !$orthogroup_fna ) { print "\nCodon alignmeents requires corresponding gene family classification orthogroups CDS fasta files\n"; die $usage; }
 if ( $iterative_realignment and !$remove_sequences ) { print "\nIterative multiple sequence alignment requires gappy sequence removal before realignment\n"; die $usage; }
 if ( $automated_trimming and $gap_trimming ) { print "\nAutomated alignment trimming is incompatible with gap alignment trimming\n"; die $usage; }
 if ( $remove_sequences and (!$automated_trimming and !$gap_trimming) ) { print "\nRemoval of gappy sequences requires alignment trimming\n"; die $usage; }
@@ -186,7 +182,7 @@ my $dirname ="./geneFamilyAlignments_dir";
 if (-d $dirname) { die "Exiting...!\nGene family alignments output directory ($dirname) already exists!\n\n"; }
 make_directory($dirname);
 
-create_orthogroup_alignments ( $pasta, $orthogroup_faa, $orthogroup_fna, $alignment_method, $codon_alignments, $scaffold, $method, $num_threads,
+create_orthogroup_alignments ( $pasta, $orthogroup_faa, $alignment_method, $codon_alignments, $scaffold, $method, $num_threads,
 	$max_memory, $pasta_iter_limit, $dirname, $scaffold_dir );
 
 if ( $automated_trimming or $gap_trimming ) {
@@ -212,7 +208,7 @@ sub make_directory {
 }
 
 sub create_orthogroup_alignments {
-	my ( $pasta, $orthogroup_faa, $orthogroup_fna, $alignment_method, $codon_alignments, $scaffold, $method, $num_threads,
+	my ( $pasta, $orthogroup_faa, $alignment_method, $codon_alignments, $scaffold, $method, $num_threads,
 		$max_memory, $pasta_iter_limit, $dirname, $scaffold_dir ) = @_;
 	print localtime()." - Creating orthogroup alignments\n\n";
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
@@ -249,7 +245,11 @@ sub create_orthogroup_alignments {
 		if ($codon_alignments) {
 			my $aa_aln = "$orthogroups_aln/$ortho_id.faa.aln";
 			my $dna_aln = "$orthogroups_aln/$ortho_id.fna.aln";
-			my $cds = "$orthogroup_faa/$ortho_id.fna"; 
+			my $cds = "$orthogroup_faa/$ortho_id.fna";
+			if (!(-e "$cds")) {
+				print "Coding sequences file for orthogroup $ortho_id ($ortho_id.fna) is not in the input directory $orthogroup_faa.\nTerminating...\n\n";
+				exit(0);
+			}
 			create_codon_alignments ( $aa_aln, $dna_aln, $cds );
 		}
 	}
