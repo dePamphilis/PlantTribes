@@ -95,8 +95,8 @@ geneFamilyClassification_dir/orthogroups_fasta - transcriptome assembly orthogro
 geneFamilyClassification_dir/single_copy_fasta - transcriptome assembly single/low copy orthogroup fasta directory
 ```
 
-### PhylogenomicsAnalysis Pipeline
-1).  Integrating post processed *de novo* transcriptome assembly sequence(s) with the scaffold gene family sequences 
+### PhylogenomicsAnalysis Pipeline (legacy pipeline)
+1).  Integrating classified post processed *de novo* transcriptome assembly sequence(s) with the scaffold gene family sequences 
 
 `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --orthogroup_fna`
 ```
@@ -126,11 +126,43 @@ phylogenomicsAnalysis_dir/orthogroups_aln/ - orthogroup multiple sequence alignm
 6). Building approximately-maximum-likelihood gene family phylogenetic trees with FastTree - faster
 
 `PlantTribes/pipelines/PhylogenomicsAnalysis --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --pasta_alignments --tree_inference fasttree`
-
 ```
 Output:
 phylogenomicsAnalysis_dir/orthogroups_fasta/ - orthogroup fasta directory
 phylogenomicsAnalysis_dir/orthogroups_aln/ - orthogroup multiple sequence alignments directory
+phylogenomicsAnalysis_dir/orthogroups_tree/ - orthogroup phylogenetic trees directory
+```
+
+### GeneFamilyIntegrator
+1).  Integrating classified post processed *de novo* transcriptome assembly sequence(s) with the scaffold gene family sequences 
+`GeneFamilyIntegrator --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --orthogroup_fna`
+```
+Output:
+integratedGeneFamilies_dir/orthogroups_fasta/ - orthogroup fasta directory
+```
+
+### GeneFamilyAligner Pipeline
+1). Creating gene family multiple sequence alignments using MAFFT L-INS-i iterative refinement method 
+
+`GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir/orthogroups_fasta --scaffold 22Gv1.1 --method orthomcl --alignment_method mafft`
+
+2). Creating gene family multiple sequence alignments using PASTA (Practical Alignment using SATe and Transitivity) method - for larger data sets
+`GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir/orthogroups_fasta --scaffold 22Gv1.1 --method orthomcl --alignment_method pasta --pasta_script_path /path/to/pasta-code/pasta/run_pasta.py`
+```
+Output:
+geneFamilyAlignments_dir/orthogroups_aln/ - orthogroup multiple sequence alignments directory
+```
+
+### GeneFamilyPhylogenyBuilder Pipeline
+1). Building maximum-likelihood gene family phylogenetic trees with RAxML
+
+`GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln --scaffold 22Gv1.1  --method orthomcl --tree_inference raxml`
+
+2). Building approximately-maximum-likelihood gene family phylogenetic trees with FastTree - faster
+
+`GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln --scaffold 22Gv1.1  --method orthomcl --tree_inference fasttree`
+```
+Output:
 phylogenomicsAnalysis_dir/orthogroups_tree/ - orthogroup phylogenetic trees directory
 ```
 
