@@ -343,10 +343,9 @@ Required Options:
 
 Codon Alignments:
 
---orthogroup_fna                 : Corresponding gene family classification orthogroups CDS fasta files. Files should be in the
-                                   same directory with input orthogroups protein fasta files. 
-
---codon_alignments               : Construct orthogroup multiple codon alignments - requires "--orthogroup_fna"
+--codon_alignments              : Construct orthogroup multiple codon alignments - corresponding gene family classification
+                                  orthogroups CDS fasta files should be in the same directory with input orthogroups protein
+                                  fasta files.
 
 MSA Quality Control Options:
 
