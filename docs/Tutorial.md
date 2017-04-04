@@ -134,7 +134,8 @@ phylogenomicsAnalysis_dir/orthogroups_tree/ - orthogroup phylogenetic trees dire
 ```
 
 ### GeneFamilyIntegrator
-1).  Integrating classified post processed *de novo* transcriptome assembly sequence(s) with the scaffold gene family sequences 
+1).  Integrating classified post processed *de novo* transcriptome assembly sequence(s) with the scaffold gene family sequences
+
 `PlantTribes/pipelines/GeneFamilyIntegrator --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --orthogroup_fna`
 ```
 Output:
@@ -147,6 +148,7 @@ integratedGeneFamilies_dir/orthogroups_fasta/ - orthogroup fasta directory
 `PlantTribes/pipelines/GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir/orthogroups_fasta --scaffold 22Gv1.1 --method orthomcl --alignment_method mafft`
 
 2). Creating gene family multiple sequence alignments using PASTA (Practical Alignment using SATe and Transitivity) method - for larger data sets
+
 `PlantTribes/pipelines/GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir/orthogroups_fasta --scaffold 22Gv1.1 --method orthomcl --alignment_method pasta --pasta_script_path /path/to/pasta-code/pasta/run_pasta.py`
 ```
 Output:
