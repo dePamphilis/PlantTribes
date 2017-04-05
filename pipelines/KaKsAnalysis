@@ -494,7 +494,7 @@ sub fit_components {
     $mixpi[0] = 1;
     while (<EMMIX>) {
       $_ =~ s/^\s+//;
-      if (/number of entities: (\d+)/) { $nobs = $1; next; }
+      if (/number of entities:\s+(\d+)/) { $nobs = $1; next; }
       if (/Mixing proportion/) { $mix = 1; next; }
       if (/Final Log-likelihood is\s+(-\d+\.\d+)/i) { $lnL = $1; next; }
       if (/Estimated mean.*for each component/) { $mean = 1; next; }
@@ -548,7 +548,7 @@ sub fit_components {
     $mixpi[0] = 1;
     while (<EMMIX>) {
       $_ =~ s/^\s+//;
-      if (/number of entities: (\d+)/) { $nobs = $1; next; }
+      if (/number of entities:\s+(\d+)/) { $nobs = $1; next; }
       if (/Mixing proportion/) { $mix = 1; next; }
       if (/Final Log-likelihood is\s+(-\d+\.\d+)/i) { $lnL = $1; next; }
       if (/Estimated mean.*for each component/) { $mean = 1; next; }
