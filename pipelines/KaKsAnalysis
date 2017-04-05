@@ -17,7 +17,7 @@ my $usage = <<__EOUSAGE__;
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
-#                                           KaKsAnalysis Pipeline
+#                                DETERMINE PAIRWISE SEQUENCE SYNONYMOUS SUBSITUTIONS (Ks) AND SIGNIFICANT DUPLICATION COMPONENTS
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #  Required Options:
