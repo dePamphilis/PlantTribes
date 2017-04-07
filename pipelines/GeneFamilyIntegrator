@@ -63,7 +63,6 @@ __EOUSAGE__
 my $orthogroup_faa;
 my $scaffold;
 my $method;
-my $config_dir;
 my $orthogroup_fna;
 
 my $options = GetOptions (  'orthogroup_faa=s' => \$orthogroup_faa,
