@@ -70,11 +70,6 @@ my $usage = <<__EOUSAGE__;
 # # # # # # # # # # # # # # # # # # 
 #  Others Options:
 #
-#  --config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
-#                                    for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
-#                                    /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
-#                                    default configuration files is set to ~home/config.
-#
 #  --num_threads <int>             : number of threads (CPUs) to assign to external utilities (MAFFT and PASTA)
 #                                    Default: 1 
 #
@@ -108,7 +103,6 @@ my $automated_trimming;
 my $gap_trimming;
 my $remove_sequences;
 my $iterative_realignment;
-my $config_dir;
 my $num_threads;
 my $max_memory;
 my $pasta_iter_limit;
@@ -123,16 +117,11 @@ my $options = GetOptions (  'orthogroup_faa=s' => \$orthogroup_faa,
               'gap_trimming=f' => \$gap_trimming,
               'remove_sequences=f' => \$remove_sequences,
               'iterative_realignment=i' => \$iterative_realignment,
-              'config_dir=s' => \$config_dir,
               'num_threads=i' => \$num_threads,
               'max_memory=i' => \$max_memory,
               'pasta_iter_limit=i'=> \$pasta_iter_limit,
               'pasta_script_path=s'=>\$pasta_script_path
               );
-
-if (!$config_dir || !File::Spec->file_name_is_absolute($config_dir)) {
-	$config_dir = "$home/config";
-}
 
 my $pasta;
 if ($pasta_script_path) {
@@ -214,7 +203,7 @@ sub create_orthogroup_alignments {
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
 	make_directory($orthogroups_aln);
 	my %pep;
-	opendir (DIR, "$orthogroup_faa") or die "can't open $orthogroup_faa file\n";
+	opendir (DIR, "$orthogroup_faa") or die "can't open $orthogroup_faa directory\n";
 	while ( my $filename = readdir(DIR) ) { if ($filename =~ /^(\d+)\.faa$/) { $pep{$1} = $1; } }
 	closedir DIR;
 	foreach my $ortho_id (keys %pep) {
@@ -231,7 +220,7 @@ sub create_orthogroup_alignments {
 			make_directory($pasta_temp);
 			system "python $pasta -d Protein -i $orthogroup_faa/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null";
 			my $pasta_aln = 0;
-			opendir (DIR, "$pasta_temp") or die "can't $pasta_temp directory\n";
+			opendir (DIR, "$pasta_temp") or die "can't open $pasta_temp directory\n";
 			while ( my $filename = readdir(DIR)) {
 				if ($filename =~ /\.aln$/){ $pasta_aln++; }
 			}
@@ -260,7 +249,7 @@ sub trim_orthogroup_alignments {
 	print localtime()." - Trimming and filtering orthogroup alignments\n\n";
 	my (%pep_aln, %cds_aln);
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
-	opendir (DIR, "$orthogroups_aln") or die "can't open $orthogroups_aln file\n";
+	opendir (DIR, "$orthogroups_aln") or die "can't open $orthogroups_aln directory\n";
 	while ( my $filename = readdir(DIR) ) {
 		if ($filename =~ /^(\d+)\.faa\.aln$/) { $pep_aln{$1} = $1; }
 		if ($filename =~ /^(\d+)\.fna\.aln$/) { $cds_aln{$1} = $1; }
@@ -426,10 +415,11 @@ sub prepare_alignments {
 	my ($log_file, $temp_dir, $pasta, $alignment_method, $codon_alignments, $automated_trimming, $gap_trimming,
 		$remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname) = @_;
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
+	make_directory($temp_dir);
 	my $temp_aln = "$temp_dir/aln_dir";
 	make_directory($temp_aln);
 	my %pep;
-	opendir (DIR, "$temp_dir") or die "can't open $temp_dir file\n";
+	opendir (DIR, "$temp_aln") or die "can't open $temp_aln directory\n";
 	while ( my $filename = readdir(DIR) ) { if ($filename =~ /^(\d+)\.faa$/) { $pep{$1} = $1; } }
 	closedir DIR;
 	open (LOG, ">$log_file") or die "can't open $log_file file\n";
