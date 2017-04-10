@@ -172,11 +172,11 @@ Others Options:
                                   If average e-value: avg_evalue
 
 --single_copy_custom <string>   : Configuration file for single copy orthogroup custom selection - incompatible with
-                                   "--single_copy_taxa".  This must be an absolute path to the configuration file
-                                   (e.g., '~/home/scaffolds/22Gv1.1.singleCopy.config') or the string 'default'.   If the
-                                   latter, the config is defined to be ~/config_dir/~scaffold.singleCopy.config.  See the
-                                   single copy configuration files the config sub-directory of the installation on how to
-                                   customize the single copy selection.	
+                                  "--single_copy_taxa".  This must be an absolute path to the configuration file
+                                  (e.g., '~/home/scaffolds/22Gv1.1.singleCopy.config') or the string 'default'.   If the
+                                  latter, the config is defined to be ~/config_dir/~scaffold.singleCopy.config.  See the
+                                  single copy configuration files the config sub-directory of the installation on how to
+                                  customize the single copy selection.	
                                     
 --single_copy_taxa <int>        : Minimum single copy taxa required in orthogroup - incompatible with "--single_copy_custom"
 
@@ -318,9 +318,9 @@ Required Options:
 
 --orthogroup_faa <string>       : Directory containing gene family classification orthogroup protein fasta files
 
---alignment_method <string>      : Multiple sequence alignment method:
-                                   If MAFFT algorithm: mafft
-                                   If PASTA algorithm: pasta 
+--alignment_method <string>     : Multiple sequence alignment method:
+                                  If MAFFT algorithm: mafft
+                                  If PASTA algorithm: pasta 
 
 
 Codon Alignments:
@@ -331,15 +331,15 @@ Codon Alignments:
 
 MSA Quality Control Options:
 
---automated_trimming             : Trims alignments using trimAl's ML heuristic trimming approach - incompatible "--gap_trimming"  
+--automated_trimming            : Trims alignments using trimAl's ML heuristic trimming approach - incompatible "--gap_trimming"  
                                    
---gap_trimming <float>           : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
+--gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
 
---remove_sequences <float>       : Removes gappy sequences in alignments (i.e. 0.5 removes sequences with 50% gaps): [0.1 to 1.0]
-                                   - requires either "--automated_trimming" or "--gap_trimming"
+--remove_sequences <float>      : Removes gappy sequences in alignments (i.e. 0.5 removes sequences with 50% gaps): [0.1 to 1.0]
+                                  - requires either "--automated_trimming" or "--gap_trimming"
 
---iterative_realignment <int>    : Iterative orthogroups realignment, trimming and fitering - requires "--remove_sequences"
-                                   (maximum number of iterations)    
+--iterative_realignment <int>   : Iterative orthogroups realignment, trimming and fitering - requires "--remove_sequences"
+                                  (maximum number of iterations)    
 Others Options:
 
 --config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
@@ -431,7 +431,7 @@ Required Options:
 
 --coding_sequences_species_1 <string>   : Coding sequences (CDS) fasta file for the first species (species1.fna)
 
---proteins_species_1 <string>   		    : Aamino acids (proteins) sequences fasta file for the first species (species1.faa) 
+--proteins_species_1 <string>           : Aamino acids (proteins) sequences fasta file for the first species (species1.faa) 
 
 --comparison <string>                   : pairwise sequence comparison to determine homolgous pairs
                                           If self species comparison: paralogs
@@ -442,7 +442,7 @@ Others Options:
 --coding_sequences_species_2 <string>   : Coding sequences (CDS) fasta file for the first species (species2.fna)
                                           requires "--comparison" to be set to "orthologs" 
 
---proteins_species_2 <string>   		    : Aamino acids (proteins) sequences fasta file for the first species (species2.faa)
+--proteins_species_2 <string>           : Aamino acids (proteins) sequences fasta file for the first species (species2.faa)
                                           requires "--comparison" to be set to "orthologs" 
 
 --min_coverage <float>                  : Minimum sequence pairwise coverage length between homologous pairs
