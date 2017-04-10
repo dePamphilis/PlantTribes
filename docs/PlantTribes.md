@@ -59,7 +59,7 @@ The execulables for the PlantTribes pipelines are in the [pipelines](../pipeline
   - Display all usage options: 
     - `PlantTribes/pipelines/GeneFamilyAligner`
   - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and mafft alignment method:
-    - `GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir/orthogroups_fasta --scaffold 22Gv1.1 --method orthomcl --alignment_method mafft`
+    - `GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir/orthogroups_fasta --alignment_method mafft`
 - **GeneFamilyPhylogenyBuilder pipeline**:  
   - Display all usage options: 
     - `PlantTribes/pipelines/GeneFamilyPhylogenyBuilder`
