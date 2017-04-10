@@ -66,7 +66,8 @@ my $usage = <<__EOUSAGE__;
 #  --min_orthogroup_size <int>     : Minimum number of sequences in orthogroup alignments
 #                                    Default: 4
 #
-#  --sequence_type <string>        : Sequence type used in the phylogenetic inference - "dna" requires codon alignments in the 
+#  --sequence_type <string>        : Sequence type used in the phylogenetic inference - "dna" requires codon alignments to be in the
+#                                    same directory with input orthogroup protein alignments
 #                                    input directory
 #                                    If amino acid based: protein (default)
 #                                    If nucleotide based: dna
