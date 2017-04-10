@@ -346,13 +346,13 @@ Others Options:
                                   for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
 
 --num_threads <int>             : number of threads (CPUs) to assign to external utilities (MAFFT and PASTA)
-                                   Default: 1 
+                                  Default: 1 
 
 --max_memory <int>              : maximum memory (in mb) available to PASTA's java tools - requires "--alignment_method = pasta" 
-                                    Default: 256
+                                   Default: 256
  
 --pasta_iter_limit <int>        : Maximum number of iteration that the PASTA algorithm will run - requires "--alignment_method = pasta"  
-                                   Default: 3
+                                  Default: 3
 
 --pasta_script_path <string>    : Optional path to the location of the run_pasta.py script. which is used for running PASTA
                                   from the command line (useful since the script is a .py file).  Using this will override
@@ -406,7 +406,7 @@ Required Options:
                                   Default: 4
 
 --sequence_type <string>        : Sequence type used in the phylogenetic inference - "dna" requires codon alignments to be in the
-                                  same directory with input orthogroup protein alignments
+                                  same directory with input orthogroup protein alignments.
                                   If amino acid based: protein (default)
                                   If nucleotide based: dna
 
