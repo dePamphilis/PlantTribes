@@ -135,8 +135,7 @@ my $dirname ="./geneFamilyAlignments_dir";
 if (-d $dirname) { die "Exiting...!\nGene family alignments output directory ($dirname) already exists!\n\n"; }
 make_directory($dirname);
 
-create_orthogroup_alignments ( $pasta, $orthogroup_faa, $alignment_method, $codon_alignments, $num_threads,
-	$max_memory, $pasta_iter_limit, $dirname );
+create_orthogroup_alignments ( $pasta, $orthogroup_faa, $alignment_method, $codon_alignments, $num_threads, $max_memory, $pasta_iter_limit, $dirname );
 
 if ( $automated_trimming or $gap_trimming ) {
 	trim_orthogroup_alignments ( $orthogroup_faa, $codon_alignments, $iterative_realignment, $automated_trimming, $gap_trimming, $remove_sequences, $dirname );
@@ -161,8 +160,7 @@ sub make_directory {
 }
 
 sub create_orthogroup_alignments {
-	my ( $pasta, $orthogroup_faa, $alignment_method, $codon_alignments, $num_threads,
-		$max_memory, $pasta_iter_limit, $dirname, ) = @_;
+	my ( $pasta, $orthogroup_faa, $alignment_method, $codon_alignments, $num_threads, $max_memory, $pasta_iter_limit, $dirname, ) = @_;
 	print localtime()." - Creating orthogroup alignments\n\n";
 	my $orthogroups_aln = "$dirname/orthogroups_aln";
 	make_directory($orthogroups_aln);
