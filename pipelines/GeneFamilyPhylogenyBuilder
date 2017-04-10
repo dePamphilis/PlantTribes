@@ -68,7 +68,6 @@ my $usage = <<__EOUSAGE__;
 #
 #  --sequence_type <string>        : Sequence type used in the phylogenetic inference - "dna" requires codon alignments to be in the
 #                                    same directory with input orthogroup protein alignments
-#                                    input directory
 #                                    If amino acid based: protein (default)
 #                                    If nucleotide based: dna
 #
