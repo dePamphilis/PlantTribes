@@ -431,7 +431,7 @@ Required Options:
 
 --coding_sequences_species_1 <string>   : Coding sequences (CDS) fasta file for the first species (species1.fna)
 
---proteins_species_1 <string>           : Aamino acids (proteins) sequences fasta file for the first species (species1.faa) 
+--proteins_species_1 <string>           : Amino acids (proteins) sequences fasta file for the first species (species1.faa) 
 
 --comparison <string>                   : pairwise sequence comparison to determine homolgous pairs
                                           If self species comparison: paralogs
@@ -442,7 +442,7 @@ Others Options:
 --coding_sequences_species_2 <string>   : Coding sequences (CDS) fasta file for the first species (species2.fna)
                                           requires "--comparison" to be set to "orthologs" 
 
---proteins_species_2 <string>           : Aamino acids (proteins) sequences fasta file for the first species (species2.faa)
+--proteins_species_2 <string>           : Amino acids (proteins) sequences fasta file for the first species (species2.faa)
                                           requires "--comparison" to be set to "orthologs" 
 
 --min_coverage <float>                  : Minimum sequence pairwise coverage length between homologous pairs
