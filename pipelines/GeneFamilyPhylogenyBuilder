@@ -57,8 +57,8 @@ my $usage = <<__EOUSAGE__;
 #
 #  --alignment_type <string>       : Input alignments type produces by the GeneFamilyAligner 
 #                                    If Primary alignments: aln (default)
-#                                    If trimmed alignmets: trim 
-#                                    If filtered alignments: filter
+#                                    If Trimmed alignmets: trim 
+#                                    If Filtered alignments: filter
 #
 #  --max_orthogroup_size <int>     : Maximum number of sequences in orthogroup alignments
 #                                    Default: 100  
