@@ -335,7 +335,7 @@ MSA Quality Control Options:
                                    
 --gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
 
---remove_sequences <float>      : Removes gappy sequences in alignments (i.e. 0.5 removes sequences with 50% gaps): [0.1 to 1.0]
+--remove_sequences <float>      : Removes gappy sequences in alignments (i.e. 0.7 removes sequences with more than 30% gaps): [0.1 to 1.0]
                                   - requires either "--automated_trimming" or "--gap_trimming"
 
 --iterative_realignment <int>   : Iterative orthogroups realignment, trimming and fitering - requires "--remove_sequences"
@@ -448,9 +448,9 @@ Others Options:
 --min_coverage <float>                  : Minimum sequence pairwise coverage length between homologous pairs
                                           Default: 0.5 (50% coverage) - [0.3 to 1.0]
 
---recalibration_rate <float>            : Recalibrate synonymous subsitutions (ks) of species using a predetermined evoutionary rate that 
-                                          can be determined from a species tree inferred from a collection single copy genes from taxa of 
-                                          interest (Cui et al., 2006) - applies only paralogous ks
+--recalibration_rate <float>            : Recalibrate synonymous subsitution (ks) rates of a species using a predetermined evoutionary rate 
+                                          that can be determined from a species tree inferred from a collection single copy genes from taxa 
+                                          of interest (Cui et al., 2006) - applies only paralogous ks
 
 --codeml_ctl_file <string>              : PAML's codeml control file to carry out ML analysis of protein-coding DNA sequences using codon
                                           substitution models. The defaults in the "codeml.ctl.args" template in the config directory 
