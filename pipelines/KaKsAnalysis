@@ -47,7 +47,7 @@ my $usage = <<__EOUSAGE__;
 #  --min_coverage <float>                  : Minimum sequence pairwise coverage length between homologous pairs
 #                                            Default: 0.5 (50% coverage) - [0.3 to 1.0]
 #
-#  --recalibration_rate <float>            : Recalibrate synonymous subsitutions (ks) of species using a predetermined evoutionary rate that can
+#  --recalibration_rate <float>            : Recalibrate synonymous subsitution (ks) rates of species using a predetermined evoutionary rate that can
 #                                            be determined from a species tree inferred from a collection single copy genes from taxa of interest
 #                                            (Cui et al., 2006) - mainly applies only paralogous ks analysis
 #
