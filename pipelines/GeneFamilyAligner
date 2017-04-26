@@ -42,7 +42,7 @@ my $usage = <<__EOUSAGE__;
 #                                    
 #  --gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
 #
-#  --remove_sequences <float>      : Removes gappy sequences in alignments (i.e. 0.5 removes sequences with 50% gaps): [0.1 to 1.0]
+#  --remove_sequences <float>      : Removes gappy sequences in alignments (i.e. 0.7 removes sequences with more than 30% gaps): [0.1 to 1.0]
 #                                    - requires either "--automated_trimming" or "--gap_trimming"
 #
 #  --iterative_realignment <int>   : Iterative orthogroups realignment, trimming and fitering - requires "--remove_sequences"
