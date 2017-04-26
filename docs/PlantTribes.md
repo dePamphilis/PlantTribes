@@ -448,9 +448,9 @@ Others Options:
 --min_coverage <float>                  : Minimum sequence pairwise coverage length between homologous pairs
                                           Default: 0.5 (50% coverage) - [0.3 to 1.0]
 
---recalibration_rate <float>            : Recalibrate synonymous subsitution (ks) rates of a species using a predetermined evoutionary rate 
-                                          that can be determined from a species tree inferred from a collection single copy genes from taxa 
-                                          of interest (Cui et al., 2006) - applies only paralogous ks
+--recalibration_rate <float>            : Recalibrate synonymous subsitution (ks) rates of a species using a predetermined evolutionary 
+                                          rate that can be determined from a species tree inferred from a collection single copy genes from 
+                                          taxa of interest (Cui et al., 2006) - applies only paralogous ks
 
 --codeml_ctl_file <string>              : PAML's codeml control file to carry out ML analysis of protein-coding DNA sequences using codon
                                           substitution models. The defaults in the "codeml.ctl.args" template in the config directory 
