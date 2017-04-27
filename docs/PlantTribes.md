@@ -448,7 +448,7 @@ Others Options:
 --min_coverage <float>                  : Minimum sequence pairwise coverage length between homologous pairs
                                           Default: 0.5 (50% coverage) - [0.3 to 1.0]
 
---recalibration_rate <float>            : Recalibrate synonymous subsitution (ks) rates of a species using a predetermined evolutionary 
+--recalibration_rate <float>            : Recalibrate synonymous substitution (ks) rates of a species using a predetermined evolutionary 
                                           rate that can be determined from a species tree inferred from a collection single copy genes from 
                                           taxa of interest (Cui et al., 2006) - applies only paralogous ks
 
@@ -460,14 +460,14 @@ Others Options:
 --fit_components                        : Fit a mixture model of multivariate normal components to synonymous (ks) distribution to
                                           identify significant duplication event(s) in a genome
                                           
---num_of_components <int>               : Number components to fit to synonymous subsitutions (ks) distribution - required if 
+--num_of_components <int>               : Number components to fit to synonymous substitutions (ks) distribution - required if 
                                           "--fit_components"
 
---min_ks <float>                        : Lower limit of synonymous subsitutions (ks) - necessary if fitting components to the
+--min_ks <float>                        : Lower limit of synonymous substitutions (ks) - necessary if fitting components to the
                                           distribution to reduce background noise from young paralogous pairs due to normal gene births
                                           and deaths in a genome.  
                                            
---max_ks <float>                        : Upper limit of synonymous subsitutions (ks) - necessary if fitting components to the
+--max_ks <float>                        : Upper limit of synonymous substitutions (ks) - necessary if fitting components to the
                                           distribution to exclude likey ancient paralogous pairs.
                                           
 --num_threads <int>                     : number of threads (CPUs)   
