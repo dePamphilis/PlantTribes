@@ -17,7 +17,7 @@ my $usage = <<__EOUSAGE__;
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
-#                                DETERMINE PAIRWISE SEQUENCE SYNONYMOUS SUBSITUTIONS (Ks) AND SIGNIFICANT DUPLICATION COMPONENTS
+#                                DETERMINE PAIRWISE SEQUENCE SYNONYMOUS SUBSTITUTIONS (Ks) AND SIGNIFICANT DUPLICATION COMPONENTS
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #  Required Options:
@@ -47,7 +47,7 @@ my $usage = <<__EOUSAGE__;
 #  --min_coverage <float>                  : Minimum sequence pairwise coverage length between homologous pairs
 #                                            Default: 0.5 (50% coverage) - [0.3 to 1.0]
 #
-#  --recalibration_rate <float>            : Recalibrate synonymous subsitution (ks) rates of a species using a predetermined evolutionary rate that
+#  --recalibration_rate <float>            : Recalibrate synonymous substitution (ks) rates of a species using a predetermined evolutionary rate that
 #                                            can be determined from a species tree inferred from a collection single copy genes from taxa of interest
 #                                            (Cui et al., 2006) - mainly applies only paralogous ks analysis
 #
@@ -61,14 +61,14 @@ my $usage = <<__EOUSAGE__;
 #                                            significant duplication event(s) in a genome
 # 
 #
-#  --num_of_components <int>               : Number components to fit to synonymous subsitutions (ks) distribution - required if "--fit_components"
+#  --num_of_components <int>               : Number components to fit to synonymous substitutions (ks) distribution - required if "--fit_components"
 #
 #
-#  --min_ks <float>                        : Lower limit of synonymous subsitutions (ks) - necessary if fitting components to the distribution to
+#  --min_ks <float>                        : Lower limit of synonymous substitutions (ks) - necessary if fitting components to the distribution to
 #                                            reduce background noise from young paralogous pairs due to normal gene births and deaths in a genome.  
 #
 #
-#  --max_ks <float>                        : Upper limit of synonymous subsitutions (ks) - necessary if fitting components to the distribution to
+#  --max_ks <float>                        : Upper limit of synonymous substitutions (ks) - necessary if fitting components to the distribution to
 #                                            exclude likey ancient paralogous pairs.
 #
 #  --num_threads <int>                     : number of threads (CPUs) 
