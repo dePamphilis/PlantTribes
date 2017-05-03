@@ -188,7 +188,7 @@ sub create_orthogroup_alignments {
 			}
 			if($pasta_aln == 0) {
 				print "PASTA multiple alignments was not successful.\nEither PASTA is properly installed or your input fasta file is not in the required format.\nTerminating...\n\n";
-				exit(0);
+				exit(1);
 			}
 			system "mv $pasta_temp/*.$ortho_id.faa.aln $orthogroups_aln/$ortho_id.faa.aln";
 			system "rm -r $pasta_temp";
@@ -199,7 +199,7 @@ sub create_orthogroup_alignments {
 			my $cds = "$orthogroup_faa/$ortho_id.fna";
 			if (!(-e "$cds")) {
 				print "Coding sequences file for orthogroup $ortho_id ($ortho_id.fna) is not in the input directory $orthogroup_faa.\nTerminating...\n\n";
-				exit(0);
+				exit(1);
 			}
 			create_codon_alignments ( $aa_aln, $dna_aln, $cds );
 		}
@@ -402,7 +402,7 @@ sub prepare_alignments {
 			}
 			if($pasta_aln == 0) {
 				print "PASTA multiple alignments was not successful.\nEither PASTA is properly installed or your input fasta file is not in the required format.\nTerminating...\n\n";
-				exit(0);
+				exit(1);
 			}
 			system "mv $pasta_temp/*.$ortho_id.faa.aln $temp_aln/$ortho_id.faa.aln";
 			system "rm -r $pasta_temp";
