@@ -184,7 +184,7 @@ sub run_estscan {
     if (!(-e "$out_dir/transcripts.cds") or !(-e "$out_dir/transcripts.pep") or (-z "$out_dir/transcripts.cds") or (-z "$out_dir/transcripts.pep")) {
 	unless($gene_family_search) {
 	    print "Coding sequence prediction was not successful.\nEither ESTScan is not properly installed or there a problem with reference score matrices you provided.\nAlternatively, you data might not have sequences with credible coding regions.\nTerminating...\n\n";
-	    exit(0);
+	    exit(1);
 	}
     }
     my (%cds, %pep, $id, $strand);
@@ -265,7 +265,7 @@ sub run_estscan {
 	   	}
 		else {
 	    	print "Proportional number of sense and antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\nTerminating...\n\n";
-	    	exit(0);
+	    	exit(1);
 		}
 		undef %plus; undef %minus;
     } 
@@ -343,7 +343,7 @@ sub run_transdecoder {
     if (!(-e "$out_dir/transcripts.cds") or !(-e "$out_dir/transcripts.pep") or (-z "$out_dir/transcripts.cds") or (-z "$out_dir/transcripts.pep")) {
 	unless($gene_family_search) {
 	    print "Coding sequence prediction was not successful.\nTransDecoder might not be properly installed.\nAlternatively, you data might not have sequences with credible coding regions.\nTerminating...\n\n";
-	    exit(0);
+	    exit(1);
 	}
     }
     my (%cds, %pep, $id, $strand);
@@ -432,7 +432,7 @@ sub run_transdecoder {
 		}
 		else {
 	    		print "Proportional number of sense and antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\nTerminating...\n\n";
-	    		exit(0);
+	    		exit(1);
 		}
    } 
    # if transcriptome assembly is not from a strand specific library only keep the strand with the longest predictions.
