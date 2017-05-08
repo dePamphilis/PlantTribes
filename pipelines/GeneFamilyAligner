@@ -127,7 +127,7 @@ if (!$pasta_iter_limit) { $pasta_iter_limit = 3; }
 print "\n";
 print localtime()." - Starting aligning gene family sequences\n";
 if ($alignment_method eq "mafft") { print "\n-- Multiple sequence alignments: MAFFT (MAFFT algorithm)"; }
-if ($alignment_method eq "pasta") { print "\n-- Multiple sequence alignments: PASTA (PASTA algorithm"; }
+if ($alignment_method eq "pasta") { print "\n-- Multiple sequence alignments: PASTA (PASTA algorithm)"; }
 print "\n\n";
 
 # create output directory
