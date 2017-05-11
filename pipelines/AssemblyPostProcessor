@@ -446,7 +446,7 @@ sub run_transdecoder {
 		}
 		close IN;
 		my %orig;
-		foreach my $key (keys %seq) {
+		foreach my $key (sort keys %seq) {
 			my $orig_id = $key;
 	    	my $sequence = $seq{$key};
 	    	#$key =~ /(\S+?)\|m\.\d+/;
@@ -463,7 +463,7 @@ sub run_transdecoder {
 	    	else { s/\s+//g; s/\*/X/g; $seq{$id} .= $_; }
 		}
 		close IN;
-		foreach my $key (keys %seq) {
+		foreach my $key (sort keys %seq) {
 	    	my $sequence = $seq{$key};
 	    	if (!$orig{$key}) { next; }  
 	    	#$key =~ /(\S+?)\|m\.\d+/;
