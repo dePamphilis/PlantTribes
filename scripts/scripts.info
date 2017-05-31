@@ -1,4 +1,4 @@
 # All PlantTribes helper scripts should be placed in this loacation - "PlanTribes/scripts"
 
 # Available helper scripts:
-kaks_analysis_barplot.R
+ks_distribution.R
