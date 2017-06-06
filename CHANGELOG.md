@@ -9,4 +9,5 @@
 ##### Version 0.7.0 (Feb, 27, 2017)
  - Addition of KaksAnalysis pipeline to PlantTribes
  
- 
+##### Version 1.0.0 (June, 06, 2017)
+ - Major changes and additonal pilelines used for PlanTribes Galaxy development (stable release)
