@@ -10,11 +10,13 @@ In addition to this README file, you can consult the PlantTribes [manual](docs/P
 PlantTribes pipeline scripts have many external dependencies that need to be installed and available on the environment's $PATH before the pipelines can be used.
 #### Pipelines dependencies
 - **AssemblyPostProcessor pipeline**:  
-[ESTScan (version 2.1)](http://estscan.sourceforge.net/), [TransDecoder (version 3.0.1)](https://github.com/TransDecoder/TransDecoder/releases), [HMMSearch (HMMER version 3.1b1)](http://hmmer.janelia.org/),   [MAFFT (version 7.215 )](http://mafft.cbrc.jp/alignment/software/), [trimAl (version 1.4.rev8)](http://trimal.cgenomics.org/), and [GenomeTools (version 1.5.4)](http://genometools.org/).
+[ESTScan (version 2.1)](http://estscan.sourceforge.net/), [TransDecoder (version 3.0.1)](https://github.com/TransDecoder/TransDecoder/releases), [HMMSearch (HMMER version 3.1b1)](http://hmmer.janelia.org/),  
+[MAFFT (version 7.215 )](http://mafft.cbrc.jp/alignment/software/), [trimAl (version 1.4.rev8)](http://trimal.cgenomics.org/), and [GenomeTools (version 1.5.4)](http://genometools.org/).
 - **GeneFamilyClassifier pipeline**:  
 [BLASTP (NCBI BLAST version 2.2.29+)](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download), and [HMMScan (HMMER version 3.1b1)](http://hmmer.janelia.org/).
 - **PhylogenomicsAnalysis pipeline (legacy pipeline)**:  
-[MAFFT (version 7.215 )](http://mafft.cbrc.jp/alignment/software/), [PASTA](https://github.com/smirarab/pasta), [trimAl (version 1.4.rev8)](http://trimal.cgenomics.org/), [RAxML (version 8.1.16)](http://sco.h-its.org/exelixis/web/software/raxml/index.html), and   [FastTreeMP (version 2.1.7 SSE3)](http://meta.microbesonline.org/fasttree/).
+[MAFFT (version 7.215 )](http://mafft.cbrc.jp/alignment/software/), [PASTA](https://github.com/smirarab/pasta), [trimAl (version 1.4.rev8)](http://trimal.cgenomics.org/), [RAxML (version 8.1.16)](http://sco.h-its.org/exelixis/web/software/raxml/index.html),  
+and [FastTreeMP (version 2.1.7 SSE3)](http://meta.microbesonline.org/fasttree/).
 - **GeneFamilyIntegrator**:  
 No external dependencies required.
 - **GeneFamilyAligner pipeline**:  
@@ -22,7 +24,8 @@ No external dependencies required.
 - **GeneFamilyPhylogenyBuilder pipeline**:  
 [RAxML (version 8.1.16)](http://sco.h-its.org/exelixis/web/software/raxml/index.html), and [FastTreeMP (version 2.1.7 SSE3)](http://meta.microbesonline.org/fasttree/).
 - **KaKsAnalysis pipeline**:   
-[MAKEBLASTDB/BLASTN (NCBI BLAST version 2.2.29+)](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download), [MAFFT (version 7.215 )](http://mafft.cbrc.jp/alignment/software/), [PAML (version 4.8)](http://abacus.gene.ucl.ac.uk/software/paml.html#download), and   [EMMIX (version 1.3)](https://people.smp.uq.edu.au/GeoffMcLachlan/emmix/emmix.html).
+[MAKEBLASTDB/BLASTN (NCBI BLAST version 2.2.29+)](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download), [MAFFT (version 7.215 )](http://mafft.cbrc.jp/alignment/software/), [PAML (version 4.8)](http://abacus.gene.ucl.ac.uk/software/paml.html#download),  
+and [EMMIX (version 1.3)](https://people.smp.uq.edu.au/GeoffMcLachlan/emmix/emmix.html).
 
 #### PlantTribes scaffolds data 
 - **22 plant genomes (Angiosperms clusters, version 1.0)**  
