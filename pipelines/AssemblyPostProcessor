@@ -372,7 +372,7 @@ sub run_transdecoder {
 				my $orig_id = $key;
 	    			my $sequence = $plus{$key};
 	    			#$key =~ /(\S+?)\|m\.\d+/;
-				$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+				$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
 	    			$key = $1;
 	    			if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
 	    			else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
@@ -389,7 +389,7 @@ sub run_transdecoder {
 	    			my $sequence = $plus{$key};
 	    			if (!$orig{$key}) { next; }  
 	    			#$key =~ /(\S+?)\|m\.\d+/;
-				$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+				$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
 	    			$key = $1;
 	    			$pep{$key} = $sequence;
 			}
@@ -404,7 +404,7 @@ sub run_transdecoder {
 				my $orig_id = $key;
 	    			my $sequence = $minus{$key};
 	    			#$key =~ /(\S+?)\|m\.\d+/;
-				$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+				$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
 	    			$key = $1;
 	    			if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
 	    			else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
@@ -421,7 +421,7 @@ sub run_transdecoder {
 	    			my $sequence = $minus{$key};
 	    			if (!$orig{$key}) { next; }  
 	    			#$key =~ /(\S+?)\|m\.\d+/;
-				$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+				$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
 	    			$key = $1;
 	    			$pep{$key} = $sequence;
 			}
@@ -450,7 +450,7 @@ sub run_transdecoder {
 			my $orig_id = $key;
 	    	my $sequence = $seq{$key};
 	    	#$key =~ /(\S+?)\|m\.\d+/;
-		$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+		$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
 	    	$key = $1;
 	    	if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
 	    	else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
@@ -467,7 +467,7 @@ sub run_transdecoder {
 	    	my $sequence = $seq{$key};
 	    	if (!$orig{$key}) { next; }  
 	    	#$key =~ /(\S+?)\|m\.\d+/;
-		$key =~ /Gene\.\d+\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+		$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
 	    	$key = $1;
 	    	$pep{$key} = $sequence;
 		}
