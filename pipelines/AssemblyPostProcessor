@@ -639,7 +639,7 @@ sub targeted_gene_family_assembly {
 		    open(IN, "$target_out_dir/transcripts.cleaned.nr.cds") or die "can't open $target_out_dir/transcripts.cleaned.nr.cds file\n";
 		    while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly_cds{$seq_id} .= $_ ; } }
 		    close IN;
-		    system "hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.nr.pep >/dev/null 2>/dev/null";			
+		    system "hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.nr.pep >/dev/null";			
 		} 
 		else {
 		    open(IN, "$target_out_dir/transcripts.cleaned.pep") or die "can't open $target_out_dir/transcripts.cleaned.pep file\n";
