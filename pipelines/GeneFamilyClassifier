@@ -202,14 +202,14 @@ sub sort_sequences {
 	if ( (!$super_orthogroups) or ($super_orthogroups ne "min_evalue") or ($super_orthogroups ne "avg_evalue") ) { $super_orthogroups = "min_evalue" } 
 	if ( ($classifier eq "blastp") or ($classifier eq "both") ) {
 		print "-- ".localtime()." - Running BLASTP\n\n";
-		system "blastp -db_soft_mask 21 -outfmt 6 -evalue 1e-5 -num_threads $num_threads -query $proteins -db $scaffold_dir/db/blast/$method -out $dirname/proteins.blastp.$scaffold  >/dev/null 2>/dev/null";
+		system "blastp -db_soft_mask 21 -outfmt 6 -evalue 1e-5 -num_threads $num_threads -query $proteins -db $scaffold_dir/db/blast/$method -out $dirname/proteins.blastp.$scaffold  >/dev/null";
 		print "-- ".localtime()." - Getting best BLASTP hits\n\n";
 		my $results = "proteins.blastp.$scaffold";
 		get_best_blastp_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir );
 	}
 	if ( ($classifier eq "hmmscan") or ($classifier eq "both") ) {
 		print "-- ".localtime()." - Running HMMScan\n\n";
-		system "hmmscan -E 1e-5 --cpu $num_threads --noali --tblout $dirname/proteins.hmmscan.$scaffold -o $dirname/hmmscan.log $scaffold_dir/db/hmm/$method $proteins >/dev/null 2>/dev/null";
+		system "hmmscan -E 1e-5 --cpu $num_threads --noali --tblout $dirname/proteins.hmmscan.$scaffold -o $dirname/hmmscan.log $scaffold_dir/db/hmm/$method $proteins >/dev/null";
 		print "-- ".localtime()." - Getting best HMMScan hits\n\n";
 		my $results = "proteins.hmmscan.$scaffold";
 		get_best_hmmscan_orthos ( $classifier, $results, $dirname, $scaffold, $method, $super_orthogroups, $scaffold_dir );
