@@ -215,10 +215,10 @@ sub get_homologs {
     print localtime()." - Determining orthologous pairs using BLASTN\n\n";
     system "cp $coding_sequences_species_2 $dirname/species2.fna";
     system "cp $proteins_species_2 $dirname/species2.faa";
-    system "makeblastdb -in $dirname/species2.fna -dbtype nucl  >/dev/null 2>/dev/null";
-    system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species2.fna -out $dirname/species1.fna.blastn.orthologs  >/dev/null 2>/dev/null";
-    system "makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null 2>/dev/null";
-    system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species2.fna -db $dirname/species1.fna -out $dirname/species2.fna.blastn.orthologs  >/dev/null 2>/dev/null";
+    system "makeblastdb -in $dirname/species2.fna -dbtype nucl  >/dev/null";
+    system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species2.fna -out $dirname/species1.fna.blastn.orthologs  >/dev/null";
+    system "makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null";
+    system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species2.fna -db $dirname/species1.fna -out $dirname/species2.fna.blastn.orthologs  >/dev/null";
     open (OUT, ">$dirname/species1and2.fna.blastn.orthologs.rbhb") or die "can't open $dirname/species1and2.fna.blastn.orthologs.rbhb file\n";
     open (IN, "$dirname/species1.fna.blastn.orthologs") or die "can't open $dirname/species1.fna.blastn.orthologs file\n";
     while (<IN>) {
@@ -249,8 +249,8 @@ sub get_homologs {
   }
   else { # $comparison eq "paralogs"
     print localtime()." - Determining paralogous pairs using BLASTN\n\n";
-    system "makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null 2>/dev/null";
-    system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species1.fna -out $dirname/species1.fna.blastn.paralogs  >/dev/null 2>/dev/null";
+    system "makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null";
+    system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species1.fna -out $dirname/species1.fna.blastn.paralogs  >/dev/null";
     open (OUT, ">$dirname/species1.fna.blastn.paralogs.rbhb") or die "can't open $dirname/species1.fna.blastn.paralogs.rbhb file\n";
     open (IN, "$dirname/species1.fna.blastn.paralogs") or die "can't open $dirname/species1.fna.blastn.paralogs file\n";
     while (<IN>) {
@@ -299,7 +299,7 @@ sub compute_kaks {
       close DNA;
       close AA;
       # run alignment on the pair
-      system "mafft --maxiterate 1000 --thread $num_threads --localpair $dirname/aa.tmp > $dirname/aa.tmp.aln 2>/dev/null";
+      system "mafft --maxiterate 1000 --thread $num_threads --localpair $dirname/aa.tmp > $dirname/aa.tmp.aln";
       if ( -z "$dirname/aa.tmp.aln" ) { print "Mafft could not align $longer and $shorter pair...\nskipping $longer and $shorter pair...\n\n"; next; }
       my ( $aa_aln, $dna_aln, $dna, %seq, $aln_len, $coverage);
       $aa_aln = "$dirname/aa.tmp.aln";
@@ -326,10 +326,10 @@ sub compute_kaks {
           print CODEML "$codeml_ctl_file";
           close CODEML;
         }
-        system "codeml >/dev/null 2>/dev/null";
+        system "codeml >/dev/null";
         #chdir("$dirname") or die "cant change directory to $dirname";";
         # remove paml files
-        system "rm rst rst1 rub 2ML.dN 2ML.dS 2ML.t 2NG.dN 2NG.dS 2NG.t codeml.ctl >/dev/null 2>/dev/null";    
+        system "rm rst rst1 rub 2ML.dN 2ML.dS 2ML.t 2NG.dN 2NG.dS 2NG.t codeml.ctl >/dev/null";    
         # parse paml-codeml results and write to output file
         open (CODEML, "$dirname/dna.tmp.aln.phylip.codeml") or die "can't open $dirname/dna.tmp.aln.phylip.codeml file\n";
         while (<CODEML>) {
@@ -369,7 +369,7 @@ sub compute_kaks {
     close RBHB;
     close KAKS;
     # remove tmp files 
-    system "rm $dirname/aa.tmp* $dirname/dna.tmp* $dirname/*.nhr $dirname/*.nin $dirname/*.nsq >/dev/null 2>/dev/null";       
+    system "rm $dirname/aa.tmp* $dirname/dna.tmp* $dirname/*.nhr $dirname/*.nin $dirname/*.nsq >/dev/null";       
   }
   else { # $comparison eq "paralogs"
     print localtime()." - Performing paralogous pairwise alignment and kaks analysis with MAFFT and CODEML respectively\n\n";
@@ -391,7 +391,7 @@ sub compute_kaks {
       close DNA;
       close AA;
       # run alignment on the pair
-      system "mafft --maxiterate 1000 --thread $num_threads --localpair $dirname/aa.tmp > $dirname/aa.tmp.aln 2>/dev/null";
+      system "mafft --maxiterate 1000 --thread $num_threads --localpair $dirname/aa.tmp > $dirname/aa.tmp.aln";
       if ( -z "$dirname/aa.tmp.aln" ) { print "Mafft could not align $longer and $shorter pair...\nskipping $longer and $shorter pair...\n\n"; next; }
       my ( $aa_aln, $dna_aln, $dna, %seq, $aln_len, $coverage);
       $aa_aln = "$dirname/aa.tmp.aln";
@@ -418,10 +418,10 @@ sub compute_kaks {
           print CODEML "$codeml_ctl_file";
           close CODEML;
         }
-        system "codeml >/dev/null 2>/dev/null";
+        system "codeml >/dev/null";
         #chdir("$dirname") or die "cant change directory to $dirname";";
         # remove paml files
-        system "rm rst rst1 rub 2ML.dN 2ML.dS 2ML.t 2NG.dN 2NG.dS 2NG.t codeml.ctl >/dev/null 2>/dev/null";    
+        system "rm rst rst1 rub 2ML.dN 2ML.dS 2ML.t 2NG.dN 2NG.dS 2NG.t codeml.ctl >/dev/null";    
         # parse paml-codeml results and write to output file
         open (CODEML, "$dirname/dna.tmp.aln.phylip.codeml") or die "can't open $dirname/dna.tmp.aln.phylip.codeml file\n";
         while (<CODEML>) {
@@ -461,7 +461,7 @@ sub compute_kaks {
     close RBHB;
     close KAKS;
     # remove tmp files 
-    system "rm $dirname/aa.tmp* $dirname/dna.tmp* $dirname/*.nhr $dirname/*.nin $dirname/*.nsq >/dev/null 2>/dev/null"; 
+    system "rm $dirname/aa.tmp* $dirname/dna.tmp* $dirname/*.nhr $dirname/*.nin $dirname/*.nsq >/dev/null"; 
   }
   
 }
@@ -577,7 +577,7 @@ sub fit_components {
     close EMMIX;
     close OUT;  
   }
-  system "rm emmix.ks.dat emmix.ks.ctr emmix.ks.mix >/dev/null 2>/dev/null"; 
+  system "rm emmix.ks.dat emmix.ks.ctr emmix.ks.mix >/dev/null"; 
 }
 
 sub create_codon_alignments {
