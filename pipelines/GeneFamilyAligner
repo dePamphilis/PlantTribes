@@ -175,7 +175,7 @@ sub create_orthogroup_alignments {
 		close IN;
 		if ($seq_count < 3) { next; }
 		if ($alignment_method eq "mafft") {
-			system "mafft --maxiterate 1000 --thread $num_threads --localpair $orthogroup_faa/$ortho_id.faa > $orthogroups_aln/$ortho_id.faa.aln 2>/dev/null"; 
+			system "mafft --maxiterate 1000 --thread $num_threads --localpair $orthogroup_faa/$ortho_id.faa > $orthogroups_aln/$ortho_id.faa.aln"; 
 		}
 		if ($alignment_method eq "pasta") {
 			my $pasta_temp = "$dirname/pasta_temp";
@@ -222,9 +222,9 @@ sub trim_orthogroup_alignments {
 	}	
 	foreach my $ortho_id (keys %pep_aln) {
 		if ($automated_trimming) {
-			system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null 2>/dev/null";
+			system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null";
 			if ($codon_alignments and $cds_aln{$ortho_id}) { 
-				system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null 2>/dev/null"; 
+				system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null"; 
 			}
 		}
 		if ($gap_trimming) {
@@ -417,13 +417,13 @@ sub prepare_alignments {
 			create_codon_alignments ( $aa_aln, $dna_aln, $cds );
 		}
 		if ($automated_trimming) {
-			system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null 2>/dev/null";
+			system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null";
 			if ($codon_alignments) { 
-				system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null 2>/dev/null"; 
+				system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null"; 
 			}
 		}
 		if ($gap_trimming) {
-			system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null";
+			system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null";
 			if ($codon_alignments) { 
 				system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null"; 
 			}
