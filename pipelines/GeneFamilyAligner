@@ -228,9 +228,9 @@ sub trim_orthogroup_alignments {
 			}
 		}
 		if ($gap_trimming) {
-			system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null";
+			system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null";
 			if ($codon_alignments and $cds_aln{$ortho_id}) { 
-				system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null"; 
+				system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null"; 
 			}
 		}
 		if ($remove_sequences) {
@@ -394,7 +394,7 @@ sub prepare_alignments {
 		if ($alignment_method eq "pasta"){
 			my $pasta_temp = "$dirname/pasta_temp";
 			make_directory($pasta_temp);
-			system "python $pasta -d Protein -i $temp_dir/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null 2>/dev/null";
+			system "python $pasta -d Protein -i $temp_dir/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null";
 			my $pasta_aln = 0;
 			opendir (DIR, "$pasta_temp") or die "can't $pasta_temp directory\n";
 			while ( my $filename = readdir(DIR)) {
@@ -408,7 +408,7 @@ sub prepare_alignments {
 			system "rm -r $pasta_temp";
 		}
 		else {
-			system "mafft --maxiterate 1000 --thread $num_threads --localpair $temp_dir/$ortho_id.faa > $temp_aln/$ortho_id.faa.aln 2>/dev/null";
+			system "mafft --maxiterate 1000 --thread $num_threads --localpair $temp_dir/$ortho_id.faa > $temp_aln/$ortho_id.faa.aln";
 		}
 		if ($codon_alignments) {
 			my $aa_aln = "$temp_aln/$ortho_id.faa.aln";
@@ -425,7 +425,7 @@ sub prepare_alignments {
 		if ($gap_trimming) {
 			system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null";
 			if ($codon_alignments) { 
-				system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null 2>/dev/null"; 
+				system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null"; 
 			}
 		}
 		if ($remove_sequences) {
