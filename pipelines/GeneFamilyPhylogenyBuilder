@@ -228,20 +228,20 @@ sub build_orthogroup_trees {
 			foreach $id (@seq_order) { print OUT $id." ".$seq{$id}."\n"; }
 			close OUT;
 			if ($seq_type eq "fna") {
-				system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m GTRGAMMA -s $phylip_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null 2>/dev/null";
+				system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m GTRGAMMA -s $phylip_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null";
 			}
 			else {
-				system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m PROTGAMMAJTT -s $phylip_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null 2>/dev/null";
+				system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m PROTGAMMAJTT -s $phylip_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null";
 			}
 			system "rm RAxML_bestTree.* RAxML_bipartitionsBranchLabels.* RAxML_bootstrap.* RAxML_info.*";
     		system "mv RAxML_bipartitions.* $orthogroups_tree/$filename.tree";
 		}
 		else {
 			if ($seq_type eq "fna") {
-			    system "FastTreeMP -nt -gtr -gamma -out $orthogroups_tree/$filename.tree $orthogroup_aln/$filename >/dev/null 2>/dev/null";
+			    system "FastTreeMP -nt -gtr -gamma -out $orthogroups_tree/$filename.tree $orthogroup_aln/$filename >/dev/null";
 			}
 			else {
-			    system "FastTreeMP -wag -gamma -out $orthogroups_tree/$filename.tree $orthogroup_aln/$filename >/dev/null 2>/dev/null";
+			    system "FastTreeMP -wag -gamma -out $orthogroups_tree/$filename.tree $orthogroup_aln/$filename >/dev/null";
 			}
 		}
 	}
