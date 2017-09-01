@@ -146,6 +146,32 @@ if ( $iterative_realignment ) {
 		$automated_trimming, $gap_trimming, $remove_sequences, $num_threads, $max_memory, $pasta_iter_limit, $dirname );
 }
 
+if ( ($automated_trimming or $gap_trimming) and (!$remove_sequences)) {
+	system "mv $dirname/orthogroups_aln $dirname/other_orthogroups_aln";
+	my $orthogroups_aln = "$dirname/orthogroups_aln";
+	make_directory($orthogroups_aln);
+	opendir (DIR, "$dirname/other_orthogroups_aln") or die "can't open $dirname/other_orthogroups_aln directory\n";
+	while ( my $filename = readdir(DIR) ) { 
+		if ($filename =~ /(.*)\.trim$/) {
+			my $renamed_file = $1; 
+			system "mv $dirname/other_orthogroups_aln/$filename $orthogroups_aln/$renamed_file";
+		} 
+	}
+}
+
+if ( ($automated_trimming or $gap_trimming) and ($remove_sequences)) {
+	system "mv $dirname/orthogroups_aln $dirname/other_orthogroups_aln";
+	my $orthogroups_aln = "$dirname/orthogroups_aln";
+	make_directory($orthogroups_aln);
+	opendir (DIR, "$dirname/other_orthogroups_aln") or die "can't open $dirname/other_orthogroups_aln directory\n";
+	while ( my $filename = readdir(DIR) ) { 
+		if ($filename =~ /(.*)\.trim\.filter$/) {
+			my $renamed_file = $1; 
+			system "mv $dirname/other_orthogroups_aln/$filename $orthogroups_aln/$renamed_file";
+		} 
+	}
+}
+
 print localtime()." - Completed aligning gene family sequences\n\n";
 
 exit(0);
@@ -175,12 +201,14 @@ sub create_orthogroup_alignments {
 		close IN;
 		if ($seq_count < 3) { next; }
 		if ($alignment_method eq "mafft") {
-			system "mafft --maxiterate 1000 --thread $num_threads --localpair $orthogroup_faa/$ortho_id.faa > $orthogroups_aln/$ortho_id.faa.aln"; 
+			my $mafft_call = system "mafft --maxiterate 1000 --thread $num_threads --localpair $orthogroup_faa/$ortho_id.faa > $orthogroups_aln/$ortho_id.faa.aln";
+			if ($mafft_call != 0) { print "\n-- ".localtime()." - Running MAFFT failed\n\n"; exit(1); }
 		}
 		if ($alignment_method eq "pasta") {
 			my $pasta_temp = "$dirname/pasta_temp";
 			make_directory($pasta_temp);
-			system "python $pasta -d Protein -i $orthogroup_faa/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null";
+			my $pasta_call = system "python $pasta -d Protein -i $orthogroup_faa/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null";
+			if ($pasta_call != 0) { print "\n-- ".localtime()." - Running PASTA failed\n\n"; exit(1); }
 			my $pasta_aln = 0;
 			opendir (DIR, "$pasta_temp") or die "can't open $pasta_temp directory\n";
 			while ( my $filename = readdir(DIR)) {
@@ -222,15 +250,19 @@ sub trim_orthogroup_alignments {
 	}	
 	foreach my $ortho_id (keys %pep_aln) {
 		if ($automated_trimming) {
-			system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null";
+			my $trimal_call = system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null";
+			if ($trimal_call != 0) { print "\n-- ".localtime()." - Running trimAL failed\n\n"; exit(1); }
 			if ($codon_alignments and $cds_aln{$ortho_id}) { 
-				system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null"; 
+				$trimal_call = system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null"; 
+				if ($trimal_call != 0) { print "\n-- ".localtime()." - Running trimAL failed\n\n"; exit(1); }
 			}
 		}
 		if ($gap_trimming) {
-			system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null";
+			my $trimal_call = system "trimal -in $orthogroups_aln/$ortho_id.faa.aln -out $orthogroups_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null";
+			if ($trimal_call != 0) { print "\n-- ".localtime()." - Running trimAL failed\n\n"; exit(1); }
 			if ($codon_alignments and $cds_aln{$ortho_id}) { 
-				system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null"; 
+				$trimal_call = system "trimal -in $orthogroups_aln/$ortho_id.fna.aln -out $orthogroups_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null"; 
+				if ($trimal_call != 0) { print "\n-- ".localtime()." - Running trimAL failed\n\n"; exit(1); }
 			}
 		}
 		if ($remove_sequences) {
@@ -394,7 +426,8 @@ sub prepare_alignments {
 		if ($alignment_method eq "pasta"){
 			my $pasta_temp = "$dirname/pasta_temp";
 			make_directory($pasta_temp);
-			system "python $pasta -d Protein -i $temp_dir/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null";
+			my $pasta_call = system "python $pasta -d Protein -i $temp_dir/$ortho_id.faa -o $pasta_temp --max-mem-mb=$max_memory --num-cpus=$num_threads --iter-limit=$pasta_iter_limit >/dev/null";
+			if ($pasta_call != 0) { print "\n-- ".localtime()." - Running PASTA failed\n\n"; exit(1); }
 			my $pasta_aln = 0;
 			opendir (DIR, "$pasta_temp") or die "can't $pasta_temp directory\n";
 			while ( my $filename = readdir(DIR)) {
@@ -408,7 +441,8 @@ sub prepare_alignments {
 			system "rm -r $pasta_temp";
 		}
 		else {
-			system "mafft --maxiterate 1000 --thread $num_threads --localpair $temp_dir/$ortho_id.faa > $temp_aln/$ortho_id.faa.aln";
+			my $mafft_call = system "mafft --maxiterate 1000 --thread $num_threads --localpair $temp_dir/$ortho_id.faa > $temp_aln/$ortho_id.faa.aln";
+			if ($mafft_call != 0) { print "\n-- ".localtime()." - Running MAFFT failed\n\n"; exit(1); }
 		}
 		if ($codon_alignments) {
 			my $aa_aln = "$temp_aln/$ortho_id.faa.aln";
@@ -417,15 +451,19 @@ sub prepare_alignments {
 			create_codon_alignments ( $aa_aln, $dna_aln, $cds );
 		}
 		if ($automated_trimming) {
-			system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null";
+			my $trimal_call = system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -automated1 >/dev/null";
+			if ($trimal_call != 0) { print "\n-- ".localtime()." - Running trimAL failed\n\n"; exit(1); }
 			if ($codon_alignments) { 
-				system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null"; 
+				$trimal_call = system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -automated1 >/dev/null"; 
+				if ($trimal_call != 0) { print "\n-- ".localtime()." - Running trimAL failed\n\n"; exit(1); }
 			}
 		}
 		if ($gap_trimming) {
-			system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null";
+			my $trimal_call = system "trimal -in $temp_aln/$ortho_id.faa.aln -out $temp_aln/$ortho_id.faa.aln.trim -gt $gap_trimming >/dev/null";
+			if ($trimal_call != 0) { print "\n-- ".localtime()." - Running trimAL failed\n\n"; exit(1); }
 			if ($codon_alignments) { 
-				system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null"; 
+				$trimal_call = system "trimal -in $temp_aln/$ortho_id.fna.aln -out $temp_aln/$ortho_id.fna.aln.trim -gt $gap_trimming >/dev/null"; 
+				if ($trimal_call != 0) { print "\n-- ".localtime()." - Running trimAL failed\n\n"; exit(1); }
 			}
 		}
 		if ($remove_sequences) {
