@@ -127,9 +127,11 @@ sub get_orthogroup_fasta {
 		die "Exiting...!\nOrthogroup classification protein and CDS fasta files not equivalent in $orthogroup_faa directory\n\n";
 	}	
 	foreach my $ortho_id (keys %pep) { 
-		system "cat $scaffold_dir/fasta/$method/$ortho_id.faa $orthogroup_faa/$ortho_id.faa > $orthogroups_fasta/$ortho_id.faa";
+		my $merging_call = system "cat $scaffold_dir/fasta/$method/$ortho_id.faa $orthogroup_faa/$ortho_id.faa > $orthogroups_fasta/$ortho_id.faa";
+		if ($merging_call != 0) { print "\n-- ".localtime()." - Merging orthogroup $ortho_id failed\n\n"; exit(1); }
 		if ($orthogroup_fna and $cds{$ortho_id}) {
-			system "cat $scaffold_dir/fasta/$method/$ortho_id.fna $orthogroup_faa/$ortho_id.fna > $orthogroups_fasta/$ortho_id.fna";
+			my $merging_call = system "cat $scaffold_dir/fasta/$method/$ortho_id.fna $orthogroup_faa/$ortho_id.fna > $orthogroups_fasta/$ortho_id.fna";
+			if ($merging_call != 0) { print "\n-- ".localtime()." - Merging orthogroup $ortho_id failed\n\n"; exit(1); }
 		}
 	} 	
 }
