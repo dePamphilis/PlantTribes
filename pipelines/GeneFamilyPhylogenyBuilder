@@ -55,11 +55,6 @@ my $usage = <<__EOUSAGE__;
 #                                    /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
 #                                    default configuration files is set to ~home/config.
 #
-#  --alignment_type <string>       : Input alignments type produces by the GeneFamilyAligner 
-#                                    If Primary alignments: aln (default)
-#                                    If Trimmed alignmets: trim 
-#                                    If Filtered alignments: filter
-#
 #  --max_orthogroup_size <int>     : Maximum number of sequences in orthogroup alignments
 #                                    Default: 100  
 #
@@ -102,7 +97,6 @@ my $scaffold;
 my $method;
 my $tree_inference;
 my $config_dir;
-my $alignment_type; 
 my $max_orthogroup_size;
 my $min_orthogroup_size;
 my $sequence_type;
@@ -115,7 +109,6 @@ my $options = GetOptions (  'orthogroup_aln=s' => \$orthogroup_aln,
               'method=s' => \$method,
               'tree_inference=s' => \$tree_inference,
               'config_dir=s' => \$config_dir,
-              'alignment_type=s' => \$alignment_type,
               'max_orthogroup_size=i' => \$max_orthogroup_size,
               'min_orthogroup_size=i' => \$min_orthogroup_size,
               'sequence_type=s' => \$sequence_type,
@@ -144,7 +137,6 @@ if ( $scaffold !~ /^\d+Gv\d+\.\d+$/) { print "\nOrthogroups or gene families pro
 if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
 	print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
 if ( $tree_inference and ($tree_inference ne "raxml") and ($tree_inference ne "fasttree") ) { print "\nUnknown phylogenetic tree inference methods\n"; die $usage; }
-if ( $alignment_type and ($alignment_type ne "aln") and ($alignment_type ne "trim") and ($alignment_type ne "filter") ) { print "\nUnknown GeneFamilyAligner alignment type\n"; die $usage; }
 if ( $min_orthogroup_size and ($min_orthogroup_size < 4) ) { print "\nMinimum number of sequences in orthogroup alignments required for phylogenetic tree inference is 4\n";
 	die $usage; }
 if ( $sequence_type and ($sequence_type ne "protein") and ($sequence_type ne "dna") ) { print "\nUnknown phylogenetic tree inference sequence type\n"; die $usage; }
@@ -170,7 +162,7 @@ if (-d $dirname) { die "Exiting...!\nPhylogenetic tree inference output director
 make_directory($dirname);
 
 
-build_orthogroup_trees ( $orthogroup_aln, $tree_inference, $alignment_type, $max_orthogroup_size, $min_orthogroup_size, $sequence_type,
+build_orthogroup_trees ( $orthogroup_aln, $tree_inference, $max_orthogroup_size, $min_orthogroup_size, $sequence_type,
 	$rooting_order, $bootstrap_replicates, $num_threads, $scaffold, $dirname, $config_dir );
 
 print localtime()." - Completed gene family phylogenetic inference\n\n";
@@ -187,19 +179,16 @@ sub make_directory {
 }
 
 sub build_orthogroup_trees {
-	my ( $orthogroup_aln, $tree_inference, $alignment_type, $max_orthogroup_size, $min_orthogroup_size, $sequence_type, $rooting_order,
+	my ( $orthogroup_aln, $tree_inference, $max_orthogroup_size, $min_orthogroup_size, $sequence_type, $rooting_order,
 		$bootstrap_replicates, $num_threads, $scaffold, $dirname, $config_dir ) = @_;
 	print localtime()." - Building orthogroup phylogenetic trees\n\n";	
 	my $orthogroups_tree = "$dirname/orthogroups_tree";
 	make_directory($orthogroups_tree);
-	my ($seq_type, $aln_type, $max_seq, $min_seq);
+	my ($seq_type, $max_seq, $min_seq);
 	if ($sequence_type and ($sequence_type eq "dna")) { $seq_type = "fna"; } else { $seq_type = "faa"; }
-	if ($alignment_type and ($alignment_type eq "trim")) { $aln_type = "trim"; } 
-	elsif ($alignment_type and ($alignment_type eq "filter")) { $aln_type = "filter"; } 
-	else { $aln_type = "aln"; }
 	opendir (DIR, "$orthogroup_aln") or die "can't open $orthogroup_aln file\n";
 	while ( my $filename = readdir(DIR) ) {
-		if ($filename !~ /^(\d+)\.$seq_type(.*)$aln_type$/) { next; }
+		if ($filename !~ /^(\d+)\.$seq_type\.aln$/) { next; }
 		my (%seq, @seq_order, $seq_id);
 		open (IN, "$orthogroup_aln/$filename") or die "can't open $orthogroup_aln/$filename file\n";
 		while (<IN>) {
@@ -228,20 +217,24 @@ sub build_orthogroup_trees {
 			foreach $id (@seq_order) { print OUT $id." ".$seq{$id}."\n"; }
 			close OUT;
 			if ($seq_type eq "fna") {
-				system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m GTRGAMMA -s $phylip_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null";
+				my $rxml_call = system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m GTRGAMMA -s $phylip_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null";
+				if ($rxml_call != 0) { print "\n-- ".localtime()." - Running RAxML failed\n\n"; exit(1); }
 			}
 			else {
-				system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m PROTGAMMAJTT -s $phylip_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null";
+				my $rxml_call = system "raxmlHPC-PTHREADS-SSE3 -T $num_threads -f a -x 12345 -p 12345 -# $bootstrap_replicates -m PROTGAMMAJTT -s $phylip_aln/$filename.phylip -n $filename.tree -o $outgroup >/dev/null";
+				if ($rxml_call != 0) { print "\n-- ".localtime()." - Running RAxML failed\n\n"; exit(1); }
 			}
 			system "rm RAxML_bestTree.* RAxML_bipartitionsBranchLabels.* RAxML_bootstrap.* RAxML_info.*";
-    		system "mv RAxML_bipartitions.* $orthogroups_tree/$filename.tree";
+			system "mv RAxML_bipartitions.* $orthogroups_tree/$filename.tree";
 		}
 		else {
 			if ($seq_type eq "fna") {
-			    system "FastTreeMP -nt -gtr -gamma -out $orthogroups_tree/$filename.tree $orthogroup_aln/$filename >/dev/null";
+			    my $fasttree_call = system "FastTreeMP -nt -gtr -gamma -out $orthogroups_tree/$filename.tree $orthogroup_aln/$filename >/dev/null";
+			    if ($fasttree_call != 0) { print "\n-- ".localtime()." - Running FastTree failed\n\n"; exit(1); }
 			}
 			else {
-			    system "FastTreeMP -wag -gamma -out $orthogroups_tree/$filename.tree $orthogroup_aln/$filename >/dev/null";
+			    my $fasttree_call = system "FastTreeMP -wag -gamma -out $orthogroups_tree/$filename.tree $orthogroup_aln/$filename >/dev/null";
+			    if ($fasttree_call != 0) { print "\n-- ".localtime()." - Running FastTree failed\n\n"; exit(1); }
 			}
 		}
 	}
