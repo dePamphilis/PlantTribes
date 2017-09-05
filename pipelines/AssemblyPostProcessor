@@ -180,7 +180,8 @@ sub make_directory {
 sub run_estscan {
     my ( $transcripts, $matrices, $stranded, $length, $gene_family_search, $out_dir ) = @_;
     print localtime()." - Predicting coding regions with ESTScan\n\n";
-    system "ESTScan $transcripts -M $matrices -t $out_dir/transcripts.pep > $out_dir/transcripts.cds";
+    my $estscan_call = system "ESTScan $transcripts -M $matrices -t $out_dir/transcripts.pep > $out_dir/transcripts.cds";
+    if ($estscan_call != 0) { print "\n-- ".localtime()." - Running ESTScan failed\n\n"; exit(1); }
     if (!(-e "$out_dir/transcripts.cds") or !(-e "$out_dir/transcripts.pep") or (-z "$out_dir/transcripts.cds") or (-z "$out_dir/transcripts.pep")) {
 	unless($gene_family_search) {
 	    print "Coding sequence prediction was not successful.\nEither ESTScan is not properly installed or there a problem with reference score matrices you provided.\nAlternatively, you data might not have sequences with credible coding regions.\nTerminating...\n\n";
@@ -334,7 +335,8 @@ sub run_estscan {
 sub run_transdecoder {
     my ( $transcripts, $stranded, $length, $gene_family_search, $out_dir ) = @_;
     print localtime()." - Predicting coding regions with TransDecoder\n\n";
-    system "TransDecoder.LongOrfs -t $transcripts >/dev/null";
+    my $transdecoder_call = system "TransDecoder.LongOrfs -t $transcripts >/dev/null";
+    if ($transdecoder_call != 0) { print "\n-- ".localtime()." - Running TransDecoder failed\n\n"; exit(1); }
     my @file_path = split (/\/+/, $transcripts);
     my $transcripts_file = $file_path[$#file_path];
     system "mv $transcripts_file.transdecoder_dir/longest_orfs.cds $out_dir/transcripts.cds";
@@ -528,7 +530,8 @@ sub dereplicate {
     if (!(-e "$out_dir/transcripts.cleaned.cds") or !(-e "$out_dir/transcripts.cleaned.pep") or (-z "$out_dir/transcripts.cleaned.cds") or (-z "$out_dir/transcripts.cleaned.pep")) {
 		print "Dereplication not performed - transcriptome assembly post processing might not have completed successfully.\nTerminating...\n\n";
     }
-    system "gt sequniq -force -o $out_dir/transcripts.cleaned.cds.nr $out_dir/transcripts.cleaned.cds >/dev/null";
+    my $genometools_call = system "gt sequniq -force -o $out_dir/transcripts.cleaned.cds.nr $out_dir/transcripts.cleaned.cds >/dev/null";
+    if ($genometools_call != 0) { print "\n-- ".localtime()." - Running GenomeTools failed\n\n"; exit(1); }
     open (IN, "$out_dir/transcripts.cleaned.cds.nr") or die "can't open $out_dir/transcripts.cleaned.cds.nr file\n";
     while(<IN>) {
 		chomp;
@@ -580,10 +583,12 @@ sub targeted_gene_family_assembly {
 		make_directory($target_out_dir);
 		# hmmsearch target profile using post-processed predicted proteins - default parameters
 		if ($dereplicate) { 
-			system "hmmsearch -E 10 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.nr.pep >/dev/null";
+			my $hmmsearch_call = system "hmmsearch -E 10 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.nr.pep >/dev/null";
+			if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
 		}
 		else {
-			system "hmmsearch -E 10 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.pep >/dev/null";
+			my $hmmsearch_call = system "hmmsearch -E 10 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.pep >/dev/null";
+			if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
 		}
 		# extract corresponding primary contigs for target hits
 		my $hits = 0;
@@ -598,7 +603,8 @@ sub targeted_gene_family_assembly {
 			next;
 		} 		
 		# Assemble target profile assigned contigs with cap3 - evalue = 10,
-		system "cap3 $target_out_dir/temp.1.hmm.contigs -o 40 -p 90 >/dev/null";
+		my $cap3_call = system "cap3 $target_out_dir/temp.1.hmm.contigs -o 40 -p 90 >/dev/null";
+		if ($cap3_call != 0) { print "\n-- ".localtime()." - Running CAP3 failed\n\n"; exit(1); }
 		# rename the cap3 contigs and singlets
 		my $count = 0;
 		open (OUT, ">$target_out_dir/temp.1.hmm.contigs.cap.fasta") or die "can't create $target_out_dir/temp.1.hmm.contigs.cap.fasta file\n";
@@ -639,7 +645,8 @@ sub targeted_gene_family_assembly {
 		    open(IN, "$target_out_dir/transcripts.cleaned.nr.cds") or die "can't open $target_out_dir/transcripts.cleaned.nr.cds file\n";
 		    while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly_cds{$seq_id} .= $_ ; } }
 		    close IN;
-		    system "hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.nr.pep >/dev/null";			
+		    my $hmmsearch_call = system "hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.nr.pep >/dev/null";
+		    if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
 		} 
 		else {
 		    open(IN, "$target_out_dir/transcripts.cleaned.pep") or die "can't open $target_out_dir/transcripts.cleaned.pep file\n";
@@ -648,7 +655,8 @@ sub targeted_gene_family_assembly {
 		    open(IN, "$target_out_dir/transcripts.cleaned.cds") or die "can't open $target_out_dir/$transcripts.cleaned.cds file\n";
 		    while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly_cds{$seq_id} .= $_ ; } }
 		    close IN;
-		    system "hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.pep >/dev/null";								
+		    my $hmmsearch_call = system "hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.pep >/dev/null";
+		    if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
 		}	
 		# compute transcript orthogroup coverage
 		$hits = 0;
@@ -662,9 +670,11 @@ sub targeted_gene_family_assembly {
 			system "rm -r $target_out_dir";
 			next;
 		}
-		system "mafft --add $target_out_dir/temp.2.hmm.pep $scaffold_dir/alns/$clustering_method/$ortho_id.aln > $target_out_dir/temp.2.hmm.pep.aln";
+		my $mafft_call = system "mafft --add $target_out_dir/temp.2.hmm.pep $scaffold_dir/alns/$clustering_method/$ortho_id.aln > $target_out_dir/temp.2.hmm.pep.aln";
+		if ($mafft_call != 0) { print "\n-- ".localtime()." - Running MAFFT failed\n\n"; exit(1); }
 		unless ($gap_trimming) { $gap_trimming = 0.1; } 
-		system "trimal -in $target_out_dir/temp.2.hmm.pep.aln -out $target_out_dir/temp.2.hmm.pep.aln.trim -gt $gap_trimming >/dev/null";
+		my $trimal_call = system "trimal -in $target_out_dir/temp.2.hmm.pep.aln -out $target_out_dir/temp.2.hmm.pep.aln.trim -gt $gap_trimming >/dev/null";
+		if ($trimal_call != 0) { print "\n-- ".localtime()." - Running trimAL failed\n\n"; exit(1); }
 		open(IN, "$target_out_dir/temp.2.hmm.pep.aln.trim") or die "can't open $target_out_dir/temp.2.hmm.pep.aln.trim file\n";
 		while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $ortho_aln{$seq_id}.= $_; } }	
 		close IN;
