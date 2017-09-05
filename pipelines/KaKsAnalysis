@@ -215,10 +215,14 @@ sub get_homologs {
     print localtime()." - Determining orthologous pairs using BLASTN\n\n";
     system "cp $coding_sequences_species_2 $dirname/species2.fna";
     system "cp $proteins_species_2 $dirname/species2.faa";
-    system "makeblastdb -in $dirname/species2.fna -dbtype nucl  >/dev/null";
-    system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species2.fna -out $dirname/species1.fna.blastn.orthologs  >/dev/null";
-    system "makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null";
-    system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species2.fna -db $dirname/species1.fna -out $dirname/species2.fna.blastn.orthologs  >/dev/null";
+    my $makeblastdb_call = system "makeblastdb -in $dirname/species2.fna -dbtype nucl  >/dev/null";
+    if ($makeblastdb_call != 0) { print "\n-- ".localtime()." - Running makeblastdb failed\n\n"; exit(1); }
+    my $blastn_call = system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species2.fna -out $dirname/species1.fna.blastn.orthologs  >/dev/null";
+    if ($blastn_call != 0) { print "\n-- ".localtime()." - Running BLASTN failed\n\n"; exit(1); }
+    $makeblastdb_call = system "makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null";
+    if ($makeblastdb_call != 0) { print "\n-- ".localtime()." - Running makeblastdb failed\n\n"; exit(1); }
+    $blastn_call = system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species2.fna -db $dirname/species1.fna -out $dirname/species2.fna.blastn.orthologs  >/dev/null";
+    if ($blastn_call != 0) { print "\n-- ".localtime()." - Running BLASTN failed\n\n"; exit(1); }
     open (OUT, ">$dirname/species1and2.fna.blastn.orthologs.rbhb") or die "can't open $dirname/species1and2.fna.blastn.orthologs.rbhb file\n";
     open (IN, "$dirname/species1.fna.blastn.orthologs") or die "can't open $dirname/species1.fna.blastn.orthologs file\n";
     while (<IN>) {
@@ -249,8 +253,10 @@ sub get_homologs {
   }
   else { # $comparison eq "paralogs"
     print localtime()." - Determining paralogous pairs using BLASTN\n\n";
-    system "makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null";
-    system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species1.fna -out $dirname/species1.fna.blastn.paralogs  >/dev/null";
+    my $makeblastdb_call = system "makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null";
+    if ($makeblastdb_call != 0) { print "\n-- ".localtime()." - Running makeblastdb failed\n\n"; exit(1); }
+    my $blastn_call = system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species1.fna -out $dirname/species1.fna.blastn.paralogs  >/dev/null";
+    if ($blastn_call != 0) { print "\n-- ".localtime()." - Running BLASTN failed\n\n"; exit(1); }
     open (OUT, ">$dirname/species1.fna.blastn.paralogs.rbhb") or die "can't open $dirname/species1.fna.blastn.paralogs.rbhb file\n";
     open (IN, "$dirname/species1.fna.blastn.paralogs") or die "can't open $dirname/species1.fna.blastn.paralogs file\n";
     while (<IN>) {
@@ -299,7 +305,8 @@ sub compute_kaks {
       close DNA;
       close AA;
       # run alignment on the pair
-      system "mafft --maxiterate 1000 --thread $num_threads --localpair $dirname/aa.tmp > $dirname/aa.tmp.aln";
+      my $mafft_call = system "mafft --maxiterate 1000 --thread $num_threads --localpair $dirname/aa.tmp > $dirname/aa.tmp.aln";
+      if ($mafft_call != 0) { print "\n-- ".localtime()." - Running MAFFT failed\n\n"; exit(1); }
       if ( -z "$dirname/aa.tmp.aln" ) { print "Mafft could not align $longer and $shorter pair...\nskipping $longer and $shorter pair...\n\n"; next; }
       my ( $aa_aln, $dna_aln, $dna, %seq, $aln_len, $coverage);
       $aa_aln = "$dirname/aa.tmp.aln";
@@ -326,7 +333,8 @@ sub compute_kaks {
           print CODEML "$codeml_ctl_file";
           close CODEML;
         }
-        system "codeml >/dev/null";
+        my $codeml_call = system "codeml >/dev/null";
+        if ($codeml_call != 0) { print "\n-- ".localtime()." - Running CODEML failed\n\n"; exit(1); }
         #chdir("$dirname") or die "cant change directory to $dirname";";
         # remove paml files
         system "rm rst rst1 rub 2ML.dN 2ML.dS 2ML.t 2NG.dN 2NG.dS 2NG.t codeml.ctl >/dev/null";    
@@ -391,7 +399,8 @@ sub compute_kaks {
       close DNA;
       close AA;
       # run alignment on the pair
-      system "mafft --maxiterate 1000 --thread $num_threads --localpair $dirname/aa.tmp > $dirname/aa.tmp.aln";
+      my $mafft_call = system "mafft --maxiterate 1000 --thread $num_threads --localpair $dirname/aa.tmp > $dirname/aa.tmp.aln";
+      if ($mafft_call != 0) { print "\n-- ".localtime()." - Running MAFFT failed\n\n"; exit(1); }
       if ( -z "$dirname/aa.tmp.aln" ) { print "Mafft could not align $longer and $shorter pair...\nskipping $longer and $shorter pair...\n\n"; next; }
       my ( $aa_aln, $dna_aln, $dna, %seq, $aln_len, $coverage);
       $aa_aln = "$dirname/aa.tmp.aln";
@@ -418,7 +427,8 @@ sub compute_kaks {
           print CODEML "$codeml_ctl_file";
           close CODEML;
         }
-        system "codeml >/dev/null";
+        my $codeml_call = system "codeml >/dev/null";
+        if ($codeml_call != 0) { print "\n-- ".localtime()." - Running CODEML failed\n\n"; exit(1); }
         #chdir("$dirname") or die "cant change directory to $dirname";";
         # remove paml files
         system "rm rst rst1 rub 2ML.dN 2ML.dS 2ML.t 2NG.dN 2NG.dS 2NG.t codeml.ctl >/dev/null";    
@@ -487,7 +497,8 @@ sub fit_components {
     foreach (1..3) { $rand = int(rand() * 30000); print CTR $rand,"\n"; }
     close CTR;
     # run EMMIX 
-    system "EMMIX < emmix.ks.ctr > /dev/null"; 
+    my $emmix_call = system "EMMIX < emmix.ks.ctr > /dev/null";
+    if ($emmix_call != 0) { print "\n-- ".localtime()." - Running EMMIX failed\n\n"; exit(1); }
     open (EMMIX, "emmix.ks.mix") or die "can't open emmix.ks.mix file\n";;
     print OUT "species\tn\tnumber_comp\tlnL\tAIC\tBIC\tmean\tvariance\tporportion\n";
     my ( @means, @variances, $mean, $variance, $mix, @mixpi, $oldbic, $bic, $aic, $likelihood, $lnL, $crit, $nobs, $val, $len, $species );
@@ -541,7 +552,8 @@ sub fit_components {
     foreach (1..3) { $rand = int(rand() * 30000); print CTR $rand,"\n"; }
     close CTR;
     # run EMMIX 
-    system "EMMIX < emmix.ks.ctr > /dev/null"; 
+    my $emmix_call = system "EMMIX < emmix.ks.ctr > /dev/null";
+    if ($emmix_call != 0) { print "\n-- ".localtime()." - Running EMMIX failed\n\n"; exit(1); }
     open (EMMIX, "emmix.ks.mix") or die "can't open emmix.ks.mix file\n";;
     print OUT "species\tn\tnumber_comp\tlnL\tAIC\tBIC\tmean\tvariance\tporportion\n";
     my ( @means, @variances, $mean, $variance, $mix, @mixpi, $oldbic, $bic, $aic, $likelihood, $lnL, $crit, $nobs, $val, $len, $species );
