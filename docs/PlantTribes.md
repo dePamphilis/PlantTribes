@@ -403,11 +403,6 @@ Required Options:
                                   /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
                                   default configuration files is set to ~home/config.
 
---alignment_type <string>       : Input alignments type produces by the GeneFamilyAligner 
-                                  If Primary alignments: aln (default)
-                                  If trimmed alignmets: trim 
-                                  If filtered alignments: filter
-
 --max_orthogroup_size <int>     : Maximum number of sequences in orthogroup alignments
                                   Default: 100  
 
