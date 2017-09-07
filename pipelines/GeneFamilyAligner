@@ -148,27 +148,79 @@ if ( $iterative_realignment ) {
 
 if ( ($automated_trimming or $gap_trimming) and (!$remove_sequences)) {
 	system "mv $dirname/orthogroups_aln $dirname/other_orthogroups_aln";
-	my $orthogroups_aln = "$dirname/orthogroups_aln";
-	make_directory($orthogroups_aln);
-	opendir (DIR, "$dirname/other_orthogroups_aln") or die "can't open $dirname/other_orthogroups_aln directory\n";
-	while ( my $filename = readdir(DIR) ) { 
-		if ($filename =~ /(.*)\.trim$/) {
-			my $renamed_file = $1; 
-			system "mv $dirname/other_orthogroups_aln/$filename $orthogroups_aln/$renamed_file";
-		} 
+	if ($codon_alignments) {
+		my $orthogroups_trimmed_aln_faa = "$dirname/orthogroups_trimmed_aln_faa";
+		make_directory($orthogroups_trimmed_aln_faa);
+		my $orthogroups_trimmed_aln_fna = "$dirname/orthogroups_trimmed_aln_fna";
+		make_directory($orthogroups_trimmed_aln_fna);
+		opendir (DIR, "$dirname/other_orthogroups_aln") or die "can't open $dirname/other_orthogroups_aln directory\n";
+		while ( my $filename = readdir(DIR) ) { 
+			if ($filename =~ /(\d+\.faa\.aln)\.trim$/) {
+				my $renamed_file = $1;
+				system "mv $dirname/other_orthogroups_aln/$filename $orthogroups_trimmed_aln_faa/$renamed_file";
+			}
+			if ($filename =~ /(\d+\.fna\.aln)\.trim$/) {
+				my $renamed_file = $1;
+				system "mv $dirname/other_orthogroups_aln/$filename $orthogroups_trimmed_aln_fna/$renamed_file";
+			}			
+		}
+	}
+	else {
+		my $orthogroups_trimmed_aln_faa = "$dirname/orthogroups_trimmed_aln_faa";
+		make_directory($orthogroups_trimmed_aln_faa);
+		opendir (DIR, "$dirname/other_orthogroups_aln") or die "can't open $dirname/other_orthogroups_aln directory\n";
+		while ( my $filename = readdir(DIR) ) {
+			if ($filename =~ /(.*)\.trim$/) {
+				my $renamed_file = $1;
+				system "mv $dirname/other_orthogroups_aln/$filename $orthogroups_trimmed_aln_faa/$renamed_file";
+			}
+		}
 	}
 }
 
 if ( ($automated_trimming or $gap_trimming) and ($remove_sequences)) {
 	system "mv $dirname/orthogroups_aln $dirname/other_orthogroups_aln";
-	my $orthogroups_aln = "$dirname/orthogroups_aln";
-	make_directory($orthogroups_aln);
-	opendir (DIR, "$dirname/other_orthogroups_aln") or die "can't open $dirname/other_orthogroups_aln directory\n";
-	while ( my $filename = readdir(DIR) ) { 
-		if ($filename =~ /(.*)\.trim\.filter$/) {
-			my $renamed_file = $1; 
-			system "mv $dirname/other_orthogroups_aln/$filename $orthogroups_aln/$renamed_file";
-		} 
+	if ($codon_alignments) {
+		my $orthogroups_filtered_aln_faa = "$dirname/orthogroups_filtered_aln_faa";
+		make_directory($orthogroups_filtered_aln_faa);
+		my $orthogroups_filtered_aln_fna = "$dirname/orthogroups_filtered_aln_fna";
+		make_directory($orthogroups_filtered_aln_fna);
+		opendir (DIR, "$dirname/other_orthogroups_aln") or die "can't open $dirname/other_orthogroups_aln directory\n";
+		while ( my $filename = readdir(DIR) ) { 
+			if ($filename =~ /(\d+\.faa\.aln)\.trim\.filter$/) {
+				my $renamed_file = $1;
+				system "mv $dirname/other_orthogroups_aln/$filename $orthogroups_filtered_aln_faa/$renamed_file";
+			}
+			if ($filename =~ /(\d+\.fna\.aln)\.trim\.filter$/) {
+				my $renamed_file = $1;
+				system "mv $dirname/other_orthogroups_aln/$filename $orthogroups_filtered_aln_fna/$renamed_file";
+			}			
+		}
+	}
+	else {
+		my $orthogroups_filtered_aln_faa = "$dirname/orthogroups_filtered_aln_faa";
+		make_directory($orthogroups_filtered_aln_faa);
+		opendir (DIR, "$dirname/other_orthogroups_aln") or die "can't open $dirname/other_orthogroups_aln directory\n";
+		while ( my $filename = readdir(DIR) ) {
+			if ($filename =~ /(.*)\.trim\.filter$/) {
+				my $renamed_file = $1;
+				system "mv $dirname/other_orthogroups_aln/$filename $orthogroups_filtered_aln_faa/$renamed_file";
+			}
+		}
+	}
+}
+
+if ( !$automated_trimming and !$gap_trimming and !$remove_sequences) {
+	system "mv $dirname/orthogroups_aln $dirname/orthogroups_aln_faa";
+	if ($codon_alignments) {
+		my $orthogroups_aln_fna = "$dirname/orthogroups_aln_fna";
+		make_directory($orthogroups_aln_fna);
+		opendir (DIR, "$dirname/orthogroups_aln_faa") or die "can't open $dirname/orthogroups_aln_faa directory\n";
+		while ( my $filename = readdir(DIR) ) { 
+			if ($filename =~ /\d+\.fna\.aln$/) {
+				system "mv $dirname/orthogroups_aln_faa/$filename $orthogroups_aln_fna/";
+			}		
+		}
 	}
 }
 
