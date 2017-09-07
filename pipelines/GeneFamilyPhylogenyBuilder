@@ -61,11 +61,6 @@ my $usage = <<__EOUSAGE__;
 #  --min_orthogroup_size <int>     : Minimum number of sequences in orthogroup alignments
 #                                    Default: 4
 #
-#  --sequence_type <string>        : Sequence type used in the phylogenetic inference - "dna" requires codon alignments to be in the
-#                                    same directory with input orthogroup protein alignments.
-#                                    If amino acid based: protein (default)
-#                                    If nucleotide based: dna
-#
 #  --rooting_order <string>        : File with a list of string fragments matching sequences identifiers of species in the 
 #                                    classification (including scaffold taxa) to be used for determining the most basal taxa in
 #                                    the orthogroups for rooting trees. Should be listed in decreasing order from older to younger
@@ -99,7 +94,6 @@ my $tree_inference;
 my $config_dir;
 my $max_orthogroup_size;
 my $min_orthogroup_size;
-my $sequence_type;
 my $rooting_order;
 my $bootstrap_replicates;
 my $num_threads;
@@ -111,7 +105,6 @@ my $options = GetOptions (  'orthogroup_aln=s' => \$orthogroup_aln,
               'config_dir=s' => \$config_dir,
               'max_orthogroup_size=i' => \$max_orthogroup_size,
               'min_orthogroup_size=i' => \$min_orthogroup_size,
-              'sequence_type=s' => \$sequence_type,
               'rooting_order=s' => \$rooting_order,
               'bootstrap_replicates=i' => \$bootstrap_replicates,
               'num_threads=i' => \$num_threads
@@ -139,7 +132,6 @@ if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is no
 if ( $tree_inference and ($tree_inference ne "raxml") and ($tree_inference ne "fasttree") ) { print "\nUnknown phylogenetic tree inference methods\n"; die $usage; }
 if ( $min_orthogroup_size and ($min_orthogroup_size < 4) ) { print "\nMinimum number of sequences in orthogroup alignments required for phylogenetic tree inference is 4\n";
 	die $usage; }
-if ( $sequence_type and ($sequence_type ne "protein") and ($sequence_type ne "dna") ) { print "\nUnknown phylogenetic tree inference sequence type\n"; die $usage; }
 if ( $rooting_order and ($tree_inference ne "raxml") ) { print "\nOrthogroup rooting order requires RAxML phylogenetic tree inference method\n"; die $usage; }
 if ( $bootstrap_replicates and ($tree_inference ne "raxml") ) { print "\nBootstrap analysis requires RAxML phylogenetic tree inference method\n"; die $usage; }
 
@@ -162,8 +154,8 @@ if (-d $dirname) { die "Exiting...!\nPhylogenetic tree inference output director
 make_directory($dirname);
 
 
-build_orthogroup_trees ( $orthogroup_aln, $tree_inference, $max_orthogroup_size, $min_orthogroup_size, $sequence_type,
-	$rooting_order, $bootstrap_replicates, $num_threads, $scaffold, $dirname, $config_dir );
+build_orthogroup_trees ( $orthogroup_aln, $tree_inference, $max_orthogroup_size, $min_orthogroup_size, $rooting_order,
+	 $bootstrap_replicates, $num_threads, $scaffold, $dirname, $config_dir );
 
 print localtime()." - Completed gene family phylogenetic inference\n\n";
 
@@ -179,16 +171,21 @@ sub make_directory {
 }
 
 sub build_orthogroup_trees {
-	my ( $orthogroup_aln, $tree_inference, $max_orthogroup_size, $min_orthogroup_size, $sequence_type, $rooting_order,
+	my ( $orthogroup_aln, $tree_inference, $max_orthogroup_size, $min_orthogroup_size, $rooting_order,
 		$bootstrap_replicates, $num_threads, $scaffold, $dirname, $config_dir ) = @_;
 	print localtime()." - Building orthogroup phylogenetic trees\n\n";	
 	my $orthogroups_tree = "$dirname/orthogroups_tree";
 	make_directory($orthogroups_tree);
 	my ($seq_type, $max_seq, $min_seq);
-	if ($sequence_type and ($sequence_type eq "dna")) { $seq_type = "fna"; } else { $seq_type = "faa"; }
 	opendir (DIR, "$orthogroup_aln") or die "can't open $orthogroup_aln file\n";
 	while ( my $filename = readdir(DIR) ) {
-		if ($filename !~ /^(\d+)\.$seq_type\.aln$/) { next; }
+		if ($filename =~ /^(\d+)\.faa\.aln$/) {
+			$seq_type = "faa";
+		}
+		elsif ($filename =~ /^(\d+)\.fna\.aln$/) {
+			$seq_type = "fna";
+		}
+		else { next; }
 		my (%seq, @seq_order, $seq_id);
 		open (IN, "$orthogroup_aln/$filename") or die "can't open $orthogroup_aln/$filename file\n";
 		while (<IN>) {
