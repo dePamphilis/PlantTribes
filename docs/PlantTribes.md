@@ -409,11 +409,6 @@ Required Options:
 --min_orthogroup_size <int>     : Minimum number of sequences in orthogroup alignments
                                   Default: 4
 
---sequence_type <string>        : Sequence type used in the phylogenetic inference - "dna" requires codon alignments to be in the
-                                  same directory with input orthogroup protein alignments.
-                                  If amino acid based: protein (default)
-                                  If nucleotide based: dna
-
 --rooting_order <string>        : File with a list of string fragments matching sequences identifiers of species in the 
                                   classification (including scaffold taxa) to be used for determining the most basal taxa in
                                   the orthogroups for rooting trees. Should be listed in decreasing order from older to younger
