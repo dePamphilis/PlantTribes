@@ -136,20 +136,20 @@ phylogenomicsAnalysis_dir/orthogroups_tree/ - orthogroup phylogenetic trees dire
 ### GeneFamilyIntegrator
 1).  Integrating classified post processed *de novo* transcriptome assembly sequence(s) with the scaffold gene family sequences
 
-`PlantTribes/pipelines/GeneFamilyIntegrator --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl --orthogroup_fna`
+`PlantTribes/pipelines/GeneFamilyIntegrator --orthogroup_fasta geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl`
 ```
 Output:
-integratedGeneFamilies_dir/orthogroups_fasta/ - orthogroup fasta directory
+integratedGeneFamilies_dir/ - orthogroup fasta directory
 ```
 
 ### GeneFamilyAligner Pipeline
 1). Creating gene family multiple sequence alignments using MAFFT L-INS-i iterative refinement method 
 
-`PlantTribes/pipelines/GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir/orthogroups_fasta --alignment_method mafft`
+`PlantTribes/pipelines/GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir --alignment_method mafft`
 
 2). Creating gene family multiple sequence alignments using PASTA (Practical Alignment using SATe and Transitivity) method - for larger data sets
 
-`PlantTribes/pipelines/GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir/orthogroups_fasta --alignment_method pasta --pasta_script_path /path/to/pasta-code/pasta/run_pasta.py`
+`PlantTribes/pipelines/GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir --alignment_method pasta --pasta_script_path /path/to/pasta-code/pasta/run_pasta.py`
 ```
 Output:
 geneFamilyAlignments_dir/orthogroups_aln/ - orthogroup multiple sequence alignments directory
