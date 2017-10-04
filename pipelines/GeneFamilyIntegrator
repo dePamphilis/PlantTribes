@@ -22,7 +22,7 @@ my $usage = <<__EOUSAGE__;
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #  Required Options:
 #
-#  --orthogroup_faa <string>       : Directory containing gene family classification orthogroups protein fasta files
+#  --orthogroup_fasta <string>     : Directory containing gene family classification orthogroups fasta files
 #
 #  --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
 #                                    path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
@@ -43,16 +43,10 @@ my $usage = <<__EOUSAGE__;
 #                                    If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
 #                                    word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
 #
-# # # # # # # # # # # # # # # # # #
-#  Others Options:
-#
-#  --orthogroup_fna                : Corresponding gene family classification orthogroups CDS fasta files. Files should be in the
-#                                    same directory with input orthogroups protein fasta files. 
-#
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #  Example Usage:
 #
-#  GeneFamilyIntegrator --orthogroup_faa geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl
+#  GeneFamilyIntegrator --orthogroup_fasta geneFamilyClassification_dir/orthogroups_fasta --scaffold 22Gv1.1  --method orthomcl
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
  
@@ -60,15 +54,13 @@ __EOUSAGE__
     ; 
 
 # Declare and initialize variables;
-my $orthogroup_faa;
+my $orthogroup_fasta;
 my $scaffold;
 my $method;
-my $orthogroup_fna;
 
-my $options = GetOptions (  'orthogroup_faa=s' => \$orthogroup_faa,
+my $options = GetOptions (  'orthogroup_fasta=s' => \$orthogroup_fasta,
               'scaffold=s' => \$scaffold,
               'method=s' => \$method,
-              'orthogroup_fna' => \$orthogroup_fna,
               );
 
 my $scaffold_dir;
@@ -81,7 +73,7 @@ if (File::Spec->file_name_is_absolute($scaffold)) {
 
 # validate options
 unless ( $options ) { die $usage; }
-unless ( $orthogroup_faa and $scaffold and $method ) { print "\nOne or more required options not set\n"; die $usage; }
+unless ( $orthogroup_fasta and $scaffold and $method ) { print "\nOne or more required options not set\n"; die $usage; }
 if ( $scaffold !~ /^\d+Gv\d+\.\d+$/) { print "\nOrthogroups or gene families proteins scaffold name $scaffold is not in the required format";
 	print " i.e. XGvY.Z, where X is number species in the scaffold, and Y.Z version number such as 12Gv1.0.\n"; die $usage; }
 if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
@@ -96,7 +88,7 @@ my $dirname ="./integratedGeneFamilies_dir";
 if (-d $dirname) { die "Exiting...!\nGene families integration output directory ($dirname) already exists!\n\n"; }
 make_directory($dirname);
 
-get_orthogroup_fasta ( $orthogroup_faa, $orthogroup_fna, $scaffold, $method, $dirname, $scaffold_dir );
+get_orthogroup_fasta ( $orthogroup_fasta, $scaffold, $method, $dirname, $scaffold_dir );
 
 print localtime()." - Completed integrating scaffold and classified gene families\n\n";
 
@@ -112,25 +104,23 @@ sub make_directory {
 }
 
 sub get_orthogroup_fasta {
-	my ( $orthogroup_faa, $orthogroup_fna, $scaffold, $method, $dirname, $scaffold_dir ) = @_;
+	my ( $orthogroup_fasta, $scaffold, $method, $dirname, $scaffold_dir ) = @_;
 	print localtime()." - Creating orthogroup fasta\n\n";
 	my (%pep, %cds);
-	my $orthogroups_fasta = "$dirname/orthogroups_fasta";
-	make_directory($orthogroups_fasta);
-	opendir (DIR, "$orthogroup_faa") or die "can't open $orthogroup_faa file\n";
+	opendir (DIR, "$orthogroup_fasta") or die "can't open $orthogroup_fasta file\n";
 	while ( my $filename = readdir(DIR) ) {
 		if ($filename =~ /^(\d+)\.faa$/) { $pep{$1} = $1; }
 		if ($filename =~ /^(\d+)\.fna$/) { $cds{$1} = $1; }
 	}
 	closedir DIR;
-	if ($orthogroup_fna and ( keys(%pep) != keys(%cds))) { 
-		die "Exiting...!\nOrthogroup classification protein and CDS fasta files not equivalent in $orthogroup_faa directory\n\n";
+	if (keys(%cds) and (keys(%pep) != keys(%cds))) { 
+		die "Exiting...!\nOrthogroup classification protein and CDS fasta files not equivalent in $orthogroup_fasta directory\n\n";
 	}	
 	foreach my $ortho_id (keys %pep) { 
-		my $merging_call = system "cat $scaffold_dir/fasta/$method/$ortho_id.faa $orthogroup_faa/$ortho_id.faa > $orthogroups_fasta/$ortho_id.faa";
+		my $merging_call = system "cat $scaffold_dir/fasta/$method/$ortho_id.faa $orthogroup_fasta/$ortho_id.faa > $dirname/$ortho_id.faa";
 		if ($merging_call != 0) { print "\n-- ".localtime()." - Merging orthogroup $ortho_id failed\n\n"; exit(1); }
-		if ($orthogroup_fna and $cds{$ortho_id}) {
-			my $merging_call = system "cat $scaffold_dir/fasta/$method/$ortho_id.fna $orthogroup_faa/$ortho_id.fna > $orthogroups_fasta/$ortho_id.fna";
+		if (keys(%cds) and $cds{$ortho_id}) {
+			my $merging_call = system "cat $scaffold_dir/fasta/$method/$ortho_id.fna $orthogroup_fasta/$ortho_id.fna > $dirname/$ortho_id.fna";
 			if ($merging_call != 0) { print "\n-- ".localtime()." - Merging orthogroup $ortho_id failed\n\n"; exit(1); }
 		}
 	} 	
