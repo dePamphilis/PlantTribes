@@ -28,10 +28,10 @@ and [EMMIX (version 1.3)](https://people.smp.uq.edu.au/GeoffMcLachlan/emmix/emmi
 #### PlantTribes scaffolds data 
 - **22 plant genomes (Angiosperms clusters, version 1.0)**  
 Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.0.tar.bz2  
-MD5 checksum: `4f09c41683d1ea0670b38cef640fb548`  
+<!--- MD5 checksum: `4f09c41683d1ea0670b38cef640fb548` ---> 
 - **22 plant genomes (Angiosperms clusters, version 1.1)**  
 Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.1.tar.bz2  
-MD5 checksum: `0025188cdeccfb828fbebabb923963bd`
+<!--- MD5 checksum: `0025188cdeccfb828fbebabb923963bd` --->
 
 #### Install PlantTribes
 1. Open a terminal and change to the location where you would to keep PlantTribes. 
@@ -296,7 +296,7 @@ Others Options:
 ```
 Required Options:
 
---orthogroup_faa <string>       : Directory containing gene family classification orthogroups protein fasta files
+--orthogroup_fasta <string>     : Directory containing gene family classification orthogroups fasta files
 
 --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
                                   path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
@@ -314,12 +314,7 @@ Required Options:
                                   If OrthoFinder: orthofinder
                                   If OrthoMCL: orthomcl
                                   If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
-                                  word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
-                                    
-Others Options:
-
---orthogroup_fna                : Corresponding gene family classification orthogroups CDS fasta files. Files should be in the
-                                  same directory with input orthogroups protein fasta files. 
+                                  word characters (alphanumeric or "_"). No embedded special charaters or white spaces.        
 ```
 #### GeneFamilyAligner
 ```
@@ -371,7 +366,7 @@ Others Options:
 ```
 Required Options:
 
---orthogroup_aln <string>       : Directory containing gene family orthogroup protein alignment files
+--orthogroup_aln <string>       : Directory containing gene family orthogroup alignment files
 
 --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
                                   path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
