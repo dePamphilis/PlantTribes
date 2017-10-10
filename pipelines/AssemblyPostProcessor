@@ -563,7 +563,7 @@ sub targeted_gene_family_assembly {
 	my ( $target_orthogroups, $scaffold, $clustering_method, $prediction_method,
 		$transcripts, $score_matrices, $stranded, $dereplicate, $length, $gap_trimming, $num_threads, $out_dir, $scaffold_dir ) = @_;
 	print localtime()." - Starting targeted gene family assembly\n\n";	
-	my $targeted_gene_families = "$out_dir/targeted_gene_families";
+	my $targeted_gene_families = "$out_dir/targeted_gene_family_assemblies";
 	make_directory($targeted_gene_families);
 	my (%target_ids, %contigs, $contig_id);
 	open (IN, "$target_orthogroups") or die "can't open $target_orthogroups file\n";
@@ -572,6 +572,9 @@ sub targeted_gene_family_assembly {
 	open (IN, "$transcripts") or die "can't open $transcripts file\n";
 	while(<IN>){ chomp; if (/^>(\S+)/) { $contig_id = $1; } else { s/\s+//g; $contigs{$contig_id} .= $_ ;} }
 	close IN;
+	open(STATS, ">$out_dir/targeted_gene_family_assemblies.stats") or die "can't create $out_dir/targeted_gene_family_assemblies.stats file\n";
+	print STATS "# seq_id = sequence identity\n# cov = sequence coverage in the orthogroup trimmed protein alignment\n# avg_cov = mean coverage of orthogroup backbone sequences in the trimmed protein alignment\n# sd_cov = standard deviation (for coverage mean) of orthogroup backbone sequences in the trimmed protein alignment\n";
+	print STATS "# len = total-length of conserved regions of sequence in the orthogroup trimmed protein alignment\n# avg_len = mean total-lengths of conserved regions of backbone sequences in the trimmed orthogroup protein alignment\n# sd_len = standard deviation (for total-lengths mean) of conserved regions of backbone sequences in the trimmed orthogroup protein alignment\n";
 	foreach my $ortho_id (sort keys %target_ids) {
 		print "############ Target Family - Orthogroup $ortho_id ############\n\n";
 		# check if target hmm profile is present for the scaffold and method
@@ -704,28 +707,27 @@ sub targeted_gene_family_assembly {
 		$std_dev_cov = standard_deviation(\@backbone_cov);
 		$std_dev_len = standard_deviation(\@backbone_len);
 		$std_dev_len = int($std_dev_len + 0.55);
-		open(PEP, ">$target_out_dir/$ortho_id.contigs.fasta.pep") or die "can't create $target_out_dir/$ortho_id.contigs.fasta.pep file\n";
-		open(CDS, ">$target_out_dir/$ortho_id.contigs.fasta.cds") or die "can't create $target_out_dir/$ortho_id.contigs.fasta.cds file\n";
-		open(CONTIGS, ">$target_out_dir/$ortho_id.contigs.fasta") or die "can't create $target_out_dir/$ortho_id.contigs.fasta file\n";
-		open(STATS, ">$target_out_dir/$ortho_id.contigs.fasta.stats") or die "can't create $target_out_dir/$ortho_id.contigs.fasta.stats file\n";
-		print STATS "# seq_id = sequence identity\n# cov = sequence coverage in the orthogroup trimmed protein alignment\n# avg_cov = mean coverage of orthogroup backbone sequences in the trimmed protein alignment\n# sd_cov = standard deviation (for coverage mean) of orthogroup backbone sequences in the trimmed protein alignment\n";
-		print STATS "# len = total-length of conserved regions of sequence in the orthogroup trimmed protein alignment\n# avg_len = mean total-lengths of conserved regions of backbone sequences in the trimmed orthogroup protein alignment\n# sd_len = standard deviation (for total-lengths mean) of conserved regions of backbone sequences in the trimmed orthogroup protein alignment\n";
+		open(PEP, ">$targeted_gene_families/$ortho_id.faa") or die "can't create $targeted_gene_families/$ortho_id.faa file\n";
+		open(CDS, ">$targeted_gene_families/$ortho_id.fna") or die "can't create $targeted_gene_families/$ortho_id.fna file\n";
+		open(CONTIGS, ">$targeted_gene_families/$ortho_id.fasta") or die "can't create $targeted_gene_families/$$ortho_id.fasta file\n";
+		print STATS "\n################## Target Family - Orthogroup $ortho_id ##################\n";
 		print STATS "seq_id\tcov\tavg_cov\tsd_cov\tlen\tavg_len\tsd_len\n";
 		foreach $seq_id (sort {$contigs_cov{$b} <=> $contigs_cov{$a}} keys %contigs_cov) {
 			$count++;
 			$assembly_pep{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
-			print PEP ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in $ortho_id.contigs.fasta.stats]\n".$assembly_pep{$seq_id}."\n";
+			print PEP ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly_pep{$seq_id}."\n";
 			$assembly_cds{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
-			print CDS ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in $ortho_id.contigs.fasta.stats]\n".$assembly_cds{$seq_id}."\n";
+			print CDS ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly_cds{$seq_id}."\n";
 			$assembly{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
-			print CONTIGS ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in $ortho_id.contigs.fasta.stats]\n".$assembly{$seq_id}."\n";
+			print CONTIGS ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly{$seq_id}."\n";
 			print STATS $scaffold."_".$clustering_method."_".$ortho_id."_".$count."\t$contigs_cov{$seq_id}\t$avg_cov\t$std_dev_cov\t$contigs_len{$seq_id}\t$avg_len\t$std_dev_len\n";
 		}
 		close PEP;
 		close CDS;
 		close CONTIGS;				
-		system "rm $target_out_dir/temp.* $target_out_dir/transcripts.*"; 
+		system "rm -r $target_out_dir";
 	}
+	close STATS;
 }
 
 sub average {
