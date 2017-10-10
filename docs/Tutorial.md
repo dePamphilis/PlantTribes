@@ -25,10 +25,10 @@ assemblyPostProcessing_dir/transcripts.cleaned.nr.pep
 
 ```
 Output:
-assemblyPostProcessing_dir/targeted_gene_families/213.contigs.fasta
-assemblyPostProcessing_dir/targeted_gene_families/213.contigs.fasta.cds
-assemblyPostProcessing_dir/targeted_gene_families/213.contigs.fasta.pep
-assemblyPostProcessing_dir/targeted_gene_families/213.contigs.fasta.stats
+assemblyPostProcessing_dir/targeted_gene_family_assemblies/213.fasta
+assemblyPostProcessing_dir/targeted_gene_family_assemblies/213.fna
+assemblyPostProcessing_dir/targeted_gene_family_assemblies/213.faa
+assemblyPostProcessing_dir/targeted_gene_family_assemblies.stats
 ```
 
 ### GeneFamilyClassifier Pipeline
