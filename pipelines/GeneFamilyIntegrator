@@ -80,7 +80,7 @@ if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is no
 	print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
 opendir (DIR, "$orthogroup_fasta") or die "can't open $orthogroup_fasta directory\n";
 while ( my $filename = readdir(DIR) ) { 
-	if (($filename != /^(\d+)\.faa$/) or ($filename != /^(\d+)\.fna$/) or ($filename != /^(\d+)\.fasta$/)) { 
+	if (($filename !~ /^(\d+)\.faa$/) or ($filename !~ /^(\d+)\.fna$/) or ($filename !~ /^(\d+)\.fasta$/)) { 
 	print "\nNot all orthogroup fasta files in $orthogroup_fasta input directory are properly named.\nPlease use the output produced by either the GeneFamilyClassifier or AssemblyPostProcessor (targeted gene assembly).\n"; die $usage; 
 	} 
 }
