@@ -85,7 +85,7 @@ while ( my $filename = readdir(DIR) ) {
 	else { 
 		print "\nNot all orthogroup fasta files in $orthogroup_fasta input directory are properly named\n";
 		print "Please use the output produced by either the GeneFamilyClassifier or the AssemblyPostProcessor (targeted gene assembly)\n";
-		die $usage;
+		exit(1);
 	}
 }
 closedir DIR;
