@@ -134,6 +134,13 @@ if ( $min_orthogroup_size and ($min_orthogroup_size < 4) ) { print "\nMinimum nu
 	die $usage; }
 if ( $rooting_order and ($tree_inference ne "raxml") ) { print "\nOrthogroup rooting order requires RAxML phylogenetic tree inference method\n"; die $usage; }
 if ( $bootstrap_replicates and ($tree_inference ne "raxml") ) { print "\nBootstrap analysis requires RAxML phylogenetic tree inference method\n"; die $usage; }
+opendir (DIR, "$orthogroup_aln") or die "can't open $orthogroup_aln directory\n";
+while ( my $filename = readdir(DIR) ) { 
+	if (($filename != /^(\d+)\.faa.aln$/) or ($filename != /^(\d+)\.fna.aln$/)) { 
+	print "\nNot all orthogroup alignments files in $orthogroup_aln input directory are properly named.\nPlease use the output produced by the GeneFamilyAligner\n"; die $usage; 
+	} 
+}
+closedir DIR;
 
 # defaults
 if (!$max_orthogroup_size) { $max_orthogroup_size = 100; }
