@@ -83,7 +83,7 @@ opendir (DIR, "$orthogroup_fasta") or die "can't open $orthogroup_fasta director
 while ( my $filename = readdir(DIR) ) { 
 	if (($filename =~ /^\d+\.faa$/) or ($filename =~ /^\d+\.fna$/) or ($filename =~ /^\d+\.fasta$/) or ($filename =~ /^\./)) { next; }
 	else { 
-		print "\nNot all orthogroup fasta files in $orthogroup_fasta input directory are properly named\n";
+		print "\nOrthogroup $filename fasta file in $orthogroup_fasta input directory is not properly named\n";
 		print "Please use the output produced by either the GeneFamilyClassifier or the AssemblyPostProcessor (targeted gene assembly)\n";
 		exit(1);
 	}
