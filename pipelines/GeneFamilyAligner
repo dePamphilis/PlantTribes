@@ -120,10 +120,10 @@ if ( $max_memory and ($alignment_method ne "pasta") ) { print "\nThe maximum mem
 if ( $pasta_iter_limit and ($alignment_method ne "pasta") ) { print "\nThe maximum number of iteration that the PASTA algorithm will run requires PASTA alignment algorithm option\n"; die $usage; }
 opendir (DIR, "$orthogroup_faa") or die "can't open $orthogroup_faa directory\n";
 while ( my $filename = readdir(DIR) ) { 
-	if (($filename =~ /^\d+\.faa$/) or ($filename =~ /^\d+\.fna$/) or ($filename =~ /^\d+\.fasta$/) or ($filename =~ /^\./)) { next; }
+	if (($filename =~ /^\d+\.faa$/) or ($filename =~ /^\d+\.fna$/) or ($filename =~ /^\./)) { next; }
 	else {
-		print "\nNot all orthogroup fasta files in $orthogroup_faa input directory are properly named.\n";
-		print "Please use the output produced by the GeneFamilyIntegrator.\n";
+		print "\nNot all orthogroup fasta files in $orthogroup_faa input directory are properly named\n";
+		print "Please use the output produced by the GeneFamilyIntegrator\n";
 		die $usage; 
 	} 
 }
