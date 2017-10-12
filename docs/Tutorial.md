@@ -152,13 +152,13 @@ integratedGeneFamilies_dir/ - orthogroup fasta directory
 `PlantTribes/pipelines/GeneFamilyAligner --orthogroup_faa integratedGeneFamilies_dir --alignment_method pasta --pasta_script_path /path/to/pasta-code/pasta/run_pasta.py`
 ```
 Output:
-geneFamilyAlignments_dir/orthogroups_aln/ - orthogroup multiple sequence alignments directory
+geneFamilyAlignments_dir/orthogroups_aln_faa - orthogroup multiple sequence alignments directory
 ```
 
 ### GeneFamilyPhylogenyBuilder Pipeline
 1). Building maximum-likelihood gene family phylogenetic trees with RAxML
 
-`PlantTribes/pipelines/GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln --scaffold 22Gv1.1  --method orthomcl --tree_inference raxml`
+`PlantTribes/pipelines/GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln_faa --scaffold 22Gv1.1  --method orthomcl --tree_inference raxml`
 ```
 Output:
 geneFamilyPhylogenies_dir/phylip_aln/ - orthogroup phylip multiple sequence alignments directory
