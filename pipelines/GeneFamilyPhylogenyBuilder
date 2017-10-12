@@ -140,7 +140,7 @@ while ( my $filename = readdir(DIR) ) {
 	else {
 		print "\nNot all orthogroup alignments files in $orthogroup_aln input directory are properly named\n";
 		print "Please use the output produced by the GeneFamilyAligner\n";
-		die $usage; 
+		exit(1); 
 	} 
 }
 closedir DIR;
