@@ -138,7 +138,7 @@ opendir (DIR, "$orthogroup_aln") or die "can't open $orthogroup_aln directory\n"
 while ( my $filename = readdir(DIR) ) { 
 	if (($filename =~ /^\d+\.faa.aln$/) or ($filename =~ /^\d+\.fna.aln$/) or ($filename =~ /^\./)) { next; }
 	else {
-		print "\nNot all orthogroup alignments files in $orthogroup_aln input directory are properly named\n";
+		print "\nOrthogroup $filename fasta alignment file in $orthogroup_aln input directory is not properly named\n";
 		print "Please use the output produced by the GeneFamilyAligner\n";
 		exit(1); 
 	} 
