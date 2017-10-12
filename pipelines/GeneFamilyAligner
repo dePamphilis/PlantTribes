@@ -122,7 +122,7 @@ opendir (DIR, "$orthogroup_faa") or die "can't open $orthogroup_faa directory\n"
 while ( my $filename = readdir(DIR) ) { 
 	if (($filename =~ /^\d+\.faa$/) or ($filename =~ /^\d+\.fna$/) or ($filename =~ /^\./)) { next; }
 	else {
-		print "\n“None of the orthogroup fasta files in $orthogroup_faa input directory are properly named"\n";
+		print "\nNone of the orthogroup fasta files in $orthogroup_faa input directory are properly named\n";
 		print "Please use the output produced by the GeneFamilyIntegrator\n";
 		exit(1); 
 	} 
