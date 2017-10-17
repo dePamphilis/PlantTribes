@@ -75,7 +75,7 @@ The execulables for the PlantTribes pipelines are in the [pipelines](pipelines) 
   - Display all usage options: 
     - `PlantTribes/pipelines/GeneFamilyPhylogenyBuilder`
   - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and fastree Phylogenetic trees inference method:
-    - `GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln --scaffold 22Gv1.1  --method orthomcl --tree_inference fasttree`     
+    - `GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln --tree_inference fasttree`     
 - **KaKsAnalysis pipeline**
   - Display all usage options:
     - `PlantTribes/pipelines/KaKsAnalysis`
