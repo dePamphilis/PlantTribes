@@ -167,7 +167,7 @@ geneFamilyPhylogenies_dir/orthogroups_tree/ - orthogroup phylogenetic trees dire
 
 2). Building approximately-maximum-likelihood gene family phylogenetic trees with FastTree - faster
 
-`PlantTribes/pipelines/GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln_faa --scaffold 22Gv1.1  --method orthomcl --tree_inference fasttree`
+`PlantTribes/pipelines/GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln_faa --tree_inference fasttree`
 ```
 Output:
 geneFamilyPhylogenies_dir/orthogroups_tree/ - orthogroup phylogenetic trees directory
