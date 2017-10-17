@@ -73,7 +73,7 @@ The execulables for the PlantTribes pipelines are in the [pipelines](../pipeline
   - Display all usage options: 
     - `PlantTribes/pipelines/GeneFamilyPhylogenyBuilder`
   - Basic run using 22Gv1.1 scaffolds, orthomcl clustering method, and fastree Phylogenetic trees inference method:
-    - `GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln --scaffold 22Gv1.1  --method orthomcl --tree_inference fasttree`     
+    - `GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln --tree_inference fasttree`     
 - **KaKsAnalysis pipeline**
   - Display all usage options:
     - `PlantTribes/pipelines/KaKsAnalysis`
@@ -366,7 +366,13 @@ Others Options:
 ```
 Required Options:
 
---orthogroup_aln <string>       : Directory containing gene family orthogroup alignment files
+--orthogroup_aln <string>       : Directory containing gene family orthogroup alignment file
+
+--tree_inference <string>       : Phylogenetic trees inference method
+                                  If RAxML: raxml
+                                  If FastTree: fasttree
+                                    
+ Others Options:
 
 --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
                                   path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
@@ -386,13 +392,7 @@ Required Options:
                                   If OrthoMCL: orthomcl
                                   If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
                                   word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
-
---tree_inference <string>       : Phylogenetic trees inference method
-                                  If RAxML: raxml
-                                  If FastTree: fasttree
-                                    
- Others Options:
-
+                                  
 --config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
                                   for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
                                   /home/configs/22Gv1.1). If this parameter is not used, the directory containing the
