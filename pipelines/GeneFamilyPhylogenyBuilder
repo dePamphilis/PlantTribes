@@ -24,6 +24,13 @@ my $usage = <<__EOUSAGE__;
 #
 #  --orthogroup_aln <string>       : Directory containing gene family orthogroup alignment files
 #
+#  --tree_inference <string>       : Phylogenetic trees inference method
+#                                    If RAxML: raxml
+#                                    If FastTree: fasttree
+#
+# # # # # # # # # # # # # # # # # #
+#  Others Options:
+#
 #  --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
 #                                    path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
 #                                    or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
@@ -42,13 +49,6 @@ my $usage = <<__EOUSAGE__;
 #                                    If OrthoMCL: orthomcl
 #                                    If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
 #                                    word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
-#
-#  --tree_inference <string>       : Phylogenetic trees inference method
-#                                    If RAxML: raxml
-#                                    If FastTree: fasttree
-#
-# # # # # # # # # # # # # # # # # #
-#  Others Options:
 #
 #  --config_dir <string>           : (Optional) Absolute path to the directory containing the default configuration files
 #                                    for the selected scaffold defined by the value of the --scaffold parameter (e.g.,
@@ -79,7 +79,7 @@ my $usage = <<__EOUSAGE__;
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #  Example Usage:
 #
-#  GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln_faa --scaffold 22Gv1.1  --method orthomcl --tree_inference fasttree
+#  GeneFamilyPhylogenyBuilder --orthogroup_aln geneFamilyAlignments_dir/orthogroups_aln_faa --tree_inference fasttree
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
  
@@ -114,24 +114,26 @@ if (!$config_dir || !File::Spec->file_name_is_absolute($config_dir)) {
 	$config_dir = "$home/config";
 }
 
-my $scaffold_dir;
-if (File::Spec->file_name_is_absolute($scaffold)) {
-	$scaffold_dir = $scaffold;
+if ($scaffold and (File::Spec->file_name_is_absolute($scaffold))) {
 	$scaffold = basename($scaffold);
-} else {
-	$scaffold_dir = "$home/data/$scaffold";
 }
 
 # validate options
 unless ( $options ) { die $usage; }
-unless ( $orthogroup_aln and $scaffold and $method and $tree_inference ) { print "\nOne or more required options not set\n"; die $usage; }
-if ( $scaffold !~ /^\d+Gv\d+\.\d+$/) { print "\nOrthogroups or gene families proteins scaffold name $scaffold is not in the required format";
+unless ( $orthogroup_aln and $tree_inference ) { print "\nOne or more required options not set\n"; die $usage; }
+if ( $scaffold and ($scaffold !~ /^\d+Gv\d+\.\d+$/)) { print "\nOrthogroups or gene families proteins scaffold name $scaffold is not in the required format";
 	print " i.e. XGvY.Z, where X is number species in the scaffold, and Y.Z version number such as 12Gv1.0.\n"; die $usage; }
-if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
+if ( $method and ($method !~ /^\w+$/)) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
 	print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
 if ( $tree_inference and ($tree_inference ne "raxml") and ($tree_inference ne "fasttree") ) { print "\nUnknown phylogenetic tree inference methods\n"; die $usage; }
 if ( $min_orthogroup_size and ($min_orthogroup_size < 4) ) { print "\nMinimum number of sequences in orthogroup alignments required for phylogenetic tree inference is 4\n";
 	die $usage; }
+if ( ($scaffold and !$method) or ($method and !$scaffold) ) { print "\nOrthogroups or gene families proteins scaffold requires a protein clustering method and vice versa\n";
+	die $usage; }
+if ( ($scaffold and ($tree_inference ne "raxml")) or (($tree_inference eq "raxml") and !$scaffold) ) { print "\nOrthogroups or gene families proteins scaffold";
+	print " requires RAxML phylogenetic tree inference method and vice versa\n"; die $usage; }
+if ( ($method and ($tree_inference ne "raxml")) or (($tree_inference eq "raxml") and !$method) ) { print "\nProtein clustering method requires RAxML phylogenetic";
+	print " tree inference method and vice versa\n"; die $usage; }
 if ( $rooting_order and ($tree_inference ne "raxml") ) { print "\nOrthogroup rooting order requires RAxML phylogenetic tree inference method\n"; die $usage; }
 if ( $bootstrap_replicates and ($tree_inference ne "raxml") ) { print "\nBootstrap analysis requires RAxML phylogenetic tree inference method\n"; die $usage; }
 opendir (DIR, "$orthogroup_aln") or die "can't open $orthogroup_aln directory\n";
@@ -153,7 +155,7 @@ if (!$num_threads) { $num_threads = 1; }
 
 print "\n";
 print localtime()." - Starting gene family phylogenetic inference\n";
-print "-- Scaffold: $scaffold\n-- Method: $method";
+if ($scaffold and $method){ print "-- Scaffold: $scaffold\n-- Method: $method"; } 
 if ($tree_inference and ($tree_inference eq "raxml") ) { print "\n-- Phylogenetic tree inference: RAxML"; }
 if ($tree_inference and ($tree_inference eq "fasttree") ) { print "\n-- Phylogenetic tree inference: FastTree"; }
 print "\n\n";
@@ -247,4 +249,3 @@ sub build_orthogroup_trees {
 	}
 	closedir DIR;	
 }
-
