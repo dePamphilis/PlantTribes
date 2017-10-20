@@ -437,14 +437,17 @@ Others Options:
                                           requires "--comparison" to be set to "orthologs" 
 
 --proteins_species_2 <string>           : Amino acids (proteins) sequences fasta file for the first species (species2.faa)
-                                          requires "--comparison" to be set to "orthologs" 
+                                          requires "--comparison" to be set to "orthologs"
+                                          
+--crb_blast <string>                    : Use conditional reciprocal best BLAST to determine for cross-species orthologs
+                                          instead of the default reciprocal best BLAST - requires "--comparison" to be set to "orthologs
 
 --min_coverage <float>                  : Minimum sequence pairwise coverage length between homologous pairs
                                           Default: 0.5 (50% coverage) - [0.3 to 1.0]
 
 --recalibration_rate <float>            : Recalibrate synonymous substitution (ks) rates of a species using a predetermined evolutionary 
-                                          rate that can be determined from a species tree inferred from a collection single copy genes from 
-                                          taxa of interest (Cui et al., 2006) - applies only paralogous ks
+                                          rate that can be determined from a species tree inferred from a collection single copy genes
+                                          from taxa of interest (Cui et al., 2006) - applies only paralogous ks
 
 --codeml_ctl_file <string>              : PAML's codeml control file to carry out ML analysis of protein-coding DNA sequences using codon
                                           substitution models. The defaults in the "codeml.ctl.args" template in the config directory 
