@@ -112,7 +112,7 @@ if ($pasta_script_path) {
 unless ( $options ) { die $usage; }
 unless ( $orthogroup_faa and $alignment_method ) { print "\nOne or more required options not set\n"; die $usage; }
 if ( $alignment_method and ($alignment_method ne "mafft") and ($alignment_method ne "pasta") ) { 
-	print "\nUnknown multiple sequence alignment methods\n"; die $usage; }
+	print "\nUnknown multiple sequence alignment method\n"; die $usage; }
 if ( $iterative_realignment and !$remove_sequences ) { print "\nIterative multiple sequence alignment requires gappy sequence removal before realignment\n"; die $usage; }
 if ( $automated_trimming and $gap_trimming ) { print "\nAutomated alignment trimming is incompatible with gap alignment trimming\n"; die $usage; }
 if ( $remove_sequences and (!$automated_trimming and !$gap_trimming) ) { print "\nRemoval of gappy sequences requires alignment trimming\n"; die $usage; }
