@@ -125,7 +125,7 @@ if ( $scaffold and ($scaffold !~ /^\d+Gv\d+\.\d+$/)) { print "\nOrthogroups or g
 	print " i.e. XGvY.Z, where X is number species in the scaffold, and Y.Z version number such as 12Gv1.0.\n"; die $usage; }
 if ( $method and ($method !~ /^\w+$/)) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
 	print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
-if ( $tree_inference and ($tree_inference ne "raxml") and ($tree_inference ne "fasttree") ) { print "\nUnknown phylogenetic tree inference methods\n"; die $usage; }
+if ( $tree_inference and ($tree_inference ne "raxml") and ($tree_inference ne "fasttree") ) { print "\nUnknown phylogenetic tree inference method\n"; die $usage; }
 if ( $min_orthogroup_size and ($min_orthogroup_size < 4) ) { print "\nMinimum number of sequences in orthogroup alignments required for phylogenetic tree inference is 4\n";
 	die $usage; }
 if ( ($scaffold and !$method) or ($method and !$scaffold) ) { print "\nOrthogroups or gene families proteins scaffold requires a protein clustering method and vice versa\n";
