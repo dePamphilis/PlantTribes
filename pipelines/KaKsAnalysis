@@ -32,7 +32,6 @@ my $usage = <<__EOUSAGE__;
 #                                            If self species comparison: paralogs
 #                                            If cross species comparison: orthologs (requires second species data)
 #
-#
 # # # # # # # # # # # # # # # # # # 
 #  Others Options:
 #
@@ -41,8 +40,11 @@ my $usage = <<__EOUSAGE__;
 #
 #
 #  --proteins_species_2 <string>           : Amino acids (proteins) sequences fasta file for the first species (species2.faa)
-#                                            requires "--comparison" to be set to "orthologs" 
+#                                            requires "--comparison" to be set to "orthologs"
 #
+#  --crb_blast <string>                    : Use conditional reciprocal best BLAST to determine for cross-species orthologs
+#                                            instead of the default reciprocal best BLAST
+#                                            requires "--comparison" to be set to "orthologs" 
 #
 #  --min_coverage <float>                  : Minimum sequence pairwise coverage length between homologous pairs
 #                                            Default: 0.5 (50% coverage) - [0.3 to 1.0]
@@ -91,6 +93,7 @@ my $proteins_species_1;
 my $comparison;
 my $coding_sequences_species_2;
 my $proteins_species_2;
+my $crb_blast;
 my $min_coverage;
 my $codeml_ctl_file;
 my $recalibration_rate;
@@ -105,6 +108,7 @@ my $options = GetOptions (  'coding_sequences_species_1=s' => \$coding_sequences
               'comparison=s' => \$comparison,
               'coding_sequences_species_2=s' => \$coding_sequences_species_2,
               'proteins_species_2=s' => \$proteins_species_2,
+              'crb_blast' => \$crb_blast,
               'min_coverage=f' => \$min_coverage,
               'codeml_ctl_file=s' => \$codeml_ctl_file,
               'recalibration_rate=f' => \$recalibration_rate,
@@ -118,11 +122,12 @@ my $options = GetOptions (  'coding_sequences_species_1=s' => \$coding_sequences
 # validate options 
 unless ( $options ) { die $usage; }
 unless ( $coding_sequences_species_1 and $proteins_species_1 and $comparison ) { print "\nOne or more required options not set\n"; die $usage; }
-my %comparisons = ( "paralogs", "paralogous", "orthologs", "orthologous" );
-unless ( $comparisons{$comparison} ) { print "$comparison is not a valid input for --comparison option\n"; die $usage; }
+if ( $comparison and ($comparison ne "paralogs") and ($comparison ne "orthologs") ) { 
+  print "\nUnknown species comparison to determine homolgous pairs\n"; die $usage; }
 if ( $comparison eq "orthologs" and (!$coding_sequences_species_2 or !$proteins_species_2) ) { 
   print "Orthologous synonymous (ks) analysis requires both coding (CDS) and amino acid (proteins) sequences for the second species\n"; die $usage;
 }
+if ( $crb_blast and ($comparison ne "orthologs") ) { print "Conditional reciprocal best BLAST ortholog assignment requires cross species comparison\n"; die $usage; }
 if ( $min_coverage and ($min_coverage < 0.3) ) { print "0.3 (30%) is the required minimum sequence pairwise coverage length between homologous pairs\n"; die $usage; }
 if ( $fit_components and !$num_of_components ) { 
   print "Fitting a mixture model of multivariate normal components to synonymous (ks) distribution requires number of components to be set (--num_of_components)\n"; die $usage;
@@ -185,7 +190,7 @@ my $dirname = "./kaksAnalysis_dir";
 if (-d $dirname) { die "Exiting...!\nKaKs analysis output directory ($dirname) already exists!\n\n"; }
 make_directory($dirname);
 
-get_homologs ( $coding_sequences_species_1, $proteins_species_1, $coding_sequences_species_2, $proteins_species_2, $comparison, $num_threads, $dirname );
+get_homologs ( $coding_sequences_species_1, $proteins_species_1, $coding_sequences_species_2, $proteins_species_2, $comparison, $crb_blast, $num_threads, $dirname );
 
 compute_kaks ( $comparison, $codeml_ctl_file, $recalibration_rate, $min_coverage, $min_ks, $max_ks, $num_threads, $dirname );
 
@@ -206,53 +211,65 @@ sub make_directory {
 
 sub get_homologs {
 
-  my ( $coding_sequences_species_1, $proteins_species_1, $coding_sequences_species_2, $proteins_species_2, $comparison, $num_threads, $dirname ) = @_;
+  my ( $coding_sequences_species_1, $proteins_species_1, $coding_sequences_species_2, $proteins_species_2, $comparison, $crb_blast, $num_threads, $dirname ) = @_;
   # create dna blast database and run blastn against self/cross-species
   my ( %best1, %max1, %best2, %max2, %rbhb );
   system "cp $coding_sequences_species_1 $dirname/species1.fna";
   system "cp $proteins_species_1 $dirname/species1.faa";
   if ( $comparison eq "orthologs") {
-    print localtime()." - Determining orthologous pairs using BLASTN\n\n";
+    print localtime()." - Determining orthologous pairs using reciprocal best BLAST\n\n";
     system "cp $coding_sequences_species_2 $dirname/species2.fna";
     system "cp $proteins_species_2 $dirname/species2.faa";
-    my $makeblastdb_call = system "makeblastdb -in $dirname/species2.fna -dbtype nucl  >/dev/null";
-    if ($makeblastdb_call != 0) { print "\n-- ".localtime()." - Running makeblastdb failed\n\n"; exit(1); }
-    my $blastn_call = system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species2.fna -out $dirname/species1.fna.blastn.orthologs  >/dev/null";
-    if ($blastn_call != 0) { print "\n-- ".localtime()." - Running BLASTN failed\n\n"; exit(1); }
-    $makeblastdb_call = system "makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null";
-    if ($makeblastdb_call != 0) { print "\n-- ".localtime()." - Running makeblastdb failed\n\n"; exit(1); }
-    $blastn_call = system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species2.fna -db $dirname/species1.fna -out $dirname/species2.fna.blastn.orthologs  >/dev/null";
-    if ($blastn_call != 0) { print "\n-- ".localtime()." - Running BLASTN failed\n\n"; exit(1); }
-    open (OUT, ">$dirname/species1and2.fna.blastn.orthologs.rbhb") or die "can't open $dirname/species1and2.fna.blastn.orthologs.rbhb file\n";
-    open (IN, "$dirname/species1.fna.blastn.orthologs") or die "can't open $dirname/species1.fna.blastn.orthologs file\n";
-    while (<IN>) {
-      chomp;
-      my @F=split(/\t/, $_);
-      if ($F[0] eq $F[1]) { next; }
-      if (!$best1{$F[0]}) { $best1{$F[0]} = $_; $max1{$F[0]} = $F[11]; }
-      else { if ($F[11] > $max1{$F[0]}) { $best1{$F[0]} = $_; $max1{$F[0]} = $F[11]; } }
+    if ( $crb_blast ) {
+      print localtime()." - Determining orthologous pairs using conditional reciprocal best BLAST\n\n";
+      my $crb_blast_call = system "crb-blast --query $dirname/species1.fna --target $dirname/species2.fna --evalue 1e-20 --threads $num_threads --output $dirname/species1and2.fna.blastn.orthologs.rbhb --split >/dev/null";
+      if ($crb_blast_call != 0) { print "\n-- ".localtime()." - Running CRB-BLAST failed\n\n"; exit(1); }
+      system "mv species1_into_species2.1.blast $dirname/species1.fna.blastn.orthologs >/dev/null";
+      system "mv species2_into_species1.2.blast $dirname/species2.fna.blastn.orthologs >/dev/null";
+      system "rm evalues_data fitting_data *.nhr *.nin *.nsq >/dev/null";
+    }    
+    else {
+      print localtime()." - Determining orthologous pairs using reciprocal best BLAST\n\n";
+      my $makeblastdb_call = system "makeblastdb -in $dirname/species2.fna -dbtype nucl  >/dev/null";
+      if ($makeblastdb_call != 0) { print "\n-- ".localtime()." - Running makeblastdb failed\n\n"; exit(1); }
+      my $blastn_call = system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species2.fna -out $dirname/species1.fna.blastn.orthologs  >/dev/null";
+      if ($blastn_call != 0) { print "\n-- ".localtime()." - Running BLASTN failed\n\n"; exit(1); }
+      $makeblastdb_call = system "makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null";
+      if ($makeblastdb_call != 0) { print "\n-- ".localtime()." - Running makeblastdb failed\n\n"; exit(1); }
+      $blastn_call = system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species2.fna -db $dirname/species1.fna -out $dirname/species2.fna.blastn.orthologs  >/dev/null";
+      if ($blastn_call != 0) { print "\n-- ".localtime()." - Running BLASTN failed\n\n"; exit(1); }
+      open (OUT, ">$dirname/species1and2.fna.blastn.orthologs.rbhb") or die "can't open $dirname/species1and2.fna.blastn.orthologs.rbhb file\n";
+      open (IN, "$dirname/species1.fna.blastn.orthologs") or die "can't open $dirname/species1.fna.blastn.orthologs file\n";
+      while (<IN>) {
+        chomp;
+        my @F=split(/\t/, $_);
+        if ($F[0] eq $F[1]) { next; }
+        if (!$best1{$F[0]}) { $best1{$F[0]} = $_; $max1{$F[0]} = $F[11]; }
+        else { if ($F[11] > $max1{$F[0]}) { $best1{$F[0]} = $_; $max1{$F[0]} = $F[11]; } }
+      }
+      close IN;
+      open (IN, "$dirname/species2.fna.blastn.orthologs") or die "can't open $dirname/species2.fna.blastn.orthologs file\n";
+      while (<IN>) {
+        chomp;
+        my @F=split(/\t/, $_);
+        if ($F[0] eq $F[1]) { next; }
+        if (!$best2{$F[0]}) { $best2{$F[0]} = $_; $max2{$F[0]} = $F[11]; }
+        else { if ($F[11] > $max2{$F[0]}) { $best2{$F[0]} = $_; $max2{$F[0]} = $F[11]; } }
+      } 
+      close IN;
+      foreach (keys %best1) {
+        if ($rbhb{$_}) { next; } 
+        my @F = split(/\t/, $best1{$_});
+        my @S = split(/\t/, $best2{$F[1]}) if $best2{$F[1]};
+        if (!$S[1]) { next; } 
+        if ($F[0] eq $S[1]) { print OUT "$F[0]\t$F[1]\n"; $rbhb{$F[0]} = $F[0]; $rbhb{$F[1]} = $F[1]; }
+      }
+      close OUT;
+      system "rm $dirname/*.nhr $dirname/*.nin $dirname/*.nsq >/dev/null";
     }
-    close IN;
-    open (IN, "$dirname/species2.fna.blastn.orthologs") or die "can't open $dirname/species2.fna.blastn.orthologs file\n";
-    while (<IN>) {
-      chomp;
-      my @F=split(/\t/, $_);
-      if ($F[0] eq $F[1]) { next; }
-      if (!$best2{$F[0]}) { $best2{$F[0]} = $_; $max2{$F[0]} = $F[11]; }
-      else { if ($F[11] > $max2{$F[0]}) { $best2{$F[0]} = $_; $max2{$F[0]} = $F[11]; } }
-    } 
-    close IN;
-    foreach (keys %best1) {
-      if ($rbhb{$_}) { next; } 
-      my @F = split(/\t/, $best1{$_});
-      my @S = split(/\t/, $best2{$F[1]}) if $best2{$F[1]};
-      if (!$S[1]) { next; } 
-      if ($F[0] eq $S[1]) { print OUT "$F[0]\t$F[1]\n"; $rbhb{$F[0]} = $F[0]; $rbhb{$F[1]} = $F[1]; }
-    }
-    close OUT;
   }
   else { # $comparison eq "paralogs"
-    print localtime()." - Determining paralogous pairs using BLASTN\n\n";
+    print localtime()." - Determining paralogous pairs using reciprocal best BLAST\n\n";
     my $makeblastdb_call = system "makeblastdb -in $dirname/species1.fna -dbtype nucl  >/dev/null";
     if ($makeblastdb_call != 0) { print "\n-- ".localtime()." - Running makeblastdb failed\n\n"; exit(1); }
     my $blastn_call = system "blastn -outfmt 6 -evalue 1e-20 -num_threads $num_threads -query $dirname/species1.fna -db $dirname/species1.fna -out $dirname/species1.fna.blastn.paralogs  >/dev/null";
@@ -274,7 +291,8 @@ sub get_homologs {
       if (!$S[1]) { next; } 
       if ($F[0] eq $S[1]) { print OUT "$F[0]\t$F[1]\n"; $rbhb{$F[0]} = $F[0]; $rbhb{$F[1]} = $F[1]; }
     }
-    close OUT; 
+    close OUT;
+    system "rm $dirname/*.nhr $dirname/*.nin $dirname/*.nsq >/dev/null";
   }
 }
 
@@ -292,7 +310,8 @@ sub compute_kaks {
     open (RBHB, "$dirname/species1and2.fna.blastn.orthologs.rbhb") or die "can't open $dirname/species1and2.fna.blastn.orthologs.rbhb file\n";
     while (<RBHB>) {
       chomp;
-      $pair = $_;
+      $_ =~ /(\S+\s+\S+)(.*)/;
+      $pair = $1;
       my @F = split(/\t/, $pair);
       if (length($cds1{$F[0]}) > length($cds2{$F[1]})) { $longer = $F[0]; $shorter = $F[1]; $longer_len = length($cds1{$F[0]}); $shorter_len = length($cds2{$F[1]}); }
       else { $longer = $F[1]; $shorter = $F[0]; $longer_len = length($cds2{$F[1]}); $shorter_len = length($cds1{$F[0]}); }
@@ -377,7 +396,7 @@ sub compute_kaks {
     close RBHB;
     close KAKS;
     # remove tmp files 
-    system "rm $dirname/aa.tmp* $dirname/dna.tmp* $dirname/*.nhr $dirname/*.nin $dirname/*.nsq >/dev/null";       
+    system "rm $dirname/aa.tmp* $dirname/dna.tmp* >/dev/null";       
   }
   else { # $comparison eq "paralogs"
     print localtime()." - Performing paralogous pairwise alignment and kaks analysis with MAFFT and CODEML respectively\n\n";
@@ -471,7 +490,7 @@ sub compute_kaks {
     close RBHB;
     close KAKS;
     # remove tmp files 
-    system "rm $dirname/aa.tmp* $dirname/dna.tmp* $dirname/*.nhr $dirname/*.nin $dirname/*.nsq >/dev/null"; 
+    system "rm $dirname/aa.tmp* $dirname/dna.tmp* >/dev/null"; 
   }
   
 }
