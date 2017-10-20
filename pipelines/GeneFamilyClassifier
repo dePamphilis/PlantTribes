@@ -141,6 +141,8 @@ if ( $scaffold !~ /^\d+Gv\d+\.\d+$/) { print "\nOrthogroups or gene families pro
 	print " i.e. XGvY.Z, where X is number species in the scaffold, and Y.Z version number such as 12Gv1.0.\n"; die $usage; }
 if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
 	print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
+if ( $classifier and ($classifier ne "blastp") and ($classifier ne "hmmscan") and ($classifier ne "both") ) { 
+	print "\nUnknown protein classification method\n"; die $usage; }
 if ( $single_copy_custom and $single_copy_taxa ) { 
 	print "\nSingle copy custom selection is incompatibale with minumum single copy taxa required\n"; die $usage; 
 }
