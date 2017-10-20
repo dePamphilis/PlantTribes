@@ -131,6 +131,8 @@ if ( $gene_family_search and (!$scaffold or !$method) ) { print "\nTargeted gene
 	if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
 		print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
 }
+if ( $prediction_method and ($prediction_method ne "estscan") and ($prediction_method ne "transdecoder") ) { 
+	print "\nUnknown coding regions prediction method\n"; die $usage; }
 	
 # defaults
 if (!$num_threads) { $num_threads = 1; }	
