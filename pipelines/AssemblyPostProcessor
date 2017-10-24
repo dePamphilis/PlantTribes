@@ -59,6 +59,8 @@ my $usage = <<__EOUSAGE__;
 #
 #  --gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
 #                                    Default: 0.1
+#  --min_coverage <float>          : Minimum sequence coverage in the orthogroup trimmed protein multiple sequence alignment
+#                                    Default: 0.5 (50% coverage) - [0.3 to 1.0]
 #   
 # # # # # # # # # # # # # # # # # # 
 #  Others Options:
@@ -94,6 +96,7 @@ my $scaffold_dir;
 my $scaffold;
 my $method;
 my $gap_trimming;
+my $min_coverage;
 my $strand_specific;
 my $dereplicate;
 my $min_length;
@@ -106,6 +109,7 @@ my $options = GetOptions (  'transcripts=s' => \$transcripts,
 	      'scaffold=s' => \$scaffold,
 	      'method=s' => \$method,
 	      'gap_trimming=f' => \$gap_trimming,
+	      'min_coverage=f' => \$min_coverage,
 	      'strand_specific' => \$strand_specific,
 	      'dereplicate' => \$dereplicate,
 	      'min_length=i' => \$min_length,
@@ -133,9 +137,13 @@ if ( $gene_family_search and (!$scaffold or !$method) ) { print "\nTargeted gene
 }
 if ( $prediction_method and ($prediction_method ne "estscan") and ($prediction_method ne "transdecoder") ) { 
 	print "\nUnknown coding regions prediction method\n"; die $usage; }
+if ( $min_coverage and ($min_coverage < 0.3) ) { print "0.3 (30%) is the required minimum sequence coverage length in orthogroup trimmed protein multiple";
+	print " sequence alignment\n"; die $usage; }
 	
 # defaults
-if (!$num_threads) { $num_threads = 1; }	
+if (!$num_threads) { $num_threads = 1; }
+if (!$gap_trimming) { $gap_trimming = 0.1; }
+if (!$min_coverage) { $min_coverage = 0.5; }
 
 print "\n";
 print localtime()." - Starting transcriptome assembly post processing\n\n";
@@ -162,8 +170,8 @@ if ( $dereplicate ) {
 }
 
 if ( $gene_family_search ) {
-	targeted_gene_family_assembly ( $gene_family_search, $scaffold, $method, $prediction_method,
-		$transcripts, $score_matrices, $strand_specific, $dereplicate, $min_length, $gap_trimming, $num_threads, $dirname, $scaffold_dir )		
+	targeted_gene_family_assembly ( $gene_family_search, $scaffold, $method, $prediction_method, $transcripts,
+		$score_matrices, $strand_specific, $dereplicate, $min_length, $gap_trimming, $min_coverage, $num_threads, $dirname, $scaffold_dir )		
 }
 
 print localtime()." - Completed transcriptome assembly post processing\n\n";
@@ -563,7 +571,7 @@ sub dereplicate {
 
 sub targeted_gene_family_assembly { 
 	my ( $target_orthogroups, $scaffold, $clustering_method, $prediction_method,
-		$transcripts, $score_matrices, $stranded, $dereplicate, $length, $gap_trimming, $num_threads, $out_dir, $scaffold_dir ) = @_;
+		$transcripts, $score_matrices, $stranded, $dereplicate, $length, $gap_trimming, $min_coverage, $num_threads, $out_dir, $scaffold_dir ) = @_;
 	print localtime()." - Starting targeted gene family assembly\n\n";	
 	my $targeted_gene_families = "$out_dir/targeted_gene_family_assemblies";
 	make_directory($targeted_gene_families);
@@ -588,11 +596,11 @@ sub targeted_gene_family_assembly {
 		make_directory($target_out_dir);
 		# hmmsearch target profile using post-processed predicted proteins - default parameters
 		if ($dereplicate) { 
-			my $hmmsearch_call = system "hmmsearch -E 10 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.nr.pep >/dev/null";
+			my $hmmsearch_call = system "hmmsearch -E 1e-20 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.nr.pep >/dev/null";
 			if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
 		}
 		else {
-			my $hmmsearch_call = system "hmmsearch -E 10 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.pep >/dev/null";
+			my $hmmsearch_call = system "hmmsearch -E 1e-20 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.pep >/dev/null";
 			if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
 		}
 		# extract corresponding primary contigs for target hits
@@ -650,7 +658,7 @@ sub targeted_gene_family_assembly {
 		    open(IN, "$target_out_dir/transcripts.cleaned.nr.cds") or die "can't open $target_out_dir/transcripts.cleaned.nr.cds file\n";
 		    while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly_cds{$seq_id} .= $_ ; } }
 		    close IN;
-		    my $hmmsearch_call = system "hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.nr.pep >/dev/null";
+		    my $hmmsearch_call = system "hmmsearch -E 1e-20 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.nr.pep >/dev/null";
 		    if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
 		} 
 		else {
@@ -660,7 +668,7 @@ sub targeted_gene_family_assembly {
 		    open(IN, "$target_out_dir/transcripts.cleaned.cds") or die "can't open $target_out_dir/$transcripts.cleaned.cds file\n";
 		    while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly_cds{$seq_id} .= $_ ; } }
 		    close IN;
-		    my $hmmsearch_call = system "hmmsearch -E 1e-5 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.pep >/dev/null";
+		    my $hmmsearch_call = system "hmmsearch -E 1e-20 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.pep >/dev/null";
 		    if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
 		}	
 		# compute transcript orthogroup coverage
@@ -676,8 +684,7 @@ sub targeted_gene_family_assembly {
 			next;
 		}
 		my $mafft_call = system "mafft --add $target_out_dir/temp.2.hmm.pep $scaffold_dir/alns/$clustering_method/$ortho_id.aln > $target_out_dir/temp.2.hmm.pep.aln";
-		if ($mafft_call != 0) { print "\n-- ".localtime()." - Running MAFFT failed\n\n"; exit(1); }
-		unless ($gap_trimming) { $gap_trimming = 0.1; } 
+		if ($mafft_call != 0) { print "\n-- ".localtime()." - Running MAFFT failed\n\n"; exit(1); } 
 		my $trimal_call = system "trimal -in $target_out_dir/temp.2.hmm.pep.aln -out $target_out_dir/temp.2.hmm.pep.aln.trim -gt $gap_trimming >/dev/null";
 		if ($trimal_call != 0) { print "\n-- ".localtime()." - Running trimAL failed\n\n"; exit(1); }
 		open(IN, "$target_out_dir/temp.2.hmm.pep.aln.trim") or die "can't open $target_out_dir/temp.2.hmm.pep.aln.trim file\n";
@@ -697,6 +704,7 @@ sub targeted_gene_family_assembly {
 			$aln_seq = $ortho_aln{$seq_id};
 			$aln_seq =~ s/-//g;
 			$aln_cov = length($aln_seq) / length($ortho_aln{$seq_id});
+			if ($aln_cov < $min_coverage) { next; }
 			$aln_cov = sprintf("%.2f", $aln_cov);
 			$contigs_cov{$seq_id} = $aln_cov;
 			$seq_len = length($aln_seq);
