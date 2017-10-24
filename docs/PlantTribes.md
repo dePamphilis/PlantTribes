@@ -123,7 +123,10 @@ Target Gene Family Assembly:
 
 --gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
                                   Default: 0.1
-   
+
+--min_coverage <float>          : Minimum sequence coverage in the orthogroup trimmed protein multiple sequence alignment
+                                  Default: 0.5 (50% coverage) - [0.3 to 1.0]
+
 Others Options:
 
 --strand_specific               : If de novo transcriptome assembly was performed with strand-specific library
