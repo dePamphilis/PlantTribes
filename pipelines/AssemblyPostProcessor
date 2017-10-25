@@ -710,32 +710,38 @@ sub targeted_gene_family_assembly {
 			$seq_len = length($aln_seq);
 			$contigs_len{$seq_id} = $seq_len;
 		}
-		$count = 0;
-		$avg_cov = average(\@backbone_cov);
-		$avg_len = average(\@backbone_len);
-		$avg_len = int($avg_len + 0.55);
-		$std_dev_cov = standard_deviation(\@backbone_cov);
-		$std_dev_len = standard_deviation(\@backbone_len);
-		$std_dev_len = int($std_dev_len + 0.55);
-		open(PEP, ">$targeted_gene_families/$ortho_id.faa") or die "can't create $targeted_gene_families/$ortho_id.faa file\n";
-		open(CDS, ">$targeted_gene_families/$ortho_id.fna") or die "can't create $targeted_gene_families/$ortho_id.fna file\n";
-		open(CONTIGS, ">$targeted_gene_families/$ortho_id.fasta") or die "can't create $targeted_gene_families/$$ortho_id.fasta file\n";
-		print STATS "\n################## Target Family - Orthogroup $ortho_id ##################\n";
-		print STATS "seq_id\tcov\tavg_cov\tsd_cov\tlen\tavg_len\tsd_len\n";
-		foreach $seq_id (sort {$contigs_cov{$b} <=> $contigs_cov{$a}} keys %contigs_cov) {
-			$count++;
-			$assembly_pep{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
-			print PEP ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly_pep{$seq_id}."\n";
-			$assembly_cds{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
-			print CDS ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly_cds{$seq_id}."\n";
-			$assembly{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
-			print CONTIGS ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly{$seq_id}."\n";
-			print STATS $scaffold."_".$clustering_method."_".$ortho_id."_".$count."\t$contigs_cov{$seq_id}\t$avg_cov\t$std_dev_cov\t$contigs_len{$seq_id}\t$avg_len\t$std_dev_len\n";
+		if (!%contigs_cov) { 
+			print STATS "\n################## Target Family - Orthogroup $ortho_id ##################\n";
+			print STATS "No transcripts to report for Orthogroup $ortho_id\n";
 		}
-		close PEP;
-		close CDS;
-		close CONTIGS;				
-		system "rm -r $target_out_dir";
+		else {
+			$count = 0;
+			$avg_cov = average(\@backbone_cov);
+			$avg_len = average(\@backbone_len);
+			$avg_len = int($avg_len + 0.55);
+			$std_dev_cov = standard_deviation(\@backbone_cov);
+			$std_dev_len = standard_deviation(\@backbone_len);
+			$std_dev_len = int($std_dev_len + 0.55);
+			open(PEP, ">$targeted_gene_families/$ortho_id.faa") or die "can't create $targeted_gene_families/$ortho_id.faa file\n";
+			open(CDS, ">$targeted_gene_families/$ortho_id.fna") or die "can't create $targeted_gene_families/$ortho_id.fna file\n";
+			open(CONTIGS, ">$targeted_gene_families/$ortho_id.fasta") or die "can't create $targeted_gene_families/$$ortho_id.fasta file\n";
+			print STATS "\n################## Target Family - Orthogroup $ortho_id ##################\n";
+			print STATS "seq_id\tcov\tavg_cov\tsd_cov\tlen\tavg_len\tsd_len\n";
+			foreach $seq_id (sort {$contigs_cov{$b} <=> $contigs_cov{$a}} keys %contigs_cov) {
+				$count++;
+				$assembly_pep{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
+				print PEP ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly_pep{$seq_id}."\n";
+				$assembly_cds{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
+				print CDS ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly_cds{$seq_id}."\n";
+				$assembly{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
+				print CONTIGS ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly{$seq_id}."\n";
+				print STATS $scaffold."_".$clustering_method."_".$ortho_id."_".$count."\t$contigs_cov{$seq_id}\t$avg_cov\t$std_dev_cov\t$contigs_len{$seq_id}\t$avg_len\t$std_dev_len\n";
+			}
+			close PEP;
+			close CDS;
+			close CONTIGS;				
+			system "rm -r $target_out_dir";
+		}
 	}
 	close STATS;
 }
