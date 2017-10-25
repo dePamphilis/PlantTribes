@@ -745,8 +745,7 @@ sub targeted_gene_family_assembly {
 		}
 	}
 	close STATS;
-	rmdir( $targeted_gene_families ) or die "Targeted gene family assemblies are in $targeted_gene_families directory\nTargeted gene family assemblies sum
-mary statistics are in $out_dir/targeted_gene_family_assemblies.stats file\n\n";
+	rmdir( $targeted_gene_families ) or die "Targeted gene family assemblies are in $targeted_gene_families directory\nTargeted gene family assemblies summary statistics are in $out_dir/targeted_gene_family_assemblies.stats file\n\n";
 }
 
 sub average {
