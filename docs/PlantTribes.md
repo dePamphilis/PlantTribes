@@ -125,7 +125,9 @@ Target Gene Family Assembly:
                                   Default: 0.1
 
 --min_coverage <float>          : Minimum sequence coverage in the orthogroup trimmed protein multiple sequence alignment
-                                  Default: 0.5 (50% coverage) - [0.3 to 1.0]
+                                  Selecting transcripts with coverage of at least the average of the backbone orthogroup gene
+                                  models is recommended. Details in targeted gene family assembly summary statistics output file.
+                                  Default: 0.0 - [0.0 to 1.0]
 
 Others Options:
 
