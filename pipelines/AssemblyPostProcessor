@@ -713,6 +713,7 @@ sub targeted_gene_family_assembly {
 		if (!%contigs_cov) { 
 			print STATS "\n################## Target Family - Orthogroup $ortho_id ##################\n";
 			print STATS "No transcripts to report for Orthogroup $ortho_id\n";
+			system "rm -r $target_out_dir";
 		}
 		else {
 			$count = 0;
@@ -744,6 +745,7 @@ sub targeted_gene_family_assembly {
 		}
 	}
 	close STATS;
+	rmdir( $targeted_gene_families ) or die "can't remove $targeted_gene_families, directory is not empty\n";
 }
 
 sub average {
