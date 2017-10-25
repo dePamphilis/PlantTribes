@@ -59,8 +59,10 @@ my $usage = <<__EOUSAGE__;
 #
 #  --gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
 #                                    Default: 0.1
-#  --min_coverage <float>          : Minimum sequence coverage in the orthogroup trimmed protein multiple sequence alignment
-#                                    Default: 0.5 (50% coverage) - [0.3 to 1.0]
+#  --min_coverage <float>          : Minimum sequence coverage in the orthogroup trimmed protein multiple sequence alignment.
+#                                    Selecting transcripts with coverage of at least the average of the backbone orthogroup gene
+#                                    models recommended. See results in targeted gene family assembly summary statistics output file. 
+#                                    Default: 0.0 - [0.3 to 1.0]
 #   
 # # # # # # # # # # # # # # # # # # 
 #  Others Options:
@@ -143,7 +145,7 @@ if ( $min_coverage and ($min_coverage < 0.3) ) { print "0.3 (30%) is the require
 # defaults
 if (!$num_threads) { $num_threads = 1; }
 if (!$gap_trimming) { $gap_trimming = 0.1; }
-if (!$min_coverage) { $min_coverage = 0.5; }
+if (!$min_coverage) { $min_coverage = 0.0; }
 
 print "\n";
 print localtime()." - Starting transcriptome assembly post processing\n\n";
