@@ -62,7 +62,7 @@ my $usage = <<__EOUSAGE__;
 #  --min_coverage <float>          : Minimum sequence coverage in the orthogroup trimmed protein multiple sequence alignment.
 #                                    Selecting transcripts with coverage of at least the average of the backbone orthogroup gene
 #                                    models recommended. See results in targeted gene family assembly summary statistics output file. 
-#                                    Default: 0.0 - [0.3 to 1.0]
+#                                    Default: 0.0 - [0.0 to 1.0]
 #   
 # # # # # # # # # # # # # # # # # # 
 #  Others Options:
