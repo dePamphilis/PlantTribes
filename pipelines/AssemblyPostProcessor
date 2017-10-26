@@ -139,7 +139,7 @@ if ( $gene_family_search and (!$scaffold or !$method) ) { print "\nTargeted gene
 }
 if ( $prediction_method and ($prediction_method ne "estscan") and ($prediction_method ne "transdecoder") ) { 
 	print "\nUnknown coding regions prediction method\n"; die $usage; }
-if ( $min_coverage and ($min_coverage < 0.3) ) { print "0.3 (30%) is the required minimum sequence coverage length in orthogroup trimmed protein multiple";
+if ( $min_coverage and ($min_coverage < 0.0) ) { print "0.0 is the required minimum sequence coverage length in orthogroup trimmed protein multiple";
 	print " sequence alignment\n"; die $usage; }
 	
 # defaults
