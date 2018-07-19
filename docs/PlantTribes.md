@@ -26,12 +26,7 @@ No external dependencies required.
 and [EMMIX (version 1.3)](https://people.smp.uq.edu.au/GeoffMcLachlan/emmix/emmix.html).
 
 #### PlantTribes scaffolds data 
-- **22 plant genomes (Angiosperms clusters, version 1.0)**  
-Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.0.tar.bz2  
-<!--- MD5 checksum: `4f09c41683d1ea0670b38cef640fb548` ---> 
-- **22 plant genomes (Angiosperms clusters, version 1.1)**  
-Download: http://fgp.huck.psu.edu/planttribes_data/22Gv1.1.tar.bz2  
-<!--- MD5 checksum: `0025188cdeccfb828fbebabb923963bd` --->
+Download: http://bigdata.bx.psu.edu/PlantTribes_scaffolds/data/
 
 #### Install PlantTribes
 1. Open a terminal and change to the location where you would to keep PlantTribes. 
