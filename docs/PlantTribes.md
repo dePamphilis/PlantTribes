@@ -26,7 +26,7 @@ No external dependencies required.
 and [EMMIX (version 1.3)](https://people.smp.uq.edu.au/GeoffMcLachlan/emmix/emmix.html).
 
 #### PlantTribes scaffolds data 
-[PlantTribes gene family scaffolds download website](http://bigdata.bx.psu.edu/PlantTribes_scaffolds/data/)
+[PlantTribes gene family scaffolds download website](http://bigdata.bx.psu.edu/PlantTribes_scaffolds/)
 
 #### Install PlantTribes
 1. Open a terminal and change to the location where you would to keep PlantTribes. 
