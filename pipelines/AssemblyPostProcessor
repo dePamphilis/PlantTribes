@@ -1,0 +1,784 @@
+#!/usr/bin/env perl
+# Author: Eric Wafula
+# Email: ekw10@psu.edu
+# Institution: Penn State University, Biology Dept, Claude dePamphilis Lab
+# Date: 01-31-2015
+
+use strict;
+use warnings;
+use File::Spec;
+use File::Basename;
+use Getopt::Long qw(:config no_ignore_case);
+use FindBin;
+
+my $home =  "$FindBin::Bin/..";
+my $usage = <<__EOUSAGE__;
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+#                                  TRANSCRIPTOME ASSEMBLY POST PROCESSING
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Required Options:
+#
+#  --transcripts <string>          : de novo transcriptome assembly fasta file (transcripts.fasta)
+#
+#  --prediction_method <string>    : The prediction method for coding regions
+#                                    If ESTScan: estscan
+#                                    If TransDecoder: transdecoder
+#
+#  --score_matrices <string>       : Required if the coding regions prediction method is ESTScan
+#                                    (i.e. Arabidopsis_thaliana.smat, Oryza_sativa.smat, Zea_mays.smat)
+#
+# # # # # # # # # # # # # # # # # #
+#  Target Gene Family Assembly:
+#
+#  --gene_family_search <string>   : File with a list of orthogroup identifiers for target gene families to assemble
+#                                    Orthogroup identifiers can be obtained from the scaffold function annotation table -
+#                                    "Orthogroup ID" field of .summary file in the config directory of the installation.
+#                                    - requires "--scaffold" and "--method" 
+#
+#  --scaffold <string>             : Orthogroups or gene families proteins scaffold.  This can either be an absolute
+#                                    path to the directory containing the scaffolds (e.g., /home/scaffolds/22Gv1.1)
+#                                    or just the scaffold (e.g., 22Gv1.1).  If the latter, ~home/data is prepended to
+#                                    the scaffold to create the absolute path.
+#                                    If Monocots clusters (version 1.0): 12Gv1.0
+#                                    If Angiosperms clusters (version 1.0): 22Gv1.0
+#                                    If Angiosperms clusters (version 1.1): 22Gv1.1
+#                                    If Green plants clusters (version 1.0): 31Gv1.0
+#                                    If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
+#                                    and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
+#                                    data on how data files and directories are named, formated, and organized.
+#
+#  --method <string>               : Protein clustering method - required by "--gene_family_search"
+#                                    If GFam: gfam
+#                                    If OrthoFinder: orthofinder
+#                                    If OrthoMCL: orthomcl
+#                                    If Other non PlantTribes method: methodname, where "methodname" a nonempty string of
+#                                    word characters (alphanumeric or "_"). No embedded special charaters or white spaces.
+#
+#  --gap_trimming <float>          : Removes gappy sites in alignments (i.e. 0.1 removes sites with 90% gaps): [0.0 to 1.0]
+#                                    Default: 0.1
+#  --min_coverage <float>          : Minimum sequence coverage in the orthogroup trimmed protein multiple sequence alignment.
+#                                    Selecting transcripts with coverage of at least the average of the backbone orthogroup gene
+#                                    models is recommended. Details in targeted gene family assembly summary statistics output file. 
+#                                    Default: 0.0 - [0.0 to 1.0]
+#   
+# # # # # # # # # # # # # # # # # # 
+#  Others Options:
+#
+#  --strand_specific               : If de novo transcriptome assembly was performed with strand-specific library
+#                                    Default: not strand-specific 
+#
+#  --dereplicate                   : Remove reapeated sequences in predicted coding regions
+#
+#  --min_length <int>              : Minimum sequence length of predicted coding regions
+#
+#  --num_threads <int>             : number of threads (CPUs) - only required for targeted gene family assembly
+#                                    Default: 1
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#  Example Usage:
+#
+#  AssemblyPostProcessor  --transcripts transcripts.fasta --prediction_method estscan --score_matrices /path/to/score/matrices/Arabidopsis_thaliana.smat  
+#  OR
+#  AssemblyPostProcessor --transcripts transcripts.fasta --prediction_method transdecoder
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ 
+__EOUSAGE__
+    ; 
+
+# Declare and initialize variables;
+my $transcripts;
+my $prediction_method;
+my $score_matrices;
+my $gene_family_search;
+my $scaffold_dir;
+my $scaffold;
+my $method;
+my $gap_trimming;
+my $min_coverage;
+my $strand_specific;
+my $dereplicate;
+my $min_length;
+my $num_threads;
+
+my $options = GetOptions (  'transcripts=s' => \$transcripts,
+	      'prediction_method=s' => \$prediction_method,
+	      'score_matrices=s' => \$score_matrices,
+	      'gene_family_search=s' => \$gene_family_search,
+	      'scaffold=s' => \$scaffold,
+	      'method=s' => \$method,
+	      'gap_trimming=f' => \$gap_trimming,
+	      'min_coverage=f' => \$min_coverage,
+	      'strand_specific' => \$strand_specific,
+	      'dereplicate' => \$dereplicate,
+	      'min_length=i' => \$min_length,
+	      'num_threads=i' => \$num_threads
+	      );
+
+if ($scaffold) {
+	if (File::Spec->file_name_is_absolute($scaffold)) {
+		$scaffold_dir = $scaffold;
+		$scaffold = basename($scaffold);
+	} else {
+		$scaffold_dir = "$home/data/$scaffold";
+	}
+}
+
+# validate options
+unless ( $options ) { die $usage; }
+unless ( $transcripts and $prediction_method ) { print "\nOne or more required options not set\n"; die $usage; }
+if ( $gene_family_search and (!$scaffold or !$method) ) { print "\nTargeted gene family assembly requires";
+	print " orthogroups or gene families proteins scaffold and its corresponding protein clustering method to be set\n"; die $usage;
+	if ( $scaffold !~ /^\d+Gv\d+\.\d+$/) { print "\nOrthogroups or gene families proteins scaffold name $scaffold is not in the required format";
+		print " i.e. XGvY.Z, where X is number species in the scaffold, and Y.Z version number such as 12Gv1.0.\n"; die $usage; }
+	if ( $method !~ /^\w+$/) { print "\nProtein clustering method name $method is not in the required format. The name should be a nonempty string";
+		print " of word characters (alphanumeric or _). No embedded special charaters or white spaces.\n"; die $usage; }
+}
+if ( $prediction_method and ($prediction_method ne "estscan") and ($prediction_method ne "transdecoder") ) { 
+	print "\nUnknown coding regions prediction method\n"; die $usage; }
+if ( $min_coverage and ($min_coverage < 0.0) ) { print "0.0 is the required minimum sequence coverage length in orthogroup trimmed protein multiple";
+	print " sequence alignment\n"; die $usage; }
+	
+# defaults
+if (!$num_threads) { $num_threads = 1; }
+if (!$gap_trimming) { $gap_trimming = 0.1; }
+if (!$min_coverage) { $min_coverage = 0.0; }
+
+print "\n";
+print localtime()." - Starting transcriptome assembly post processing\n\n";
+if ($gene_family_search) {
+	print "--- Scaffold: $scaffold\n--- Method: $method\n\n";
+}
+
+# create output directory
+my $dirname ="./assemblyPostProcessing_dir";
+if (-d $dirname) { die "Exiting...!\nAssembly post processing output directory ($dirname) already exists!\n\n"; }
+make_directory($dirname);
+
+if ( $prediction_method eq "estscan" ) {
+    unless ( $score_matrices ) { die "Reference score matrices required with ESTScan.\n\n$usage;"; }
+    run_estscan ( $transcripts, $score_matrices, $strand_specific, $min_length, $gene_family_search, $dirname ); 
+}
+elsif ( $prediction_method eq "transdecoder" ) {
+	run_transdecoder ( $transcripts, $strand_specific, $min_length, $gene_family_search, $dirname );
+}
+else { die "Unknown coding sequence prediction method.\n\n$usage"; }
+
+if ( $dereplicate ) {
+    dereplicate ( $dirname );
+}
+
+if ( $gene_family_search ) {
+	targeted_gene_family_assembly ( $gene_family_search, $scaffold, $method, $prediction_method, $transcripts,
+		$score_matrices, $strand_specific, $dereplicate, $min_length, $gap_trimming, $min_coverage, $num_threads, $dirname, $scaffold_dir )		
+}
+
+print localtime()." - Completed transcriptome assembly post processing\n\n";
+
+exit(0);
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #  sub-routines # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+sub make_directory {
+        my ( $new_dir ) = @_;
+        if (!-d $new_dir) {
+                mkdir($new_dir, 0755);
+        }
+}
+
+sub run_estscan {
+    my ( $transcripts, $matrices, $stranded, $length, $gene_family_search, $out_dir ) = @_;
+    print localtime()." - Predicting coding regions with ESTScan\n\n";
+    my $estscan_call = system "ESTScan $transcripts -M $matrices -t $out_dir/transcripts.pep > $out_dir/transcripts.cds";
+    if ($estscan_call != 0) { print "\n-- ".localtime()." - Running ESTScan failed\n\n"; exit(1); }
+    if (!(-e "$out_dir/transcripts.cds") or !(-e "$out_dir/transcripts.pep") or (-z "$out_dir/transcripts.cds") or (-z "$out_dir/transcripts.pep")) {
+	unless($gene_family_search) {
+	    print "Coding sequence prediction was not successful.\nEither ESTScan is not properly installed or there a problem with reference score matrices you provided.\nAlternatively, you data might not have sequences with credible coding regions.\nTerminating...\n\n";
+	    exit(1);
+	}
+    }
+    my (%cds, %pep, $id, $strand);
+    # if transcriptome assembly is from a strand specific library only keep the strand with most predictions i.e usually
+    # more than 90% of predictions are of from one strand (plus or minus) if from stranded library. 
+    if ($stranded) {
+		my (%plus, %minus);
+		open (IN, "$out_dir/transcripts.cds") or die "can't open $out_dir/transcripts.cds file\n";
+		while(<IN>) {
+	  		chomp;
+	  		if (/^>(\S+)/) { $id = $1; if (/minus/) { $strand = 1; } else { $strand = 0; } } # >contig_1; 50 1 337 = minus strand, >contig_7 11 1 244 = plus strand
+	  		else {
+	      		# clean ESTScan results to make sure that predicted peptides pefectly match by replacing insertions 'X' with
+	      		# unknow character 'N' in cds, and removing deletions that are represented the cds in lower case base charaters.
+	      		s/\s+//g; s/X/N/g; s/a//g; s/t//g; s/c//g; s/g//g; s/x//g; s/n//g;
+	      		if ($strand == 0) { $plus{$id} .= $_; }
+	      		if ($strand == 1) { $minus{$id} .= $_; }
+	  		}
+       	}
+		close IN;
+		my $plus_count = keys(%plus);
+		my $minus_count = keys(%minus);
+		if ($plus_count > $minus_count) {
+	    	my %orig;
+			foreach my $key (sort keys %plus) {
+				my $orig_id = $key;
+	    		my $sequence = $plus{$key};
+	    		if ($key =~ /(.*)\;$/) { $key = $1; }
+	    		if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
+	    		else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
+			}
+			undef %plus;	    	
+	    	open (IN, "$out_dir/transcripts.pep") || die "can't open $out_dir/transcripts.pep file\n";
+	    	while(<IN>) {
+				chomp; 
+				if (/^>(\S+)/) { $id = $1; if (/minus/) { $strand = 1; } else { $strand = 0; } }
+				else { if ($strand == 1) {next; } s/\s+//g; $plus{$id} .= $_; }
+	    	}
+	    	close IN;
+	    	foreach my $key (sort keys %plus) {
+	    		my $sequence = $plus{$key};
+	    		if (!$orig{$key}) { next; }  
+	    		if ($key =~ /(.*)\;$/) { $key = $1; }
+	    		$pep{$key} = $sequence;
+			}
+			undef %plus;	    	
+	    	if ( (($minus_count) / ($minus_count + $plus_count )) > 0.25 ) {
+				print "A surprisingly large number of antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\n"; 
+	    	}
+		}
+		elsif ($minus_count > $plus_count) {
+	    	my %orig;
+			foreach my $key (sort keys %minus) {
+				my $orig_id = $key;
+	    		my $sequence = $minus{$key};
+	    		if ($key =~ /(.*)\;$/) { $key = $1; }
+	    		if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
+	    		else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
+			}
+			undef %minus;		    	
+	    	open (IN, "$out_dir/transcripts.pep") or die "can't open $out_dir/transcripts.pep file\n";
+	    	while(<IN>) {
+				chomp;
+				if (/^>(\S+)/) { $id = $1; if (/minus/) { $strand = 1; } else { $strand = 0; } } # >contig_1; 50 1 337 = minus strand, >contig_7 11 1 244 = plus strand
+				else { if ($strand == 0) { next; } s/\s+//g; $minus{$id} .= $_; } 
+			}
+	    	close IN;
+	    	foreach my $key (sort keys %minus) {
+	    		my $sequence = $minus{$key};
+	    		if (!$orig{$key}) { next; }  
+	    		if ($key =~ /(.*)\;$/) { $key = $1; }
+	    		$pep{$key} = $sequence;
+			}
+			undef %minus;	    	
+	    	if ( (($plus_count) / ($plus_count + $minus_count )) > 0.25 ) {
+				print "A surprisingly large number of antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\n";
+	    	}
+	   	}
+		else {
+	    	print "Proportional number of sense and antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\nTerminating...\n\n";
+	    	exit(1);
+		}
+		undef %plus; undef %minus;
+    } 
+    # if transcriptome assembly is not from a strand specific library only keep the strand with the longest prediction.
+    else {
+		my %seq;
+		open (IN, "$out_dir/transcripts.cds") or die "can't open $out_dir/transcripts.cds file\n";
+		while(<IN>) {
+	    	chomp;
+	    	if (/^>(\S+)/) { $id = $1; }
+	    	else {
+				# clean ESTScan results to make sure that predicted peptides pefectly match by replacing insertions 'X' with
+            	# unknow character 'N' in cds, and removing deletions that are represented the cds in lower case base charaters.
+				s/\s+//g; s/X/N/g; s/a//g; s/t//g; s/c//g; s/g//g; s/x//g; s/n//g; $seq{$id} .= $_;
+	    	}
+		}
+		close IN;
+		my %orig;
+		foreach my $key (sort keys %seq) {
+			my $orig_id = $key;
+	    	my $sequence = $seq{$key};
+	    	if ($key =~ /(.*)\;$/) { $key = $1; }
+	    	if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
+	    	else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
+		}
+		undef %seq;
+		open (IN, "$out_dir/transcripts.pep") or die "can't open $out_dir/transcripts.pep file\n";
+		while(<IN>) {
+	    	chomp;
+	    	if (/^>(\S+)/) { $id = $1; }
+	    	else { s/\s+//g; $seq{$id} .= $_; }
+		}
+		close IN;
+		foreach my $key (sort keys %seq) {
+	    	my $sequence = $seq{$key};
+	    	if (!$orig{$key}) { next; }
+	    	if ($key =~ /(.*)\;$/) { $key = $1; }
+	    	$pep{$key} = $sequence;
+		}
+		undef %seq;
+    }
+    my %sequences = validate_translations(\%cds, \%pep);  # validate that cds and peptide match
+    # write validated cds and corresponding peptides sequences to output files
+    open (CDS, ">$out_dir/transcripts.cleaned.cds") or die "can't create $out_dir/transcripts.cleaned.cds file\n";
+    open (PEP, ">$out_dir/transcripts.cleaned.pep") or die "can't create $out_dir/transcripts.cleaned.pep file\n";
+    for my $seq_id ( sort keys %sequences ) {
+		if ($length) {
+	    	if (length($sequences{$seq_id}{'cds'}) >= $length) {
+				$sequences{$seq_id}{'cds'} =~ s/.{80}(?=.)/$&\n/g;
+				print CDS ">$seq_id\n$sequences{$seq_id}{'cds'}\n";
+				$sequences{$seq_id}{'pep'} =~ s/.{80}(?=.)/$&\n/g;
+				print PEP ">$seq_id\n$sequences{$seq_id}{'pep'}\n"; 
+	    	}
+		}
+		else {
+	    	$sequences{$seq_id}{'cds'} =~ s/.{80}(?=.)/$&\n/g;
+	    	print CDS ">$seq_id\n$sequences{$seq_id}{'cds'}\n";
+	    	$sequences{$seq_id}{'pep'} =~ s/.{80}(?=.)/$&\n/g;
+	    	print PEP ">$seq_id\n$sequences{$seq_id}{'pep'}\n";
+		}
+    }
+    close CDS;
+    close PEP;
+}
+
+sub run_transdecoder {
+    my ( $transcripts, $stranded, $length, $gene_family_search, $out_dir ) = @_;
+    print localtime()." - Predicting coding regions with TransDecoder\n\n";
+    my $transdecoder_call = system "TransDecoder.LongOrfs -t $transcripts >/dev/null";
+    if ($transdecoder_call != 0) { print "\n-- ".localtime()." - Running TransDecoder failed\n\n"; exit(1); }
+    my @file_path = split (/\/+/, $transcripts);
+    my $transcripts_file = $file_path[$#file_path];
+    system "mv $transcripts_file.transdecoder_dir/longest_orfs.cds $out_dir/transcripts.cds";
+    system "mv $transcripts_file.transdecoder_dir/longest_orfs.pep $out_dir/transcripts.pep";
+    system "rm -rf $transcripts_file.transdecoder_dir $transcripts_file.transdecoder_dir.__checkpoints_longorfs pipeliner.*.cmds";
+    if (!(-e "$out_dir/transcripts.cds") or !(-e "$out_dir/transcripts.pep") or (-z "$out_dir/transcripts.cds") or (-z "$out_dir/transcripts.pep")) {
+	unless($gene_family_search) {
+	    print "Coding sequence prediction was not successful.\nTransDecoder might not be properly installed.\nAlternatively, you data might not have sequences with credible coding regions.\nTerminating...\n\n";
+	    exit(1);
+	}
+    }
+    my (%cds, %pep, $id, $strand);
+    # if transcriptome assembly is from a strand specific library only keep the strand with most predictions i.e usually
+    # more than 90% of predictions are of from one strand (plus or minus) if from stranded library. 
+    if ($stranded) {
+    		my (%plus, %minus);
+		open (IN, "$out_dir/transcripts.cds") or die "can't open $out_dir/transcripts.cds file\n";
+		while(<IN>) {
+	  		chomp;
+			# version 2.0.1
+	  		# CDS: >contig_1|m.1 contig_1|g.1 type:internal len:115 contig_1:344-3(-) PEP: >contig_1|m.1 contig_1|g.1 type:internal len:115 gc:universal contig_1:344-3(-) = minus strand
+	  		# CDS: >contig_2|m.2 contig_2|g.2 type:5prime_partial len:170 contig_2:2-511(+) PEP: >contig_2|m.2 contig_2|g.2 type:5prime_partial len:170 gc:universal contig_2:2-511(+) = plus strand
+	  		# version 3.0.1
+			# CDS: >Gene.1::contig_1::g.1::m.1 type:internal len:115 contig_1:344-3(-) PEP: >Gene.1::contig_1::g.1::m.1 type:internal len:115 gc:universal contig_1:344-3(-) = minus strand
+			# CDS: >Gene.1::contig_2::g.1::m.1 type:3prime_partial len:413 contig_2:1-1236(+) PEP: >Gene.1::contig_2::g.1::m.1 type:3prime_partial len:413 gc:universal contig_2:1-1236(+) = plus strand
+			# version 5.5.0
+			# CDS: >contig_1.p1 type:internal len:115 contig_1:344-3(-) - minus strand
+			# CDS: >contig_2.p1 type:5prime_partial len:170 contig_2:2-511(+) - plus strand
+			# PEP: >contig_1.p1 type:internal len:115 gc:universal contig_1:344-3(-) - minus strand
+			# PEP: >contig_2.p1 type:5prime_partial len:170 gc:universal contig_2:2-511(+) - plus strand
+			if (/^>(\S+)/) { $id = $1; if (/\(\-\)$/) { $strand = 1; } else { $strand = 0; } } 
+	  		else { s/\s+//g; if ($strand == 0) { $plus{$id} .= $_; } if ($strand == 1) { $minus{$id} .= $_; } }
+        	}
+		close IN;
+		my $plus_count = keys(%plus);
+		my $minus_count = keys(%minus);
+		if ($plus_count > $minus_count) {
+	    		my %orig;
+			foreach my $key (sort keys %plus) {
+				my $orig_id = $key;
+	    			my $sequence = $plus{$key};
+	    			#$key =~ /(\S+?)\|m\.\d+/;
+				#$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+				$key =~ /(\S+?)\.p\d+/;
+	    			$key = $1;
+	    			if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
+	    			else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
+			}
+			undef %plus;
+	    		open (IN, "$out_dir/transcripts.pep") || die "can't open $out_dir/transcripts.pep file\n";
+	    		while(<IN>) {
+				chomp; 
+				if (/^>(\S+)/) { $id = $1; if (/\(\-\)$/) { $strand = 1; } else { $strand = 0; } }
+				else { if ($strand == 1) {next; } s/\s+//g; s/\*/X/g; $plus{$id} .= $_; }
+	    		}
+	    		close IN;
+	    		foreach my $key (sort keys %plus) {
+	    			my $sequence = $plus{$key};
+	    			if (!$orig{$key}) { next; }  
+	    			#$key =~ /(\S+?)\|m\.\d+/;
+				#$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+				$key =~ /(\S+?)\.p\d+/;
+	    			$key = $1;
+	    			$pep{$key} = $sequence;
+			}
+			undef %plus;	    	
+	    		if ( (($minus_count) / ($minus_count + $plus_count )) > 0.25 ) {
+				print "A surprisingly large number of antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\n"; 
+	    		}
+		}
+		elsif ($minus_count > $plus_count) {
+	    		my %orig;
+			foreach my $key (sort keys %minus) {
+				my $orig_id = $key;
+	    			my $sequence = $minus{$key};
+	    			#$key =~ /(\S+?)\|m\.\d+/;
+				#$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+				$key =~ /(\S+?)\.p\d+/;
+	    			$key = $1;
+	    			if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
+	    			else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
+			}
+			undef %minus;	    	
+	    		open (IN, "$out_dir/transcripts.pep") or die "can't open $out_dir/transcripts.pep file\n";
+	    		while(<IN>) {
+				chomp;
+				if (/^>(\S+)/) { $id = $1; if (/\(\-\)$/) { $strand = 1; } else { $strand = 0; } }
+				else { if ($strand == 0) { next; } s/\s+//g; s/\*/X/g; $minus{$id} .= $_; }
+			}
+	    		close IN;
+	    		foreach my $key (sort keys %minus) {
+	    			my $sequence = $minus{$key};
+	    			if (!$orig{$key}) { next; }  
+	    			#$key =~ /(\S+?)\|m\.\d+/;
+				#$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+				$key =~ /(\S+?)\.p\d+/;
+	    			$key = $1;
+	    			$pep{$key} = $sequence;
+			}
+			undef %minus;	  
+	    		if ( (($plus_count) / ($plus_count + $minus_count )) > 0.25 ) {
+				print "A surprisingly large number of antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\n";
+	    		}
+		}
+		else {
+	    		print "Proportional number of sense and antisense predicted coding regions!\nPlease consider re-running without the strand-specific option if transcriptome assembly is not from strand-specific library.\n\nTerminating...\n\n";
+	    		exit(1);
+		}
+   } 
+   # if transcriptome assembly is not from a strand specific library only keep the strand with the longest predictions.
+   else {
+		my %seq;
+		open (IN, "$out_dir/transcripts.cds") or die "can't open $out_dir/transcripts.cds file\n";
+		while(<IN>) {
+		    chomp;
+		    if (/^>(\S+)/) { $id = $1; }
+		    else { s/\s+//g; $seq{$id} .= $_; }
+		}
+		close IN;
+		my %orig;
+		foreach my $key (sort keys %seq) {
+		    my $orig_id = $key;
+		    my $sequence = $seq{$key};
+		    #$key =~ /(\S+?)\|m\.\d+/;
+		    #$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+		    $key =~ /(\S+?)\.p\d+/;
+		    $key = $1;
+		    if ( ($cds{$key}) and (length($cds{$key}) >= length($sequence)) ) { next; }
+		    else { $cds{$key} = $sequence; $orig{$orig_id} = $orig_id; }
+		}
+		undef %seq;
+		open (IN, "$out_dir/transcripts.pep") or die "can't open $out_dir/transcripts.pep file\n";
+		while(<IN>) {
+		    chomp;
+		    if (/^>(\S+)/) { $id = $1; }
+		    else { s/\s+//g; s/\*/X/g; $seq{$id} .= $_; }
+		}
+		close IN;
+		foreach my $key (sort keys %seq) {
+		    my $sequence = $seq{$key};
+		    if (!$orig{$key}) { next; }  
+		    #$key =~ /(\S+?)\|m\.\d+/;
+		    #$key =~ /\S+?\:\:(\S+?)\:\:g\.\d+\:\:m\.\d+/;
+		    $key =~ /(\S+?)\.p\d+/;
+		    $key = $1;
+		    $pep{$key} = $sequence;
+		}
+		undef %seq;
+    }
+    my %sequences = validate_translations(\%cds, \%pep);  # validate that cds and peptide match
+    # write validated cds and corresponding peptides sequences to output files
+    open (CDS, ">$out_dir/transcripts.cleaned.cds") or die "can't create $out_dir/transcripts.cleaned.cds file\n";
+    open (PEP, ">$out_dir/transcripts.cleaned.pep") or die "can't create $out_dir/transcripts.cleaned.pep file\n";
+    for my $seq_id ( sort keys %sequences ) {
+		if ($length) {
+	    	if (length($sequences{$seq_id}{'cds'}) >= $length) {
+				$sequences{$seq_id}{'cds'} =~ s/.{80}(?=.)/$&\n/g;
+				print CDS ">$seq_id\n$sequences{$seq_id}{'cds'}\n";
+				$sequences{$seq_id}{'pep'} =~ s/.{80}(?=.)/$&\n/g;
+				print PEP ">$seq_id\n$sequences{$seq_id}{'pep'}\n"; 
+	    	}
+		}
+		else {
+	    	$sequences{$seq_id}{'cds'} =~ s/.{80}(?=.)/$&\n/g;
+	    	print CDS ">$seq_id\n$sequences{$seq_id}{'cds'}\n";
+	    	$sequences{$seq_id}{'pep'} =~ s/.{80}(?=.)/$&\n/g;
+	    	print PEP ">$seq_id\n$sequences{$seq_id}{'pep'}\n";
+		}
+	}
+    close CDS;
+    close PEP;
+}
+
+sub validate_translations {
+    my ($cds, $pep) = @_;
+    my %sequences; 
+    print localtime()." - Validating predicted coding regions\n\n";
+    foreach my $id (keys %$cds) {
+		unless ( $$cds{$id} and $$pep{$id} ) { print "$id does not have a valid aa and dna, skipping...!\n"; next; }
+		my $dna_seq = $$cds{$id};
+		if ( length($dna_seq) % 3 != 0 ) { print "$id cds not in triplets, skipping...! \n"; next; }
+		my @codon  = unpack( "a3" x int( length($dna_seq) / 3 ), $dna_seq );
+		my $aa_seq = $$pep{$id};
+		if ( length($dna_seq) / 3 < length($aa_seq) ) { print "$id cds triplets shorter than amino acids, skipping...!\n"; next; }
+		my @aa = split( "", $aa_seq );
+		my $index = 0;
+		foreach (@aa) {
+	    	if ( $_ eq "X" and ( $codon[$index] eq "TAA" or $codon[$index] eq "TAG" or $codon[$index] eq "TGA" ) ) { $index++; next; }
+	    	if ( $codon[$index] eq "TAA" or $codon[$index] eq "TAG" or $codon[$index] eq "TGA" ) { print "$id has an internal stop codon, skipping...!\n"; last; }
+	    	$sequences{$id}{'cds'} .= $codon[$index];
+	    	$sequences{$id}{'pep'} .= $_;
+	    	$index++;
+		}
+    }
+    return %sequences;
+}
+
+sub dereplicate {
+    my ($out_dir) = @_;
+    my ($id, %cds, %pep);
+    print localtime()." - Removing reapeated sequences in predicted coding regions\n\n";
+    if (!(-e "$out_dir/transcripts.cleaned.cds") or !(-e "$out_dir/transcripts.cleaned.pep") or (-z "$out_dir/transcripts.cleaned.cds") or (-z "$out_dir/transcripts.cleaned.pep")) {
+		print "Dereplication not performed - transcriptome assembly post processing might not have completed successfully.\nTerminating...\n\n";
+    }
+    my $genometools_call = system "gt sequniq -force -o $out_dir/transcripts.cleaned.cds.nr $out_dir/transcripts.cleaned.cds >/dev/null";
+    if ($genometools_call != 0) { print "\n-- ".localtime()." - Running GenomeTools failed\n\n"; exit(1); }
+    open (IN, "$out_dir/transcripts.cleaned.cds.nr") or die "can't open $out_dir/transcripts.cleaned.cds.nr file\n";
+    while(<IN>) {
+		chomp;
+		if (/^>(\S+)/) { $id = $1; }
+		else { s/\s+//g; $cds{$id} .= $_; }
+    }
+    close IN;
+    open (IN, "$out_dir/transcripts.cleaned.pep") or die "can't open $out_dir/transcripts.cleaned.pep file\n";
+    while(<IN>) {
+		chomp;
+		if (/^>(\S+)/) { $id = $1; }
+		else { s/\s+//g; $pep{$id} .= $_; }
+    }
+    close IN;
+    open (CDS, ">$out_dir/transcripts.cleaned.nr.cds") or die "can't create $out_dir/transcripts.cleaned.nr.cds file\n";
+    open (PEP, ">$out_dir/transcripts.cleaned.nr.pep") or die "can't create $out_dir/transcripts.cleaned.nr.pep file\n";
+    for my $seq_id ( sort keys %cds ) {
+		$cds{$seq_id} =~ s/.{80}(?=.)/$&\n/g;
+		print CDS ">$seq_id\n$cds{$seq_id}\n";
+		$pep{$seq_id} =~ s/.{80}(?=.)/$&\n/g;
+		print PEP ">$seq_id\n$pep{$seq_id}\n";
+    }
+    close CDS;
+    close PEP;
+    system "rm -f $out_dir/transcripts.cleaned.cds.*";
+}
+
+sub targeted_gene_family_assembly { 
+	my ( $target_orthogroups, $scaffold, $clustering_method, $prediction_method,
+		$transcripts, $score_matrices, $stranded, $dereplicate, $length, $gap_trimming, $min_coverage, $num_threads, $out_dir, $scaffold_dir ) = @_;
+	print localtime()." - Starting targeted gene family assembly\n\n";	
+	my $targeted_gene_families = "$out_dir/targeted_gene_family_assemblies";
+	make_directory($targeted_gene_families);
+	my (%target_ids, %contigs, $contig_id);
+	open (IN, "$target_orthogroups") or die "can't open $target_orthogroups file\n";
+	while(<IN>){ chomp; if ($_ =~ /^(\d+)/) { $target_ids{$1} = $1; } else { next; } }
+	close IN;
+	open (IN, "$transcripts") or die "can't open $transcripts file\n";
+	while(<IN>){ chomp; if (/^>(\S+)/) { $contig_id = $1; } else { s/\s+//g; $contigs{$contig_id} .= $_ ;} }
+	close IN;
+	open(STATS, ">$out_dir/targeted_gene_family_assemblies.stats") or die "can't create $out_dir/targeted_gene_family_assemblies.stats file\n";
+	print STATS "# seq_id = sequence identity\n# cov = sequence coverage in the orthogroup trimmed protein alignment\n# avg_cov = mean coverage of orthogroup backbone sequences in the trimmed protein alignment\n# sd_cov = standard deviation (for coverage mean) of orthogroup backbone sequences in the trimmed protein alignment\n";
+	print STATS "# len = total-length of conserved regions of sequence in the orthogroup trimmed protein alignment\n# avg_len = mean total-lengths of conserved regions of backbone sequences in the trimmed orthogroup protein alignment\n# sd_len = standard deviation (for total-lengths mean) of conserved regions of backbone sequences in the trimmed orthogroup protein alignment\n";
+	foreach my $ortho_id (sort keys %target_ids) {
+		print "############ Target Family - Orthogroup $ortho_id ############\n\n";
+		# check if target hmm profile is present for the scaffold and method
+		if (!(-e "$scaffold_dir/hmms/$clustering_method/$ortho_id.hmm") or (-z "$scaffold_dir/hmms/$clustering_method/$ortho_id.hmm")) {
+			print "HMM profile for orthogroup $ortho_id doesn't exist for $clustering_method method of scaffold $scaffold!\n\n";
+			next;
+		}
+		my $target_out_dir = "$targeted_gene_families/$ortho_id";
+		make_directory($target_out_dir);
+		# hmmsearch target profile using post-processed predicted proteins - default parameters
+		if ($dereplicate) { 
+			my $hmmsearch_call = system "hmmsearch -E 1e-20 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.nr.pep >/dev/null";
+			if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
+		}
+		else {
+			my $hmmsearch_call = system "hmmsearch -E 1e-20 --cpu $num_threads --noali --tblout $target_out_dir/temp.1.hmm -o $target_out_dir/temp.1.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $out_dir/transcripts.cleaned.pep >/dev/null";
+			if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
+		}
+		# extract corresponding primary contigs for target hits
+		my $hits = 0;
+		open (OUT, ">$target_out_dir/temp.1.hmm.contigs") or die "can't create $target_out_dir/temp.1.hmm.contigs file\n";
+		open (IN, "$target_out_dir/temp.1.hmm") or die "can't open $target_out_dir/temp.1.hmm file\n";
+		while(<IN>) { chomp; if (/^#/){ next; } else { $hits++; $_ =~ /(\S+)(.*)/; print OUT ">$1\n$contigs{$1}\n"; } }
+		close IN;
+		close OUT;
+		unless ($hits > 0) {
+			print "No contigs assigned to orthogroup $ortho_id!\n\n";
+			system "rm -r $target_out_dir";
+			next;
+		} 		
+		# Assemble target profile assigned contigs with cap3 - evalue = 10,
+		my $cap3_call = system "cap3 $target_out_dir/temp.1.hmm.contigs -o 40 -p 90 >/dev/null";
+		if ($cap3_call != 0) { print "\n-- ".localtime()." - Running CAP3 failed\n\n"; exit(1); }
+		# rename the cap3 contigs and singlets
+		my $count = 0;
+		open (OUT, ">$target_out_dir/temp.1.hmm.contigs.cap.fasta") or die "can't create $target_out_dir/temp.1.hmm.contigs.cap.fasta file\n";
+		open (IN, "$target_out_dir/temp.1.hmm.contigs.cap.contigs") or die "can't open $target_out_dir/temp.1.hmm.contigs.cap.contigs file\n";
+		while(<IN>) { chomp; if(/^>/){ $count++; print OUT ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count."\n"; } else { print OUT "$_\n"; } }
+		close IN;
+		open (IN, "$target_out_dir/temp.1.hmm.contigs.cap.singlets") or die "can't open $target_out_dir/temp.1.hmm.contigs.cap.singlets file\n";
+		while(<IN>) { chomp; if(/^>/){ $count++; print OUT ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count."\n"; } else { print OUT "$_\n"; } }
+		close IN;				
+		close OUT;
+		# post process assembled contigs/singeltons
+		my (%assembly, %assembly_pep, %assembly_cds, %ortho_aln, @backbone_cov, @backbone_len, %contigs_cov, %contigs_len, $seq_id, $seq_len, $aln_seq, $aln_cov, $avg_cov, $avg_len, $std_dev_cov, $std_dev_len);		
+		my $contig_file = "$target_out_dir/temp.1.hmm.contigs.cap.fasta";
+		open(IN, "$target_out_dir/temp.1.hmm.contigs.cap.fasta") or die "can't open $target_out_dir/temp.1.hmm.contigs.cap.fasta file\n";
+		while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly{$seq_id} .= $_ ; } }
+		close IN;
+		if ( $prediction_method eq "estscan" ) {
+		    run_estscan ( $contig_file, $score_matrices, $strand_specific, $min_length, $gene_family_search, $target_out_dir );
+		    if (!(-e "$target_out_dir/transcripts.pep") or (-z "$target_out_dir/transcripts.pep")) {
+			print "No contigs with credible coding regions for orthogroup $ortho_id!\n\n";
+			system "rm -r $target_out_dir";
+			next;
+		    }
+		}
+		else  {
+		    run_transdecoder ( $contig_file, $strand_specific, $min_length, $gene_family_search, $target_out_dir );
+		    if (!(-e "$target_out_dir/transcripts.pep") or (-z "$target_out_dir/transcripts.pep")) {
+			print "No contigs with credible coding regions for orthogroup $ortho_id!\n\n";
+			system "rm -r $target_out_dir";
+			next;
+		    }    
+		}	
+		if ( $dereplicate ) {
+		    dereplicate ( $target_out_dir );
+		    open(IN, "$target_out_dir/transcripts.cleaned.nr.pep") or die "can't open $target_out_dir/transcripts.cleaned.nr.pep file\n";
+		    while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly_pep{$seq_id} .= $_ ; } }
+		    close IN;
+		    open(IN, "$target_out_dir/transcripts.cleaned.nr.cds") or die "can't open $target_out_dir/transcripts.cleaned.nr.cds file\n";
+		    while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly_cds{$seq_id} .= $_ ; } }
+		    close IN;
+		    my $hmmsearch_call = system "hmmsearch -E 1e-20 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.nr.pep >/dev/null";
+		    if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
+		} 
+		else {
+		    open(IN, "$target_out_dir/transcripts.cleaned.pep") or die "can't open $target_out_dir/transcripts.cleaned.pep file\n";
+		    while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly_pep{$seq_id} .= $_ ; } }
+		    close IN;
+		    open(IN, "$target_out_dir/transcripts.cleaned.cds") or die "can't open $target_out_dir/$transcripts.cleaned.cds file\n";
+		    while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $assembly_cds{$seq_id} .= $_ ; } }
+		    close IN;
+		    my $hmmsearch_call = system "hmmsearch -E 1e-20 --cpu $num_threads --noali --tblout $target_out_dir/temp.2.hmm -o $target_out_dir/temp.2.hmm.log $scaffold_dir/hmms/$clustering_method/$ortho_id.hmm $target_out_dir/transcripts.cleaned.pep >/dev/null";
+		    if ($hmmsearch_call != 0) { print "\n-- ".localtime()." - Running HMMSearch failed\n\n"; exit(1); }
+		}	
+		# compute transcript orthogroup coverage
+		$hits = 0;
+		open(OUT, ">$target_out_dir/temp.2.hmm.pep") or die "can't create $target_out_dir/temp.2.hmm.pep file\n";
+		open(IN, "$target_out_dir/temp.2.hmm") or die "can't open $target_out_dir/temp.2.hmm file\n";	 
+		while(<IN>){ chomp; if (/^\#/){ next; } $hits++; my @F = split(/\s+/, $_); print OUT ">$F[0]\n$assembly_pep{$F[0]}\n"; }
+		close IN;
+		close OUT;
+		unless ($hits > 0) {
+			print "No contigs assigned to orthogroup $ortho_id!\n\n";
+			system "rm -r $target_out_dir";
+			next;
+		}
+		my $mafft_call = system "mafft --add $target_out_dir/temp.2.hmm.pep $scaffold_dir/alns/$clustering_method/$ortho_id.aln > $target_out_dir/temp.2.hmm.pep.aln";
+		if ($mafft_call != 0) { print "\n-- ".localtime()." - Running MAFFT failed\n\n"; exit(1); } 
+		my $trimal_call = system "trimal -in $target_out_dir/temp.2.hmm.pep.aln -out $target_out_dir/temp.2.hmm.pep.aln.trim -gt $gap_trimming >/dev/null";
+		if ($trimal_call != 0) { print "\n-- ".localtime()." - Running trimAL failed\n\n"; exit(1); }
+		open(IN, "$target_out_dir/temp.2.hmm.pep.aln.trim") or die "can't open $target_out_dir/temp.2.hmm.pep.aln.trim file\n";
+		while(<IN>){ chomp; if (/^>(\S+)/) { $seq_id = $1; } else { s/\s+//g; $ortho_aln{$seq_id}.= $_; } }	
+		close IN;
+		foreach $seq_id (keys %ortho_aln) {
+			unless ($assembly_pep{$seq_id}) {
+				$aln_seq = $ortho_aln{$seq_id};
+				$aln_seq =~ s/-//g;
+				$aln_cov = length($aln_seq) / length($ortho_aln{$seq_id});
+				$aln_cov = sprintf("%.2f", $aln_cov);
+				push (@backbone_cov, $aln_cov);
+				$seq_len = length($aln_seq);
+				push (@backbone_len, $seq_len);
+				next;
+			}			
+			$aln_seq = $ortho_aln{$seq_id};
+			$aln_seq =~ s/-//g;
+			$aln_cov = length($aln_seq) / length($ortho_aln{$seq_id});
+			if ($aln_cov < $min_coverage) { next; }
+			$aln_cov = sprintf("%.2f", $aln_cov);
+			$contigs_cov{$seq_id} = $aln_cov;
+			$seq_len = length($aln_seq);
+			$contigs_len{$seq_id} = $seq_len;
+		}
+		if (!%contigs_cov) { 
+			print STATS "\n################## Target Family - Orthogroup $ortho_id ##################\n";
+			print STATS "No transcripts to report for Orthogroup $ortho_id\n";
+			system "rm -r $target_out_dir";
+		}
+		else {
+			$count = 0;
+			$avg_cov = average(\@backbone_cov);
+			$avg_len = average(\@backbone_len);
+			$avg_len = int($avg_len + 0.55);
+			$std_dev_cov = standard_deviation(\@backbone_cov);
+			$std_dev_len = standard_deviation(\@backbone_len);
+			$std_dev_len = int($std_dev_len + 0.55);
+			open(PEP, ">$targeted_gene_families/$ortho_id.faa") or die "can't create $targeted_gene_families/$ortho_id.faa file\n";
+			open(CDS, ">$targeted_gene_families/$ortho_id.fna") or die "can't create $targeted_gene_families/$ortho_id.fna file\n";
+			open(CONTIGS, ">$targeted_gene_families/$ortho_id.fasta") or die "can't create $targeted_gene_families/$$ortho_id.fasta file\n";
+			print STATS "\n################## Target Family - Orthogroup $ortho_id ##################\n";
+			print STATS "seq_id\tcov\tavg_cov\tsd_cov\tlen\tavg_len\tsd_len\n";
+			foreach $seq_id (sort {$contigs_cov{$b} <=> $contigs_cov{$a}} keys %contigs_cov) {
+				$count++;
+				$assembly_pep{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
+				print PEP ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly_pep{$seq_id}."\n";
+				$assembly_cds{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
+				print CDS ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly_cds{$seq_id}."\n";
+				$assembly{$seq_id}  =~ s/.{80}(?=.)/$&\n/g;
+				print CONTIGS ">".$scaffold."_".$clustering_method."_".$ortho_id."_".$count." cov=".$contigs_cov{$seq_id}." avg_cov=".$avg_cov." sd_cov=".$std_dev_cov." len=".$contigs_len{$seq_id}." avg_len=".$avg_len." sd_len=".$std_dev_len." [details in targeted_gene_family_assemblies.stats]\n".$assembly{$seq_id}."\n";
+				print STATS $scaffold."_".$clustering_method."_".$ortho_id."_".$count."\t$contigs_cov{$seq_id}\t$avg_cov\t$std_dev_cov\t$contigs_len{$seq_id}\t$avg_len\t$std_dev_len\n";
+			}
+			close PEP;
+			close CDS;
+			close CONTIGS;				
+			system "rm -r $target_out_dir";
+		}
+	}
+	close STATS;
+}
+
+sub average {
+	my ($data) = @_;
+	my $sum = 0;
+	foreach my $value (@$data) {
+		$sum += $value;
+	}
+	my $avg = $sum / @$data;
+	$avg = sprintf("%.2f", $avg);
+	return $avg;
+}
+
+sub standard_deviation {
+	my ($data) = @_;
+	my $avg = average(\@$data);
+	my $sq_sum = 0;
+	foreach my $value (@$data) {
+		$sq_sum += ($avg - $value) ** 2;		
+	}
+	my $std_dev = ($sq_sum / @$data ) ** 0.5;
+	$std_dev = sprintf("%.2f", $std_dev);
+	return $std_dev;
+}
