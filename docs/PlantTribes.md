@@ -8,7 +8,7 @@ Please submit all questions, inquires, and bugs using the PlantTribes repository
 PlantTribes pipeline scripts have many external dependencies that need to be installed and available on the environment's $PATH before the pipelines can be used.
 #### Pipelines dependencies
 - **AssemblyPostProcessor pipeline**:  
-[ESTScan (version 2.1)](http://estscan.sourceforge.net/), [TransDecoder (version 3.0.1)](https://github.com/TransDecoder/TransDecoder/releases), [HMMSearch (HMMER version 3.1b1)](http://hmmer.janelia.org/),  
+[ESTScan (version 2.1)](http://estscan.sourceforge.net/), [TransDecoder (version 5.5.0)](https://github.com/TransDecoder/TransDecoder/releases), [HMMSearch (HMMER version 3.1b1)](http://hmmer.janelia.org/),  
 [MAFFT (version 7.215 )](http://mafft.cbrc.jp/alignment/software/), [trimAl (version 1.4.rev8)](http://trimal.cgenomics.org/), and [GenomeTools (version 1.5.4)](http://genometools.org/).
 - **GeneFamilyClassifier pipeline**:  
 [BLASTP (NCBI BLAST version 2.2.29+)](http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download), and [HMMScan (HMMER version 3.1b1)](http://hmmer.janelia.org/).
@@ -104,7 +104,7 @@ Target Gene Family Assembly:
                                   If Monocots clusters (version 1.0): 12Gv1.0
                                   If Angiosperms clusters (version 1.0): 22Gv1.0
                                   If Angiosperms clusters (version 1.1): 22Gv1.1
-                                  If Green plants clusters (version 1.0): 30Gv1.0
+                                  If Green plants clusters (version 1.0): 31Gv1.0
                                   If Other non PlantTribes clusters: XGvY.Z, where "X" is the number species in the scaffold,
                                   and "Y.Z" version number such as 12Gv1.0. Please look at one of the PlantTribes scaffold
                                   data on how data files and directories are named, formated, and organized.
