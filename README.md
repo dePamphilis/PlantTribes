@@ -1,6 +1,9 @@
 # PlantTribes
+
 ## Overview
 PlantTribes is a collection of automated modular analysis pipelines that utilize objective classifications of complete protein sequences from sequenced plant genomes to perform comparative evolutionary studies. It post-processes *de novo* assembly transcripts into putative coding sequences and their corresponding amino acid translations, locally assembles targeted gene families, estimates paralogous/orthologous pairwise synonymous/non-synonymous substitution rates for a set of gene sequences, classifies gene sequences into pre-computed orthologous plant gene family clusters, and builds gene family multiple sequence alignments and their corresponding phylogenies. 
+
+Please cite: Wafula, E. K., Zhang, H., Kuster, G. V., Leebens-Mack, J. H., Honaas, L. A., and dePamphilis, C. W. (2023). PlantTribes2: Tools for comparative gene family analysis in plant genomics. Front Plant Sci 13, 1011199. [doi: 10.3389/fpls.2022.1011199](https://www.frontiersin.org/articles/10.3389/fpls.2022.1011199/full).  
 
 Please submit all questions, inquires, and bugs using the PlantTribes repository [issues](https://github.com/dePamphilis/PlantTribes/issues) tab.
 
