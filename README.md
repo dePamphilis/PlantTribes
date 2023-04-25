@@ -10,7 +10,8 @@ Please submit all questions, inquires, and bugs using the PlantTribes repository
 In addition to this README file, you can consult the PlantTribes [manual](docs/PlantTribes.md) for more detailed information.
 
 ## Installation
-PlantTribes pipeline scripts have many external dependencies that need to be installed and available on the environment's $PATH before the pipelines can be used.
+PlantTribes pipeline can be installed manualy, via [bioconda](https://bioconda.github.io/index.html), or via a container such as [docker](https://www.docker.com/) or [singularity](https://sylabs.io/#:~:text=Singularity%20is%20a%20widely%2Dadopted,into%20a%20single%20file%20(SIF)).  
+If manual installation is preferred, external dependencies need to be installed and available on the environment's $PATH before the pipelines can be used.
 #### Pipelines dependencies
 - **AssemblyPostProcessor pipeline**:  
 [ESTScan (version 2.1)](http://estscan.sourceforge.net/), [TransDecoder (version 5.5.0)](https://github.com/TransDecoder/TransDecoder/releases), [HMMSearch (HMMER version 3.1b1)](http://hmmer.janelia.org/),  
@@ -33,13 +34,30 @@ and [EMMIX (version 1.3)](https://people.smp.uq.edu.au/GeoffMcLachlan/emmix/emmi
 #### PlantTribes scaffolds datasets  
 [PlantTribes gene family scaffolds download website](http://bigdata.bx.psu.edu/PlantTribes_scaffolds/)  
 
-#### Install PlantTribes
+#### Manual installation
 1. Open a terminal and change to the location where you would to keep PlantTribes. 
   - Example: `cd ~/softwares`
 2. Clone the [PlantTribes](https://github.com/dePamphilis/PlantTribes) GitHub repository or download the [zip archive](https://github.com/dePamphilis/PlantTribes/archive/master.zip) and decompress it in your desired location.   
   - Examples: `git clone https://github.com/dePamphilis/PlantTribes.git` or `unzip https://github.com/dePamphilis/PlantTribes/archive/master.zip`
 3. Download the scaffold data set(s) that you would like to use into the PlantTribes' [data](data) subdirectory and decompress them.
   - Examples: `cd PlantTribes/data`, `md5sum 22Gv1.1.tar.bz` (should match the provided MD5 checksum for the data archive), followed by `tar -xjvf 22Gv1.1.tar.bz2`
+
+#### Install via Bioconda
+1. With an activated Bioconda channel, install with:  
+  - `conda install plant_tribes_assembly_post_processor`  
+2. Replace `plant_tribes_assembly_post_processor` with other [mudule names](https://bioconda.github.io/search.html?q=PlantTribes) to install other modules.  
+3. Alternatively, you can create a new environment with `conda create -n <your_env>` before installing PlantTribes.  
+
+#### Install via docker
+1. Use docker pull to install with:
+  - `docker pull quay.io/biocontainers/plant_tribes_assembly_post_processor:<tag>`
+    tags/ versions for each module are listed in the repository tags page, replace `<tag>` with the tag ID you want to use to install the correponding version of the module.  
+2. Replace `plant_tribes_assembly_post_processor` with other [mudule names](https://bioconda.github.io/search.html?q=PlantTribes) and the corresponding tag to install.  
+
+#### Install via Singularity
+1. You can install and execute the module in one command! For example:
+  - `singularity exec -B ${PWD} docker://quay.io/biocontainers/plant_tribes_gene_family_phylogeny_builder:1.0.4--hdfd78af_1 /usr/local/bin/GeneFamilyPhylogenyBuilder`
+2. Replace `plant_tribes_gene_family_phylogeny_builder` and the `<tag>` with the desired module and correpsonding tag to run other modules.
 
 ## Using PlantTribes
 The execulables for the PlantTribes pipelines are in the [pipelines](pipelines) subdrectory of the installation. You can either add them to your PATH environment variable or execute directly from the PlantTribes installation.
